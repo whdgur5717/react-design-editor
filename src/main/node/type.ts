@@ -44,7 +44,7 @@ export type FrameNodeProps = BaseNodeProps;
 export type FrameReactNode = BaseReactNode<'FRAME', FrameNodeProps>;
 export type TextNodeProps = BaseNodeProps;
 
-export type TextReactNode = BaseReactNode<'TEXT', TextNodeProps, []>;
+export type TextReactNode = BaseReactNode<'TEXT', TextNodeProps>;
 
 export type GroupReactNode = BaseReactNode<'GROUP', BaseNodeProps>;
 
