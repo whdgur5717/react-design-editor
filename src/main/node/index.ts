@@ -12,9 +12,11 @@ export const figmaNodeToReactNode = async (node: SceneNode): Promise<ReactNode> 
 	let baseNode: ReactNode;
 	switch (node.type) {
 		case 'TEXT':
-			return extractTextNode(node);
+			baseNode = extractTextNode(node);
+			break;
 		case 'RECTANGLE':
-			return extractRectangleNode(node);
+			baseNode = extractRectangleNode(node);
+			break;
 		case 'INSTANCE':
 			baseNode = extractInstanceNode(node);
 			break;
