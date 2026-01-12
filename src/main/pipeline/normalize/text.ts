@@ -1,24 +1,17 @@
 import { normalizePaints } from './fills';
 import { isNumber } from 'es-toolkit/compat';
+import { variableAliasSchema } from '../shared/schemas';
 import type { NormalizedValue } from './types';
 
 type ExtractedTextProps = import('../extract/text').ExtractedTextProps;
 type NormalizedText = import('./types').NormalizedText;
 
-const isVariableAlias = (value: unknown): value is VariableAlias =>
-	!!value &&
-	typeof value === 'object' &&
-	'type' in value &&
-	'id' in value &&
-	(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-	typeof (value as { id?: unknown }).id === 'string';
-
 const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null) =>
 	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
 
 const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const value = boundVariables?.[key];
-	return isVariableAlias(value) ? value : null;
+	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
+	return parsed.success ? parsed.data : null;
 };
 
 type TextSegment = NonNullable<ExtractedTextProps['characters']>[number];

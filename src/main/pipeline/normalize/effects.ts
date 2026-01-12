@@ -1,4 +1,5 @@
 import type { ExtractedEffectProps } from '../extract/effects';
+import { variableAliasSchema } from '../shared/schemas';
 import type {
 	NormalizedBlurEffect,
 	NormalizedColor,
@@ -33,24 +34,21 @@ const normalizeColor = (color: RGB, opacity: number): NormalizedColor => {
 const normalizeRgbaColor = (color: RGBA): NormalizedColor =>
 	normalizeColor({ r: color.r, g: color.g, b: color.b }, color.a);
 
-const isVariableAlias = (value: unknown): value is VariableAlias =>
-	!!value &&
-	typeof value === 'object' &&
-	'type' in value &&
-	'id' in value &&
-	(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-	typeof (value as { id?: unknown }).id === 'string';
+const getAlias = (value: unknown) => {
+	const parsed = variableAliasSchema.safeParse(value);
+	return parsed.success ? parsed.data : null;
+};
 
 const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
 	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
 
 const toShadow = (effect: DropShadowEffect | InnerShadowEffect): NormalizedShadowEffect => {
 	const boundVariables = effect.boundVariables;
-	const colorAlias = isVariableAlias(boundVariables?.color) ? boundVariables?.color : null;
-	const offsetXAlias = isVariableAlias(boundVariables?.offsetX) ? boundVariables?.offsetX : null;
-	const offsetYAlias = isVariableAlias(boundVariables?.offsetY) ? boundVariables?.offsetY : null;
-	const radiusAlias = isVariableAlias(boundVariables?.radius) ? boundVariables?.radius : null;
-	const spreadAlias = isVariableAlias(boundVariables?.spread) ? boundVariables?.spread : null;
+	const colorAlias = getAlias(boundVariables?.color);
+	const offsetXAlias = getAlias(boundVariables?.offsetX);
+	const offsetYAlias = getAlias(boundVariables?.offsetY);
+	const radiusAlias = getAlias(boundVariables?.radius);
+	const spreadAlias = getAlias(boundVariables?.spread);
 	const spreadValue = typeof effect.spread === 'number' ? effect.spread : null;
 
 	return {
@@ -70,7 +68,7 @@ const toShadow = (effect: DropShadowEffect | InnerShadowEffect): NormalizedShado
 };
 
 const toBlur = (effect: BlurEffect): NormalizedBlurEffect => {
-	const radiusAlias = isVariableAlias(effect.boundVariables?.radius) ? effect.boundVariables?.radius : null;
+	const radiusAlias = getAlias(effect.boundVariables?.radius);
 
 	return {
 		type: 'blur',
@@ -140,11 +138,6 @@ const normalizeEffect = (effect: Effect): NormalizedEffect | null => {
 
 export const normalizeEffects = (props: ExtractedEffectProps): NormalizedValue<NormalizedEffect[]> => {
 	const effects = props.effects;
-
-	if (effects === figma.mixed) {
-		console.warn('Unexpected mixed effects on single node');
-		return { type: 'mixed', values: [] };
-	}
 
 	if (!effects || !Array.isArray(effects)) {
 		return { type: 'uniform', value: [] };

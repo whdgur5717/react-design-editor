@@ -1,4 +1,5 @@
 import type { ExtractedFillProps } from '../extract/fills';
+import { variableAliasSchema } from '../shared/schemas';
 import type {
 	NormalizedColor,
 	NormalizedFill,
@@ -33,13 +34,10 @@ const normalizeColor = (color: RGB, opacity: number): NormalizedColor => {
 const normalizeRgbaColor = (color: RGBA, opacity: number): NormalizedColor =>
 	normalizeColor({ r: color.r, g: color.g, b: color.b }, opacity);
 
-const isVariableAlias = (value: unknown): value is VariableAlias =>
-	!!value &&
-	typeof value === 'object' &&
-	'type' in value &&
-	'id' in value &&
-	(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-	typeof (value as { id?: unknown }).id === 'string';
+const getAlias = (value: unknown) => {
+	const parsed = variableAliasSchema.safeParse(value);
+	return parsed.success ? parsed.data : null;
+};
 
 const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
 	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
@@ -47,7 +45,7 @@ const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedV
 const normalizeSolid = (paint: SolidPaint): NormalizedSolidFill => {
 	const opacity = paint.opacity ?? 1;
 	const color = normalizeColor(paint.color, opacity);
-	const alias = isVariableAlias(paint.boundVariables?.color) ? paint.boundVariables?.color : null;
+	const alias = getAlias(paint.boundVariables?.color);
 	const normalized: NormalizedSolidFill = {
 		type: 'solid',
 		color: toTokenizedValue(color, alias),
@@ -69,7 +67,7 @@ const normalizeGradientStops = (paint: GradientPaint): NormalizedGradientStop[] 
 	return paint.gradientStops.map((stop) => {
 		const opacity = stop.color.a * paintOpacity;
 		const color = normalizeRgbaColor(stop.color, opacity);
-		const alias = isVariableAlias(stop.boundVariables?.color) ? stop.boundVariables?.color : null;
+		const alias = getAlias(stop.boundVariables?.color);
 		return {
 			position: stop.position,
 			color: toTokenizedValue(color, alias),

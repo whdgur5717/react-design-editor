@@ -1,24 +1,17 @@
 import { isNumber } from 'es-toolkit/compat';
 import { normalizePaints } from './fills';
 import type { ExtractedStrokeProps } from '../extract/stroke';
+import { variableAliasSchema } from '../shared/schemas';
 import type { NormalizedCorner, NormalizedStroke, NormalizedStrokeWeight, NormalizedValue } from './types';
 
 const toNumber = (value: number | undefined): number => (isNumber(value) ? value : 0);
-
-const isVariableAlias = (value: unknown): value is VariableAlias =>
-	!!value &&
-	typeof value === 'object' &&
-	'type' in value &&
-	'id' in value &&
-	(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-	typeof (value as { id?: unknown }).id === 'string';
 
 const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null) =>
 	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
 
 const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const value = boundVariables?.[key];
-	return isVariableAlias(value) ? value : null;
+	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
+	return parsed.success ? parsed.data : null;
 };
 
 const buildStrokeWeight = (

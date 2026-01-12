@@ -1,5 +1,6 @@
 import { isNumber } from 'es-toolkit/compat';
 import type { ExtractedLayoutProps } from '../extract/layout';
+import { variableAliasSchema } from '../shared/schemas';
 import type {
 	NormalizedLayout,
 	NormalizedLayoutChild,
@@ -12,20 +13,12 @@ import type {
 
 const toNumber = (value: number | undefined): number => (typeof value === 'number' ? value : 0);
 
-const isVariableAlias = (value: unknown): value is VariableAlias =>
-	!!value &&
-	typeof value === 'object' &&
-	'type' in value &&
-	'id' in value &&
-	(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-	typeof (value as { id?: unknown }).id === 'string';
-
 const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
 	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
 
 const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const value = boundVariables?.[key];
-	return isVariableAlias(value) ? value : null;
+	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
+	return parsed.success ? parsed.data : null;
 };
 
 const buildPosition = (

@@ -1,3 +1,4 @@
+import { variableAliasSchema } from '../shared/schemas';
 import { extractEffectProps } from './effects';
 import { extractFillProps } from './fills';
 import { extractAutoLayout } from './layout';
@@ -10,14 +11,6 @@ const toSortedArray = (values: Set<string>) => Array.from(values).sort();
 
 type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue };
 type BoundVariables = Record<string, BoundVariableValue>;
-
-const isVariableAlias = (value: unknown): value is VariableAlias => {
-	if (!value || typeof value !== 'object') return false;
-	const record = value as { id?: unknown; type?: unknown };
-	if (typeof record.id !== 'string') return false;
-	if (typeof record.type === 'string' && record.type !== 'VARIABLE_ALIAS') return false;
-	return true;
-};
 
 const NODE_BOUND_VARIABLE_KEYS = new Set([
 	'width',
@@ -72,8 +65,9 @@ const collectAliasIds = (target: Set<string>, aliases: BoundVariableValue | unde
 		}
 		return;
 	}
-	if (isVariableAlias(aliases)) {
-		target.add(aliases.id);
+	const parsed = variableAliasSchema.safeParse(aliases);
+	if (parsed.success) {
+		target.add(parsed.data.id);
 		return;
 	}
 	const values = Object.values(aliases);
