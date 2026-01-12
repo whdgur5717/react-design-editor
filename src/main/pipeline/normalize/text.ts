@@ -1,5 +1,6 @@
 import { normalizePaints } from './fills';
 import { isNumber } from 'es-toolkit/compat';
+import type { NormalizedValue } from './types';
 
 type ExtractedTextProps = import('../extract/text').ExtractedTextProps;
 type NormalizedText = import('./types').NormalizedText;
@@ -100,6 +101,13 @@ const buildHyperlink = (text: ExtractedTextProps, runs: NormalizedText['runs']):
 	return { type: 'mixed', segments };
 };
 
+const normalizeLeadingTrim = (value: LeadingTrim | PluginAPI['mixed'] | undefined): NormalizedValue<LeadingTrim> => {
+	if (value === figma.mixed) {
+		return { type: 'mixed', values: ['NONE', 'CAP_HEIGHT'] as LeadingTrim[] };
+	}
+	return { type: 'uniform', value: value ?? 'NONE' };
+};
+
 export const normalizeText = (
 	text: ExtractedTextProps,
 	nodeBoundVariables?: Record<string, unknown>,
@@ -124,7 +132,7 @@ export const normalizeText = (
 		listSpacing: isNumber(text.listSpacing) ? text.listSpacing : 0,
 		hangingPunctuation: text.hangingPunctuation ?? false,
 		hangingList: text.hangingList ?? false,
-		leadingTrim: text.leadingTrim === figma.mixed ? 'NONE' : (text.leadingTrim ?? 'NONE'),
+		leadingTrim: normalizeLeadingTrim(text.leadingTrim),
 		textStyleId: buildTextStyleId(text, runs),
 		hyperlink: buildHyperlink(text, runs),
 	};

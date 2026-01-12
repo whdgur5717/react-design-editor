@@ -9,7 +9,7 @@ export type TokenRef = {
 
 export type TokenizedValue<T> = T | { tokenRef: TokenRef; fallback: T };
 
-export type NormalizedMixedValue<T> =
+export type NormalizedValue<T> =
 	| { type: 'uniform'; value: T }
 	| { type: 'mixed'; values: T[] }
 	| { type: 'range-based'; segments: Array<{ start: number; end: number; value: T }> };
@@ -131,7 +131,7 @@ export type NormalizedEffect =
 export type NormalizedEffects = NormalizedEffect[];
 
 export type NormalizedCorner = {
-	radius: NormalizedMixedValue<TokenizedValue<number>>;
+	radius: NormalizedValue<TokenizedValue<number>>;
 	smoothing: TokenizedValue<number>;
 };
 
@@ -146,11 +146,11 @@ export type NormalizedStrokeWeight =
 	  };
 
 export type NormalizedStroke = {
-	paints: NormalizedFill[];
+	paints: NormalizedValue<NormalizedFill[]>;
 	weight: NormalizedStrokeWeight;
 	align: 'CENTER' | 'INSIDE' | 'OUTSIDE';
-	cap: StrokeCap | { type: 'mixed'; values: StrokeCap[] };
-	join: StrokeJoin | { type: 'mixed'; values: StrokeJoin[] };
+	cap: NormalizedValue<StrokeCap>;
+	join: NormalizedValue<StrokeJoin>;
 	dashPattern: readonly number[];
 	miterLimit: number;
 	corner?: NormalizedCorner | null;
@@ -280,14 +280,14 @@ export type NormalizedText = {
 	listSpacing: number;
 	hangingPunctuation: boolean;
 	hangingList: boolean;
-	leadingTrim: LeadingTrim;
+	leadingTrim: NormalizedValue<LeadingTrim>;
 	textStyleId: TokenizedValue<string> | { type: 'mixed'; segments: NormalizedTextSegment<string>[] };
 	hyperlink: HyperlinkTarget | null | { type: 'mixed'; segments: NormalizedTextSegment<HyperlinkTarget | null>[] };
 };
 
 export type NormalizedStyle = {
-	fills: NormalizedFills;
-	effects: NormalizedEffects;
+	fills: NormalizedValue<NormalizedFill[]>;
+	effects: NormalizedValue<NormalizedEffect[]>;
 	layout: NormalizedLayout;
 	text: NormalizedText | null;
 	stroke: NormalizedStroke | null;

@@ -1,7 +1,7 @@
 import { isNumber } from 'es-toolkit/compat';
 import { normalizePaints } from './fills';
 import type { ExtractedStrokeProps } from '../extract/stroke';
-import type { NormalizedCorner, NormalizedStroke, NormalizedStrokeWeight } from './types';
+import type { NormalizedCorner, NormalizedStroke, NormalizedStrokeWeight, NormalizedValue } from './types';
 
 const toNumber = (value: number | undefined): number => (isNumber(value) ? value : 0);
 
@@ -107,9 +107,7 @@ const buildCorner = (
 	return null;
 };
 
-const normalizeCap = (
-	cap: StrokeCap | PluginAPI['mixed'] | undefined,
-): StrokeCap | { type: 'mixed'; values: StrokeCap[] } => {
+const normalizeCap = (cap: StrokeCap | PluginAPI['mixed'] | undefined): NormalizedValue<StrokeCap> => {
 	if (cap === figma.mixed) {
 		return {
 			type: 'mixed',
@@ -125,16 +123,14 @@ const normalizeCap = (
 			] as StrokeCap[],
 		};
 	}
-	return cap ?? 'NONE';
+	return { type: 'uniform', value: cap ?? 'NONE' };
 };
 
-const normalizeJoin = (
-	join: StrokeJoin | PluginAPI['mixed'] | undefined,
-): StrokeJoin | { type: 'mixed'; values: StrokeJoin[] } => {
+const normalizeJoin = (join: StrokeJoin | PluginAPI['mixed'] | undefined): NormalizedValue<StrokeJoin> => {
 	if (join === figma.mixed) {
 		return { type: 'mixed', values: ['MITER', 'BEVEL', 'ROUND'] as StrokeJoin[] };
 	}
-	return join ?? 'MITER';
+	return { type: 'uniform', value: join ?? 'MITER' };
 };
 
 export const normalizeStroke = (
@@ -145,7 +141,7 @@ export const normalizeStroke = (
 	if (paints.length === 0) return null;
 
 	const normalized: NormalizedStroke = {
-		paints,
+		paints: { type: 'uniform', value: paints },
 		weight: buildStrokeWeight(props, boundVariables),
 		align: props.strokeAlign ?? 'CENTER',
 		cap: normalizeCap(props.strokeCap),
