@@ -9,7 +9,7 @@
 		"format:check": "prettier --check .",
 		"lint": "eslint .",
 		"vitest": "npx vitest",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc -p src/main/tsconfig.json --noEmit && tsc -p src/ui/tsconfig.json --noEmit"
 	},
 	"devDependencies": {
 		"@figma/plugin-typings": "^1.100.2",
