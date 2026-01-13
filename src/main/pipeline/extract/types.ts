@@ -25,5 +25,5 @@ export interface ExtractedStyle {
 	text: ExtractedTextProps;
 	stroke: ExtractedStrokeProps;
 	boundVariables: ExtractedBoundVariables;
-	nodeBoundVariables?: Record<string, unknown>;
+	nodeBoundVariables?: SceneNode['boundVariables'];
 }

@@ -298,30 +298,31 @@ const resolveTextTokens = (
 	tokenRefs: Map<string, TokenRef>,
 ): NormalizedText => {
 	const segments = Array.isArray(extractedText.characters) ? extractedText.characters : [];
-	const textRangeFills = nodeBoundVariables?.textRangeFills;
+	const textRangeFills = nodeBoundVariables?.['textRangeFills'];
 
 	const runs = text.runs.map((run, index) => {
 		const segment = segments[index] as TextSegment | undefined;
 		const boundVariables = (segment?.boundVariables as BoundVariablesRecord) ?? undefined;
 
 		const fontFamilyAlias =
-			getAlias(boundVariables, 'fontFamily') ?? getAliasFromArray(nodeBoundVariables?.fontFamily, index);
+			getAlias(boundVariables, 'fontFamily') ?? getAliasFromArray(nodeBoundVariables?.['fontFamily'], index);
 		const fontStyleAlias =
-			getAlias(boundVariables, 'fontStyle') ?? getAliasFromArray(nodeBoundVariables?.fontStyle, index);
+			getAlias(boundVariables, 'fontStyle') ?? getAliasFromArray(nodeBoundVariables?.['fontStyle'], index);
 		const fontWeightAlias =
-			getAlias(boundVariables, 'fontWeight') ?? getAliasFromArray(nodeBoundVariables?.fontWeight, index);
+			getAlias(boundVariables, 'fontWeight') ?? getAliasFromArray(nodeBoundVariables?.['fontWeight'], index);
 		const fontSizeAlias =
-			getAlias(boundVariables, 'fontSize') ?? getAliasFromArray(nodeBoundVariables?.fontSize, index);
+			getAlias(boundVariables, 'fontSize') ?? getAliasFromArray(nodeBoundVariables?.['fontSize'], index);
 		const letterSpacingAlias =
-			getAlias(boundVariables, 'letterSpacing') ?? getAliasFromArray(nodeBoundVariables?.letterSpacing, index);
+			getAlias(boundVariables, 'letterSpacing') ??
+			getAliasFromArray(nodeBoundVariables?.['letterSpacing'], index);
 		const lineHeightAlias =
-			getAlias(boundVariables, 'lineHeight') ?? getAliasFromArray(nodeBoundVariables?.lineHeight, index);
+			getAlias(boundVariables, 'lineHeight') ?? getAliasFromArray(nodeBoundVariables?.['lineHeight'], index);
 		const paragraphSpacingAlias =
 			getAlias(boundVariables, 'paragraphSpacing') ??
-			getAliasFromArray(nodeBoundVariables?.paragraphSpacing, index);
+			getAliasFromArray(nodeBoundVariables?.['paragraphSpacing'], index);
 		const paragraphIndentAlias =
 			getAlias(boundVariables, 'paragraphIndent') ??
-			getAliasFromArray(nodeBoundVariables?.paragraphIndent, index);
+			getAliasFromArray(nodeBoundVariables?.['paragraphIndent'], index);
 		const fillsAlias = getAliasFromArray(textRangeFills, index);
 
 		const resolvedFills = resolveFillsValue(run.style.fills, tokenRefs);
@@ -410,7 +411,7 @@ export const buildComponentProperties = (
 ): OutputComponentProperties | undefined => {
 	const componentProperties = node.componentProperties;
 	if (!componentProperties) return undefined;
-	const boundVariableProps = nodeBoundVariables?.componentProperties as BoundVariablesRecord;
+	const boundVariableProps = nodeBoundVariables?.['componentProperties'] as BoundVariablesRecord;
 
 	const result: OutputComponentProperties = {};
 	Object.entries(componentProperties).forEach(([name, prop]) => {
@@ -443,8 +444,7 @@ const buildInstanceRef = (node: SceneNode): InstanceRef | undefined => {
 };
 
 const collectImageAssets = (fills: NormalizedFill[], assets: Map<string, AssetRef>) => {
-	for (let index = 0; index < fills.length; index += 1) {
-		const fill = fills[index];
+	for (const fill of fills) {
 		if (fill.type !== 'image') continue;
 		if (!fill.imageHash) continue;
 		assets.set(fill.imageHash, { kind: 'image', id: fill.imageHash });
@@ -460,8 +460,7 @@ const buildAssetRefs = (style: NormalizedStyle): AssetRef[] | undefined => {
 		collectImageAssets(style.stroke.paints.value, assets);
 	}
 	if (style.text) {
-		for (let index = 0; index < style.text.runs.length; index += 1) {
-			const run = style.text.runs[index];
+		for (const run of style.text.runs) {
 			const fills = unwrapTokenized(run.style.fills);
 			collectImageAssets(fills, assets);
 		}
@@ -476,9 +475,9 @@ const enrichStyle = (
 	tokenRefs: Map<string, TokenRef>,
 ): OutputNormalizedStyle => {
 	const nodeBoundVariables = extractedStyle.nodeBoundVariables as BoundVariablesRecord;
-	const fillsAliases = nodeBoundVariables?.fills;
-	const effectsAliases = nodeBoundVariables?.effects;
-	const strokeAliases = nodeBoundVariables?.strokes;
+	const fillsAliases = nodeBoundVariables?.['fills'];
+	const effectsAliases = nodeBoundVariables?.['effects'];
+	const strokeAliases = nodeBoundVariables?.['strokes'];
 
 	const fillsValue =
 		normalizedStyle.fills.type === 'uniform'
@@ -489,7 +488,9 @@ const enrichStyle = (
 				})
 			: [];
 	const fills: NormalizedValue<Array<TokenizedValue<NormalizedFill>>> =
-		normalizedStyle.fills.type === 'uniform' ? { type: 'uniform', value: fillsValue } : { type: 'mixed', values: [] };
+		normalizedStyle.fills.type === 'uniform'
+			? { type: 'uniform', value: fillsValue }
+			: { type: 'mixed', values: [] };
 
 	const effectsValue =
 		normalizedStyle.effects.type === 'uniform'
