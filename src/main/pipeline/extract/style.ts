@@ -10,7 +10,6 @@ import type { ExtractedBoundVariables, ExtractedStyle } from './types';
 const toSortedArray = (values: Set<string>) => Array.from(values).sort();
 
 type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue };
-type BoundVariables = Record<string, BoundVariableValue>;
 
 const NODE_BOUND_VARIABLE_KEYS = new Set([
 	'width',
@@ -46,11 +45,10 @@ const NODE_BOUND_VARIABLE_KEYS = new Set([
 
 const warnUnknownNodeBoundVariableKeys = (node: SceneNode) => {
 	if (!('boundVariables' in node)) return;
-	const boundVariables = (node as SceneNode & { boundVariables?: BoundVariables }).boundVariables;
+	const boundVariables = node.boundVariables;
 	if (!boundVariables) return;
-	const keys = Object.keys(boundVariables);
-	for (let index = 0; index < keys.length; index += 1) {
-		const key = keys[index];
+
+	for (const key in boundVariables) {
 		if (!NODE_BOUND_VARIABLE_KEYS.has(key)) {
 			console.warn('Unknown boundVariables key', { nodeId: node.id, nodeType: node.type, key });
 		}
@@ -76,17 +74,18 @@ const collectAliasIds = (target: Set<string>, aliases: BoundVariableValue | unde
 	}
 };
 
-const isPaint = (value: unknown): value is Paint => typeof value === 'object' && value !== null && 'type' in value;
-
 const collectPaintBoundVariables = (target: Set<string>, paint: Paint) => {
-	const boundVariables = (paint as Paint & { boundVariables?: BoundVariableValue }).boundVariables;
-	collectAliasIds(target, boundVariables);
+	if ('boundVariables' in paint) {
+		collectAliasIds(target, paint.boundVariables);
+	}
+
 	if ('gradientStops' in paint && Array.isArray(paint.gradientStops)) {
 		const stops = paint.gradientStops;
 		for (let index = 0; index < stops.length; index += 1) {
 			const stop = stops[index];
-			const stopBoundVariables = (stop as ColorStop & { boundVariables?: BoundVariableValue }).boundVariables;
-			collectAliasIds(target, stopBoundVariables);
+			if ('boundVariables' in stop) {
+				collectAliasIds(target, stop.boundVariables);
+			}
 		}
 	}
 };
@@ -97,10 +96,7 @@ const collectPaintsBoundVariables = (
 ) => {
 	if (!paints || paints === figma.mixed || !Array.isArray(paints)) return;
 	for (let index = 0; index < paints.length; index += 1) {
-		const paint = paints[index];
-		if (isPaint(paint)) {
-			collectPaintBoundVariables(target, paint);
-		}
+		collectPaintBoundVariables(target, paints[index]);
 	}
 };
 const collectEffectsBoundVariables = (
@@ -110,21 +106,22 @@ const collectEffectsBoundVariables = (
 	if (!effects || effects === figma.mixed || !Array.isArray(effects)) return;
 	for (let index = 0; index < effects.length; index += 1) {
 		const effect = effects[index];
-		const boundVariables = (effect as Effect & { boundVariables?: BoundVariableValue }).boundVariables;
-		collectAliasIds(target, boundVariables);
+		if ('boundVariables' in effect) {
+			collectAliasIds(target, effect.boundVariables);
+		}
 	}
 };
 
 const collectNodeBoundVariables = (target: Set<string>, node: SceneNode) => {
 	if ('boundVariables' in node) {
 		warnUnknownNodeBoundVariableKeys(node);
-		collectAliasIds(target, (node as { boundVariables?: BoundVariableValue }).boundVariables);
+		collectAliasIds(target, node.boundVariables);
 	}
 };
 
 const collectLayoutGridBoundVariables = (target: Set<string>, node: SceneNode) => {
 	if (!('layoutGrids' in node)) return;
-	const grids = (node as { layoutGrids?: ReadonlyArray<LayoutGrid> }).layoutGrids;
+	const grids = node.layoutGrids;
 	if (!Array.isArray(grids)) return;
 	for (let index = 0; index < grids.length; index += 1) {
 		const grid = grids[index];
@@ -134,28 +131,38 @@ const collectLayoutGridBoundVariables = (target: Set<string>, node: SceneNode) =
 
 const collectComponentPropsBoundVariables = (target: Set<string>, node: SceneNode) => {
 	if (!('componentProperties' in node)) return;
-	const componentProps = (node as { componentProperties?: Record<string, { boundVariables?: unknown }> })
-		.componentProperties;
+	const componentProps = node.componentProperties;
 	if (!componentProps || typeof componentProps !== 'object') return;
+
 	Object.values(componentProps).forEach((prop) => {
-		if (prop && typeof prop === 'object') {
-			collectAliasIds(target, (prop as { boundVariables?: BoundVariableValue }).boundVariables);
+		if (prop && typeof prop === 'object' && 'boundVariables' in prop) {
+			collectAliasIds(target, prop.boundVariables);
 		}
 	});
 };
 
 const collectTextBoundVariables = (target: Set<string>, text: ExtractedTextProps) => {
-	collectAliasIds(target, (text as { boundVariables?: BoundVariableValue }).boundVariables);
-	collectPaintsBoundVariables(target, (text as { fills?: ReadonlyArray<Paint> | PluginAPI['mixed'] }).fills);
+	if ('boundVariables' in text) {
+		collectAliasIds(target, text.boundVariables);
+	}
 
-	const { characters } = text as { characters?: unknown };
+	if ('fills' in text) {
+		collectPaintsBoundVariables(target, text.fills);
+	}
+
+	const { characters } = text;
 	if (!Array.isArray(characters)) return;
+
 	for (let index = 0; index < characters.length; index += 1) {
 		const segment = characters[index];
 		if (!segment || typeof segment !== 'object') continue;
-		const record = segment as Record<string, unknown>;
-		collectAliasIds(target, record.boundVariables as BoundVariableValue | undefined);
-		collectPaintsBoundVariables(target, record.fills as ReadonlyArray<Paint> | PluginAPI['mixed'] | undefined);
+
+		if ('boundVariables' in segment) {
+			collectAliasIds(target, segment.boundVariables);
+		}
+		if ('fills' in segment) {
+			collectPaintsBoundVariables(target, segment.fills);
+		}
 	}
 };
 
