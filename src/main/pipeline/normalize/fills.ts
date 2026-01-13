@@ -1,5 +1,5 @@
 import type { ExtractedFillProps } from '../extract/fills';
-import { variableAliasSchema } from '../shared/schemas';
+import { toTokenizedValue } from './utils';
 import type {
 	NormalizedColor,
 	NormalizedFill,
@@ -8,7 +8,6 @@ import type {
 	NormalizedImageFill,
 	NormalizedSolidFill,
 	NormalizedValue,
-	TokenizedValue,
 } from './types';
 
 const toChannel = (value: number) => Math.round(value * 255);
@@ -34,18 +33,10 @@ const normalizeColor = (color: RGB, opacity: number): NormalizedColor => {
 const normalizeRgbaColor = (color: RGBA, opacity: number): NormalizedColor =>
 	normalizeColor({ r: color.r, g: color.g, b: color.b }, opacity);
 
-const getAlias = (value: unknown) => {
-	const parsed = variableAliasSchema.safeParse(value);
-	return parsed.success ? parsed.data : null;
-};
-
-const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
-	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-
 const normalizeSolid = (paint: SolidPaint): NormalizedSolidFill => {
 	const opacity = paint.opacity ?? 1;
 	const color = normalizeColor(paint.color, opacity);
-	const alias = getAlias(paint.boundVariables?.color);
+	const alias = paint.boundVariables?.color;
 	const normalized: NormalizedSolidFill = {
 		type: 'solid',
 		color: toTokenizedValue(color, alias),
@@ -67,7 +58,7 @@ const normalizeGradientStops = (paint: GradientPaint): NormalizedGradientStop[] 
 	return paint.gradientStops.map((stop) => {
 		const opacity = stop.color.a * paintOpacity;
 		const color = normalizeRgbaColor(stop.color, opacity);
-		const alias = getAlias(stop.boundVariables?.color);
+		const alias = stop.boundVariables?.color;
 		return {
 			position: stop.position,
 			color: toTokenizedValue(color, alias),

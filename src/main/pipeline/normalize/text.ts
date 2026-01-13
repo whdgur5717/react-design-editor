@@ -1,31 +1,23 @@
 import { normalizePaints } from './fills';
 import { isNumber } from 'es-toolkit/compat';
-import { variableAliasSchema } from '../shared/schemas';
+import { toTokenizedValue } from './utils';
 import type { NormalizedValue } from './types';
 
 type ExtractedTextProps = import('../extract/text').ExtractedTextProps;
 type NormalizedText = import('./types').NormalizedText;
 
-const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null) =>
-	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-
-const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
-	return parsed.success ? parsed.data : null;
-};
-
 type TextSegment = NonNullable<ExtractedTextProps['characters']>[number];
 
 const buildRunStyle = (segment: TextSegment): NormalizedText['runs'][number]['style'] => {
-	const boundVariables = segment.boundVariables as Record<string, unknown> | undefined;
-	const fontFamilyAlias = getAlias(boundVariables, 'fontFamily');
-	const fontStyleAlias = getAlias(boundVariables, 'fontStyle');
-	const fontWeightAlias = getAlias(boundVariables, 'fontWeight');
-	const fontSizeAlias = getAlias(boundVariables, 'fontSize');
-	const letterSpacingAlias = getAlias(boundVariables, 'letterSpacing');
-	const lineHeightAlias = getAlias(boundVariables, 'lineHeight');
-	const paragraphSpacingAlias = getAlias(boundVariables, 'paragraphSpacing');
-	const paragraphIndentAlias = getAlias(boundVariables, 'paragraphIndent');
+	const boundVariables = segment.boundVariables;
+	const fontFamilyAlias = boundVariables?.fontFamily;
+	const fontStyleAlias = boundVariables?.fontStyle;
+	const fontWeightAlias = boundVariables?.fontWeight;
+	const fontSizeAlias = boundVariables?.fontSize;
+	const letterSpacingAlias = boundVariables?.letterSpacing;
+	const lineHeightAlias = boundVariables?.lineHeight;
+	const paragraphSpacingAlias = boundVariables?.paragraphSpacing;
+	const paragraphIndentAlias = boundVariables?.paragraphIndent;
 
 	const textDecorationColor = segment.textDecorationColor ?? { value: 'AUTO' };
 
@@ -96,21 +88,21 @@ const buildHyperlink = (text: ExtractedTextProps, runs: NormalizedText['runs']):
 
 const normalizeLeadingTrim = (value: LeadingTrim | PluginAPI['mixed'] | undefined): NormalizedValue<LeadingTrim> => {
 	if (value === figma.mixed) {
-		return { type: 'mixed', values: ['NONE', 'CAP_HEIGHT'] as LeadingTrim[] };
+		return { type: 'mixed', values: ['NONE', 'CAP_HEIGHT'] as const };
 	}
 	return { type: 'uniform', value: value ?? 'NONE' };
 };
 
 export const normalizeText = (
 	text: ExtractedTextProps,
-	nodeBoundVariables?: Record<string, unknown>,
+	nodeBoundVariables?: SceneNode['boundVariables'],
 ): NormalizedText | null => {
 	const segments = text.characters as TextSegment[] | undefined;
 	if (!segments || segments.length === 0) return null;
 
 	const runs = buildRuns(segments);
 	const characters = runs.map((run) => run.characters).join('');
-	const charactersAlias = getAlias(nodeBoundVariables, 'characters');
+	const charactersAlias = nodeBoundVariables?.characters;
 
 	return {
 		characters: toTokenizedValue(characters, charactersAlias),

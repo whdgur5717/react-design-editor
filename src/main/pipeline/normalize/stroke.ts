@@ -1,28 +1,20 @@
 import { isNumber } from 'es-toolkit/compat';
 import { normalizePaints } from './fills';
+import { toTokenizedValue } from './utils';
 import type { ExtractedStrokeProps } from '../extract/stroke';
-import { variableAliasSchema } from '../shared/schemas';
 import type { NormalizedCorner, NormalizedStroke, NormalizedStrokeWeight, NormalizedValue } from './types';
 
 const toNumber = (value: number | undefined): number => (isNumber(value) ? value : 0);
 
-const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null) =>
-	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-
-const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
-	return parsed.success ? parsed.data : null;
-};
-
 const buildStrokeWeight = (
 	stroke: ExtractedStrokeProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedStrokeWeight => {
-	const weightAlias = getAlias(boundVariables, 'strokeWeight');
-	const topAlias = getAlias(boundVariables, 'strokeTopWeight');
-	const rightAlias = getAlias(boundVariables, 'strokeRightWeight');
-	const bottomAlias = getAlias(boundVariables, 'strokeBottomWeight');
-	const leftAlias = getAlias(boundVariables, 'strokeLeftWeight');
+	const weightAlias = boundVariables?.strokeWeight;
+	const topAlias = boundVariables?.strokeTopWeight;
+	const rightAlias = boundVariables?.strokeRightWeight;
+	const bottomAlias = boundVariables?.strokeBottomWeight;
+	const leftAlias = boundVariables?.strokeLeftWeight;
 
 	const weight = stroke.strokeWeight;
 	const hasIndividual =
@@ -49,13 +41,13 @@ const buildStrokeWeight = (
 
 const buildCorner = (
 	stroke: ExtractedStrokeProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedCorner | null => {
 	const smoothing = isNumber(stroke.cornerSmoothing) ? stroke.cornerSmoothing : 0;
-	const topLeftAlias = getAlias(boundVariables, 'topLeftRadius');
-	const topRightAlias = getAlias(boundVariables, 'topRightRadius');
-	const bottomRightAlias = getAlias(boundVariables, 'bottomRightRadius');
-	const bottomLeftAlias = getAlias(boundVariables, 'bottomLeftRadius');
+	const topLeftAlias = boundVariables?.topLeftRadius;
+	const topRightAlias = boundVariables?.topRightRadius;
+	const bottomRightAlias = boundVariables?.bottomRightRadius;
+	const bottomLeftAlias = boundVariables?.bottomLeftRadius;
 	const uniformAlias = topLeftAlias ?? topRightAlias ?? bottomRightAlias ?? bottomLeftAlias;
 
 	if (stroke.cornerRadius === figma.mixed) {
@@ -113,7 +105,7 @@ const normalizeCap = (cap: StrokeCap | PluginAPI['mixed'] | undefined): Normaliz
 				'DIAMOND_FILLED',
 				'TRIANGLE_FILLED',
 				'CIRCLE_FILLED',
-			] as StrokeCap[],
+			],
 		};
 	}
 	return { type: 'uniform', value: cap ?? 'NONE' };
@@ -121,14 +113,14 @@ const normalizeCap = (cap: StrokeCap | PluginAPI['mixed'] | undefined): Normaliz
 
 const normalizeJoin = (join: StrokeJoin | PluginAPI['mixed'] | undefined): NormalizedValue<StrokeJoin> => {
 	if (join === figma.mixed) {
-		return { type: 'mixed', values: ['MITER', 'BEVEL', 'ROUND'] as StrokeJoin[] };
+		return { type: 'mixed', values: ['MITER', 'BEVEL', 'ROUND'] as const };
 	}
 	return { type: 'uniform', value: join ?? 'MITER' };
 };
 
 export const normalizeStroke = (
 	props: ExtractedStrokeProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedStroke | null => {
 	const paints = normalizePaints(props.strokes);
 	if (paints.length === 0) return null;

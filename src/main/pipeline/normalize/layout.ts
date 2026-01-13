@@ -1,6 +1,6 @@
 import { isNumber } from 'es-toolkit/compat';
+import { toTokenizedValue } from './utils';
 import type { ExtractedLayoutProps } from '../extract/layout';
-import { variableAliasSchema } from '../shared/schemas';
 import type {
 	NormalizedLayout,
 	NormalizedLayoutChild,
@@ -8,22 +8,13 @@ import type {
 	NormalizedLayoutGap,
 	NormalizedLayoutPadding,
 	NormalizedLayoutPosition,
-	TokenizedValue,
 } from './types';
 
 const toNumber = (value: number | undefined): number => (typeof value === 'number' ? value : 0);
 
-const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
-	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-
-const getAlias = (boundVariables: Record<string, unknown> | undefined, key: string) => {
-	const parsed = variableAliasSchema.safeParse(boundVariables?.[key]);
-	return parsed.success ? parsed.data : null;
-};
-
 const buildPosition = (
 	layout: ExtractedLayoutProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedLayoutPosition => {
 	const width = toNumber(layout.width);
 	const height = toNumber(layout.height);
@@ -35,18 +26,18 @@ const buildPosition = (
 	return {
 		x: toNumber(layout.x),
 		y: toNumber(layout.y),
-		width: toTokenizedValue(width, getAlias(boundVariables, 'width')),
-		height: toTokenizedValue(height, getAlias(boundVariables, 'height')),
-		minWidth: minWidth === null ? null : toTokenizedValue(minWidth, getAlias(boundVariables, 'minWidth')),
-		maxWidth: maxWidth === null ? null : toTokenizedValue(maxWidth, getAlias(boundVariables, 'maxWidth')),
-		minHeight: minHeight === null ? null : toTokenizedValue(minHeight, getAlias(boundVariables, 'minHeight')),
-		maxHeight: maxHeight === null ? null : toTokenizedValue(maxHeight, getAlias(boundVariables, 'maxHeight')),
+		width: toTokenizedValue(width, boundVariables?.width),
+		height: toTokenizedValue(height, boundVariables?.height),
+		minWidth: minWidth === null ? null : toTokenizedValue(minWidth, boundVariables?.minWidth),
+		maxWidth: maxWidth === null ? null : toTokenizedValue(maxWidth, boundVariables?.maxWidth),
+		minHeight: minHeight === null ? null : toTokenizedValue(minHeight, boundVariables?.minHeight),
+		maxHeight: maxHeight === null ? null : toTokenizedValue(maxHeight, boundVariables?.maxHeight),
 	};
 };
 
 const buildPadding = (
 	layout: ExtractedLayoutProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedLayoutPadding | undefined => {
 	const hasPadding =
 		isNumber(layout.paddingTop) ||
@@ -57,22 +48,22 @@ const buildPadding = (
 	if (!hasPadding) return undefined;
 
 	return {
-		top: toTokenizedValue(toNumber(layout.paddingTop), getAlias(boundVariables, 'paddingTop')),
-		right: toTokenizedValue(toNumber(layout.paddingRight), getAlias(boundVariables, 'paddingRight')),
-		bottom: toTokenizedValue(toNumber(layout.paddingBottom), getAlias(boundVariables, 'paddingBottom')),
-		left: toTokenizedValue(toNumber(layout.paddingLeft), getAlias(boundVariables, 'paddingLeft')),
+		top: toTokenizedValue(toNumber(layout.paddingTop), boundVariables?.paddingTop),
+		right: toTokenizedValue(toNumber(layout.paddingRight), boundVariables?.paddingRight),
+		bottom: toTokenizedValue(toNumber(layout.paddingBottom), boundVariables?.paddingBottom),
+		left: toTokenizedValue(toNumber(layout.paddingLeft), boundVariables?.paddingLeft),
 	};
 };
 
 const buildGap = (
 	layout: ExtractedLayoutProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedLayoutGap | undefined => {
 	const gap: NormalizedLayoutGap = {};
-	const gridRowGapAlias = getAlias(boundVariables, 'gridRowGap');
-	const gridColumnGapAlias = getAlias(boundVariables, 'gridColumnGap');
-	const itemSpacingAlias = getAlias(boundVariables, 'itemSpacing');
-	const counterAxisSpacingAlias = getAlias(boundVariables, 'counterAxisSpacing');
+	const gridRowGapAlias = boundVariables?.gridRowGap;
+	const gridColumnGapAlias = boundVariables?.gridColumnGap;
+	const itemSpacingAlias = boundVariables?.itemSpacing;
+	const counterAxisSpacingAlias = boundVariables?.counterAxisSpacing;
 
 	if (layout.layoutMode === 'GRID') {
 		if (isNumber(layout.gridRowGap)) {
@@ -109,7 +100,7 @@ const buildGap = (
 
 const buildContainer = (
 	layout: ExtractedLayoutProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedLayoutContainer | undefined => {
 	const container: NormalizedLayoutContainer = {};
 
@@ -142,13 +133,11 @@ const buildContainer = (
 		Array.isArray(layout.gridRowSizes) ||
 		Array.isArray(layout.gridColumnSizes)
 	) {
-		const gridRowGapAlias = getAlias(boundVariables, 'gridRowGap');
-		const gridColumnGapAlias = getAlias(boundVariables, 'gridColumnGap');
 		container.grid = {
 			rowCount: toNumber(layout.gridRowCount),
 			columnCount: toNumber(layout.gridColumnCount),
-			rowGap: toTokenizedValue(toNumber(layout.gridRowGap), gridRowGapAlias),
-			columnGap: toTokenizedValue(toNumber(layout.gridColumnGap), gridColumnGapAlias),
+			rowGap: toTokenizedValue(toNumber(layout.gridRowGap), boundVariables?.gridRowGap),
+			columnGap: toTokenizedValue(toNumber(layout.gridColumnGap), boundVariables?.gridColumnGap),
 			rowSizes: layout.gridRowSizes ?? [],
 			columnSizes: layout.gridColumnSizes ?? [],
 		};
@@ -189,7 +178,7 @@ const buildChild = (layout: ExtractedLayoutProps): NormalizedLayoutChild | undef
 
 export const normalizeLayout = (
 	layout: ExtractedLayoutProps,
-	boundVariables?: Record<string, unknown>,
+	boundVariables?: SceneNode['boundVariables'],
 ): NormalizedLayout => {
 	const mode: NormalizedLayout['mode'] =
 		layout.layoutMode === 'GRID'

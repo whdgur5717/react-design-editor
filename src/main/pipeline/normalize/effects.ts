@@ -1,5 +1,5 @@
 import type { ExtractedEffectProps } from '../extract/effects';
-import { variableAliasSchema } from '../shared/schemas';
+import { toTokenizedValue } from './utils';
 import type {
 	NormalizedBlurEffect,
 	NormalizedColor,
@@ -9,7 +9,6 @@ import type {
 	NormalizedShadowEffect,
 	NormalizedTextureEffect,
 	NormalizedValue,
-	TokenizedValue,
 } from './types';
 
 const toChannel = (value: number) => Math.round(value * 255);
@@ -34,21 +33,13 @@ const normalizeColor = (color: RGB, opacity: number): NormalizedColor => {
 const normalizeRgbaColor = (color: RGBA): NormalizedColor =>
 	normalizeColor({ r: color.r, g: color.g, b: color.b }, color.a);
 
-const getAlias = (value: unknown) => {
-	const parsed = variableAliasSchema.safeParse(value);
-	return parsed.success ? parsed.data : null;
-};
-
-const toTokenizedValue = <T>(value: T, alias?: VariableAlias | null): TokenizedValue<T> =>
-	alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-
 const toShadow = (effect: DropShadowEffect | InnerShadowEffect): NormalizedShadowEffect => {
 	const boundVariables = effect.boundVariables;
-	const colorAlias = getAlias(boundVariables?.color);
-	const offsetXAlias = getAlias(boundVariables?.offsetX);
-	const offsetYAlias = getAlias(boundVariables?.offsetY);
-	const radiusAlias = getAlias(boundVariables?.radius);
-	const spreadAlias = getAlias(boundVariables?.spread);
+	const colorAlias = boundVariables?.color;
+	const offsetXAlias = boundVariables?.offsetX;
+	const offsetYAlias = boundVariables?.offsetY;
+	const radiusAlias = boundVariables?.radius;
+	const spreadAlias = boundVariables?.spread;
 	const spreadValue = typeof effect.spread === 'number' ? effect.spread : null;
 
 	return {
@@ -68,7 +59,7 @@ const toShadow = (effect: DropShadowEffect | InnerShadowEffect): NormalizedShado
 };
 
 const toBlur = (effect: BlurEffect): NormalizedBlurEffect => {
-	const radiusAlias = getAlias(effect.boundVariables?.radius);
+	const radiusAlias = effect.boundVariables?.radius;
 
 	return {
 		type: 'blur',
