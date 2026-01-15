@@ -1,7 +1,5 @@
-import type { ExtractedBoundVariables, ExtractedStyle } from '../pipeline/extract/types';
-import { extractStyle } from '../pipeline/extract/style';
 import type { ExtractedTextProps } from '../pipeline/extract/text';
-import { normalizeStyle } from '../pipeline/normalize/style';
+import type { ExtractedBoundVariables, ExtractedStyle } from '../pipeline/extract/types';
 import type {
 	NormalizedEffect,
 	NormalizedFill,
@@ -13,8 +11,6 @@ import type {
 	TokenRef,
 	TokenizedValue,
 } from '../pipeline/normalize/types';
-import { tokenizedValueSchema, variableAliasSchema } from '../pipeline/shared/schemas';
-import { VariableRegistry } from '../pipeline/variables/registry';
 import type {
 	AssetRef,
 	BaseNodeProps,
@@ -26,6 +22,10 @@ import type {
 	OutputNormalizedStyle,
 	TokenRefMapping,
 } from './type';
+import { styleExtractor } from '../pipeline/extract/style';
+import { styleNormalizer } from '../pipeline/normalize/style';
+import { tokenizedValueSchema, variableAliasSchema } from '../pipeline/shared/schemas';
+import { VariableRegistry } from '../pipeline/variables/registry';
 
 type BuiltNodeData = {
 	props: BaseNodeProps;
@@ -38,7 +38,11 @@ type TextSegment = NonNullable<ExtractedTextProps['characters']>[number];
 
 export type BoundVariablesRecord = Record<string, unknown> | undefined;
 
-const variableRegistry = new VariableRegistry();
+type TokenRegistryPort = {
+	resolveAlias: (alias: VariableAlias) => Promise<TokenRef | null>;
+};
+
+const variableRegistry: TokenRegistryPort = new VariableRegistry();
 
 const unwrapTokenized = <T>(value: TokenizedValue<T>): T => {
 	const parsed = tokenizedValueSchema.safeParse(value);
@@ -101,12 +105,15 @@ const getAliasFromArray = (record: unknown, index: number): VariableAlias | null
 	return parsed.success ? parsed.data : null;
 };
 
-const buildTokenRefs = async (boundVariables?: ExtractedBoundVariables): Promise<TokenRefMapping[] | undefined> => {
+const buildTokenRefs = async (
+	boundVariables?: ExtractedBoundVariables,
+	registry: TokenRegistryPort = variableRegistry,
+): Promise<TokenRefMapping[] | undefined> => {
 	if (!boundVariables || boundVariables.ids.length === 0) return undefined;
 	const refs = await Promise.all(
 		boundVariables.ids.map(async (id) => {
 			const alias: VariableAlias = { type: 'VARIABLE_ALIAS', id };
-			const resolved = await variableRegistry.resolveAlias(alias);
+			const resolved = await registry.resolveAlias(alias);
 			return {
 				variableId: id,
 				token: resolved ?? { id },
@@ -474,7 +481,7 @@ const enrichStyle = (
 	node: SceneNode,
 	tokenRefs: Map<string, TokenRef>,
 ): OutputNormalizedStyle => {
-	const nodeBoundVariables = extractedStyle.nodeBoundVariables as BoundVariablesRecord;
+	const nodeBoundVariables = extractedStyle.nodeBoundVariables;
 	const fillsAliases = nodeBoundVariables?.['fills'];
 	const effectsAliases = nodeBoundVariables?.['effects'];
 	const strokeAliases = nodeBoundVariables?.['strokes'];
@@ -533,24 +540,36 @@ const enrichStyle = (
 	};
 };
 
-export const buildNodeData = async (node: SceneNode): Promise<BuiltNodeData> => {
-	const extractedStyle = extractStyle(node);
-	const normalizedStyle = normalizeStyle(extractedStyle);
-	const tokensRef = await buildTokenRefs(extractedStyle.boundVariables);
-	const tokenRefMap = buildTokenRefMap(tokensRef);
-	const style = enrichStyle(normalizedStyle, extractedStyle, node, tokenRefMap);
+export class NodeDataBuilder {
+	constructor(
+		private readonly extractor = styleExtractor,
+		private readonly normalizer = styleNormalizer,
+		private readonly tokenRegistry: TokenRegistryPort = variableRegistry,
+	) {}
 
-	const props: BaseNodeProps = {
-		id: node.id,
-		name: node.name,
-		style,
-		boundVariables: extractedStyle.boundVariables,
-	};
+	async build(node: SceneNode): Promise<BuiltNodeData> {
+		const extractedStyle = this.extractor.extract(node);
+		const normalizedStyle = this.normalizer.normalize(extractedStyle);
+		const tokensRef = await buildTokenRefs(extractedStyle.boundVariables, this.tokenRegistry);
+		const tokenRefMap = buildTokenRefMap(tokensRef);
+		const style = enrichStyle(normalizedStyle, extractedStyle, node, tokenRefMap);
 
-	return {
-		props,
-		instanceRef: buildInstanceRef(node),
-		tokensRef,
-		assets: buildAssetRefs(normalizedStyle),
-	};
-};
+		const props: BaseNodeProps = {
+			id: node.id,
+			name: node.name,
+			style,
+			boundVariables: extractedStyle.boundVariables,
+		};
+
+		return {
+			props,
+			instanceRef: buildInstanceRef(node),
+			tokensRef,
+			assets: buildAssetRefs(normalizedStyle),
+		};
+	}
+}
+
+export const nodeDataBuilder = new NodeDataBuilder();
+
+export const buildNodeData = async (node: SceneNode): Promise<BuiltNodeData> => nodeDataBuilder.build(node);

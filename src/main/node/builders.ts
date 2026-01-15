@@ -22,7 +22,7 @@ export const buildFrameNode = async (node: FrameNode): Promise<FrameReactNode> =
 export const buildInstanceNode = async (node: InstanceNode): Promise<InstanceReactNode> => {
 	const data = await buildNodeData(node);
 	const tokenRefMap = buildTokenRefMap(data.tokensRef);
-	const nodeBoundVariables = node.boundVariables as Record<string, unknown> | undefined;
+	const nodeBoundVariables = node.boundVariables;
 	const componentProperties = buildComponentProperties(node, nodeBoundVariables, tokenRefMap);
 
 	return {
