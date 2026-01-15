@@ -1,5 +1,5 @@
-import type { ExtractedFillProps } from '../extract/fills';
 import { toTokenizedValue } from './utils';
+import type { ExtractedFillProps } from '../extract/fills';
 import type {
 	NormalizedColor,
 	NormalizedFill,
@@ -10,171 +10,188 @@ import type {
 	NormalizedValue,
 } from './types';
 
-const toChannel = (value: number) => Math.round(value * 255);
+export class PaintNormalizer {
+	normalizeFills(props: ExtractedFillProps): NormalizedValue<NormalizedFill[]> {
+		const extracted = props.fills;
+		if (!extracted) {
+			return { type: 'uniform', value: [] };
+		}
 
-const toHex = (value: number) => toChannel(value).toString(16).padStart(2, '0');
+		if (extracted.type === 'range') {
+			return {
+				type: 'range-based',
+				segments: extracted.segments.map((seg) => ({
+					start: seg.start,
+					end: seg.end,
+					value: this.normalizePaints(seg.value),
+				})),
+			} satisfies NormalizedValue<NormalizedFill[]>;
+		}
 
-const rgbToHex = (color: RGB) => `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`;
+		return { type: 'uniform', value: this.normalizePaints(extracted.value) };
+	}
 
-const normalizeColor = (color: RGB, opacity: number): NormalizedColor => {
-	const red = toChannel(color.r);
-	const green = toChannel(color.g);
-	const blue = toChannel(color.b);
-	const alpha = opacity;
+	normalizePaints(paints: ReadonlyArray<Paint> | undefined): NormalizedFill[] {
+		if (!paints || !Array.isArray(paints)) {
+			return [];
+		}
 
-	return {
-		hex: rgbToHex(color),
-		rgb: `rgb(${red}, ${green}, ${blue})`,
-		rgba: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
-		opacity: alpha,
-	};
-};
+		const normalized: NormalizedFill[] = [];
+		for (let index = 0; index < paints.length; index += 1) {
+			const paint = paints[index];
+			if (paint.visible === false) continue;
+			const normalizedPaint = this.normalizePaint(paint);
+			if (normalizedPaint) normalized.push(normalizedPaint);
+		}
 
-const normalizeRgbaColor = (color: RGBA, opacity: number): NormalizedColor =>
-	normalizeColor({ r: color.r, g: color.g, b: color.b }, opacity);
+		return normalized;
+	}
 
-const normalizeSolid = (paint: SolidPaint): NormalizedSolidFill => {
-	const opacity = paint.opacity ?? 1;
-	const color = normalizeColor(paint.color, opacity);
-	const alias = paint.boundVariables?.color;
-	const normalized: NormalizedSolidFill = {
-		type: 'solid',
-		color: toTokenizedValue(color, alias),
-	};
+	private normalizePaint(paint: Paint): NormalizedFill | null {
+		if (paint.type === 'SOLID') {
+			return this.normalizeSolid(paint);
+		}
 
-	if (paint.blendMode) normalized.blendMode = paint.blendMode;
-	if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
+		if (paint.type === 'GRADIENT_LINEAR') {
+			return this.normalizeGradient(paint, 'linear');
+		}
 
-	return normalized;
-};
+		if (paint.type === 'GRADIENT_RADIAL') {
+			return this.normalizeGradient(paint, 'radial');
+		}
 
-const calculateGradientAngle = (transform: Transform): number => {
-	const [[a], [c]] = transform;
-	return Math.atan2(c, a) * (180 / Math.PI);
-};
+		if (paint.type === 'GRADIENT_ANGULAR') {
+			return this.normalizeGradient(paint, 'angular');
+		}
 
-const normalizeGradientStops = (paint: GradientPaint): NormalizedGradientStop[] => {
-	const paintOpacity = paint.opacity ?? 1;
-	return paint.gradientStops.map((stop) => {
-		const opacity = stop.color.a * paintOpacity;
-		const color = normalizeRgbaColor(stop.color, opacity);
-		const alias = stop.boundVariables?.color;
-		return {
-			position: stop.position,
+		if (paint.type === 'GRADIENT_DIAMOND') {
+			return this.normalizeGradient(paint, 'diamond');
+		}
+
+		if (paint.type === 'IMAGE') {
+			return this.normalizeImage(paint, paint.imageHash ?? null, paint.imageTransform ?? null);
+		}
+
+		if (paint.type === 'VIDEO') {
+			return this.normalizeImage(paint, paint.videoHash ?? null, paint.videoTransform ?? null);
+		}
+
+		return null;
+	}
+
+	private normalizeSolid(paint: SolidPaint): NormalizedSolidFill {
+		const opacity = paint.opacity ?? 1;
+		const color = this.normalizeColor(paint.color, opacity);
+		const alias = paint.boundVariables?.color;
+		const normalized: NormalizedSolidFill = {
+			type: 'solid',
 			color: toTokenizedValue(color, alias),
 		};
-	});
-};
 
-const normalizeGradient = (
-	paint: GradientPaint,
-	gradientType: NormalizedGradientFill['gradientType'],
-): NormalizedGradientFill => {
-	const normalized: NormalizedGradientFill = {
-		type: 'gradient',
-		gradientType,
-		stops: normalizeGradientStops(paint),
-		angle: calculateGradientAngle(paint.gradientTransform),
-		transform: paint.gradientTransform,
-	};
+		if (paint.blendMode) normalized.blendMode = paint.blendMode;
+		if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
 
-	if (paint.blendMode) normalized.blendMode = paint.blendMode;
-	if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
-
-	return normalized;
-};
-
-const normalizeFilters = (filters?: ImageFilters): NormalizedImageFill['filters'] => ({
-	exposure: filters?.exposure ?? null,
-	contrast: filters?.contrast ?? null,
-	saturation: filters?.saturation ?? null,
-	temperature: filters?.temperature ?? null,
-	tint: filters?.tint ?? null,
-	highlights: filters?.highlights ?? null,
-	shadows: filters?.shadows ?? null,
-});
-
-const normalizeImage = (
-	paint: ImagePaint | VideoPaint,
-	imageHash: string | null,
-	imageTransform: Transform | null,
-): NormalizedImageFill => {
-	const normalized: NormalizedImageFill = {
-		type: 'image',
-		imageHash,
-		scaleMode: paint.scaleMode,
-		imageTransform,
-		scalingFactor: paint.scalingFactor ?? null,
-		rotation: paint.rotation ?? null,
-		filters: normalizeFilters(paint.filters),
-	};
-
-	if (paint.blendMode) normalized.blendMode = paint.blendMode;
-	if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
-
-	return normalized;
-};
-
-const normalizePaint = (paint: Paint): NormalizedFill | null => {
-	if (paint.type === 'SOLID') {
-		return normalizeSolid(paint);
+		return normalized;
 	}
 
-	if (paint.type === 'GRADIENT_LINEAR') {
-		return normalizeGradient(paint, 'linear');
+	private normalizeGradientStops(paint: GradientPaint): NormalizedGradientStop[] {
+		const paintOpacity = paint.opacity ?? 1;
+		return paint.gradientStops.map((stop) => {
+			const opacity = stop.color.a * paintOpacity;
+			const color = this.normalizeRgbaColor(stop.color, opacity);
+			const alias = stop.boundVariables?.color;
+			return {
+				position: stop.position,
+				color: toTokenizedValue(color, alias),
+			};
+		});
 	}
 
-	if (paint.type === 'GRADIENT_RADIAL') {
-		return normalizeGradient(paint, 'radial');
+	private normalizeGradient(
+		paint: GradientPaint,
+		gradientType: NormalizedGradientFill['gradientType'],
+	): NormalizedGradientFill {
+		const normalized: NormalizedGradientFill = {
+			type: 'gradient',
+			gradientType,
+			stops: this.normalizeGradientStops(paint),
+			angle: this.calculateGradientAngle(paint.gradientTransform),
+			transform: paint.gradientTransform,
+		};
+
+		if (paint.blendMode) normalized.blendMode = paint.blendMode;
+		if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
+
+		return normalized;
 	}
 
-	if (paint.type === 'GRADIENT_ANGULAR') {
-		return normalizeGradient(paint, 'angular');
+	private normalizeFilters(filters?: ImageFilters): NormalizedImageFill['filters'] {
+		return {
+			exposure: filters?.exposure ?? null,
+			contrast: filters?.contrast ?? null,
+			saturation: filters?.saturation ?? null,
+			temperature: filters?.temperature ?? null,
+			tint: filters?.tint ?? null,
+			highlights: filters?.highlights ?? null,
+			shadows: filters?.shadows ?? null,
+		};
 	}
 
-	if (paint.type === 'GRADIENT_DIAMOND') {
-		return normalizeGradient(paint, 'diamond');
+	private normalizeImage(
+		paint: ImagePaint | VideoPaint,
+		imageHash: string | null,
+		imageTransform: Transform | null,
+	): NormalizedImageFill {
+		const normalized: NormalizedImageFill = {
+			type: 'image',
+			imageHash,
+			scaleMode: paint.scaleMode,
+			imageTransform,
+			scalingFactor: paint.scalingFactor ?? null,
+			rotation: paint.rotation ?? null,
+			filters: this.normalizeFilters(paint.filters),
+		};
+
+		if (paint.blendMode) normalized.blendMode = paint.blendMode;
+		if (typeof paint.visible === 'boolean') normalized.visible = paint.visible;
+
+		return normalized;
 	}
 
-	if (paint.type === 'IMAGE') {
-		return normalizeImage(paint, paint.imageHash ?? null, paint.imageTransform ?? null);
+	private normalizeColor(color: RGB, opacity: number): NormalizedColor {
+		const red = this.toChannel(color.r);
+		const green = this.toChannel(color.g);
+		const blue = this.toChannel(color.b);
+		const alpha = opacity;
+
+		return {
+			hex: this.rgbToHex(color),
+			rgb: `rgb(${red}, ${green}, ${blue})`,
+			rgba: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
+			opacity: alpha,
+		};
 	}
 
-	if (paint.type === 'VIDEO') {
-		return normalizeImage(paint, paint.videoHash ?? null, paint.videoTransform ?? null);
+	private normalizeRgbaColor(color: RGBA, opacity: number): NormalizedColor {
+		return this.normalizeColor({ r: color.r, g: color.g, b: color.b }, opacity);
 	}
 
-	return null;
-};
-
-export const normalizePaints = (paints: ReadonlyArray<Paint> | undefined): NormalizedFill[] => {
-	if (!paints || !Array.isArray(paints)) {
-		return [];
+	private calculateGradientAngle(transform: Transform): number {
+		const [[a], [c]] = transform;
+		return Math.atan2(c, a) * (180 / Math.PI);
 	}
 
-	const normalized: NormalizedFill[] = [];
-	for (let index = 0; index < paints.length; index += 1) {
-		const paint = paints[index];
-		if (paint.visible === false) continue;
-		const normalizedPaint = normalizePaint(paint);
-		if (normalizedPaint) normalized.push(normalizedPaint);
+	private toChannel(value: number): number {
+		return Math.round(value * 255);
 	}
 
-	return normalized;
-};
-
-export const normalizeFills = (
-	props: ExtractedFillProps,
-	nodeType?: string,
-): NormalizedValue<NormalizedFill[]> => {
-	const fills = props.fills;
-
-	if (fills === figma.mixed) {
-		if (nodeType !== 'TEXT') {
-			console.warn('Unexpected mixed fills on non-TEXT node');
-		}
-		return { type: 'mixed', values: [] };
+	private toHex(value: number): string {
+		return this.toChannel(value).toString(16).padStart(2, '0');
 	}
 
-	return { type: 'uniform', value: normalizePaints(fills) };
-};
+	private rgbToHex(color: RGB): string {
+		return `#${this.toHex(color.r)}${this.toHex(color.g)}${this.toHex(color.b)}`;
+	}
+}
+
+export const paintNormalizer = new PaintNormalizer();

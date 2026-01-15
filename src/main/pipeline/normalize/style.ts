@@ -1,15 +1,29 @@
-import { normalizeEffects } from './effects';
-import { normalizeFills } from './fills';
-import { normalizeLayout } from './layout';
-import { normalizeStroke } from './stroke';
-import { normalizeText } from './text';
 import type { ExtractedStyle } from '../extract/types';
 import type { NormalizedStyle } from './types';
+import { effectsNormalizer } from './effects';
+import { paintNormalizer } from './fills';
+import { layoutNormalizer } from './layout';
+import { strokeNormalizer } from './stroke';
+import { textNormalizer } from './text';
 
-export const normalizeStyle = (style: ExtractedStyle): NormalizedStyle => ({
-	fills: normalizeFills(style.fills, style.nodeType),
-	effects: normalizeEffects(style.effects),
-	layout: normalizeLayout(style.layout, style.nodeBoundVariables),
-	text: normalizeText(style.text, style.nodeBoundVariables),
-	stroke: normalizeStroke(style.stroke, style.nodeBoundVariables),
-});
+export class StyleNormalizer {
+	constructor(
+		private readonly paint = paintNormalizer,
+		private readonly effects = effectsNormalizer,
+		private readonly layout = layoutNormalizer,
+		private readonly text = textNormalizer,
+		private readonly stroke = strokeNormalizer,
+	) {}
+
+	normalize(style: ExtractedStyle): NormalizedStyle {
+		return {
+			fills: this.paint.normalizeFills(style.fills),
+			effects: this.effects.normalizeEffects(style.effects),
+			layout: this.layout.normalizeLayout(style.layout, style.nodeBoundVariables),
+			text: this.text.normalizeText(style.text, style.nodeBoundVariables),
+			stroke: this.stroke.normalizeStroke(style.stroke, style.nodeBoundVariables),
+		};
+	}
+}
+
+export const styleNormalizer = new StyleNormalizer();

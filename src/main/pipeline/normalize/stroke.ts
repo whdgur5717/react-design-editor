@@ -1,143 +1,127 @@
 import { isNumber } from 'es-toolkit/compat';
-import { normalizePaints } from './fills';
+import { paintNormalizer } from './fills';
 import { toTokenizedValue } from './utils';
 import type { ExtractedStrokeProps } from '../extract/stroke';
+import type { ExtractedStrokeCap, ExtractedStrokeJoin } from '../extract/value-types';
 import type { NormalizedCorner, NormalizedStroke, NormalizedStrokeWeight, NormalizedValue } from './types';
 
-const toNumber = (value: number | undefined): number => (isNumber(value) ? value : 0);
+export class StrokeNormalizer {
+	normalizeStroke(
+		props: ExtractedStrokeProps,
+		boundVariables?: SceneNode['boundVariables'],
+	): NormalizedStroke | null {
+		const paints = paintNormalizer.normalizePaints(props.strokes?.value);
+		if (paints.length === 0) return null;
 
-const buildStrokeWeight = (
-	stroke: ExtractedStrokeProps,
-	boundVariables?: SceneNode['boundVariables'],
-): NormalizedStrokeWeight => {
-	const weightAlias = boundVariables?.strokeWeight;
-	const topAlias = boundVariables?.strokeTopWeight;
-	const rightAlias = boundVariables?.strokeRightWeight;
-	const bottomAlias = boundVariables?.strokeBottomWeight;
-	const leftAlias = boundVariables?.strokeLeftWeight;
+		const normalized: NormalizedStroke = {
+			paints: { type: 'uniform', value: paints },
+			weight: this.buildStrokeWeight(props, boundVariables),
+			align: props.strokeAlign?.value ?? 'CENTER',
+			cap: this.normalizeCap(props.strokeCap),
+			join: this.normalizeJoin(props.strokeJoin),
+			dashPattern: props.dashPattern?.value ?? [],
+			miterLimit: props.strokeMiterLimit?.value ?? 0,
+		};
 
-	const weight = stroke.strokeWeight;
-	const hasIndividual =
-		isNumber(stroke.strokeTopWeight) &&
-		isNumber(stroke.strokeRightWeight) &&
-		isNumber(stroke.strokeBottomWeight) &&
-		isNumber(stroke.strokeLeftWeight);
+		const corner = this.buildCorner(props, boundVariables);
+		if (corner) normalized.corner = corner;
+		if (props.vectorNetwork?.value) normalized.vectorNetwork = props.vectorNetwork.value;
 
-	if (weight === figma.mixed || !isNumber(weight)) {
-		if (hasIndividual) {
+		return normalized;
+	}
+
+	private buildStrokeWeight(
+		stroke: ExtractedStrokeProps,
+		boundVariables?: SceneNode['boundVariables'],
+	): NormalizedStrokeWeight {
+		const extracted = stroke.strokeWeight;
+		if (!extracted) {
+			return { type: 'uniform', value: toTokenizedValue(0, boundVariables?.strokeWeight) };
+		}
+
+		if (extracted.type === 'side') {
 			return {
 				type: 'individual',
-				top: toTokenizedValue(toNumber(stroke.strokeTopWeight), topAlias),
-				right: toTokenizedValue(toNumber(stroke.strokeRightWeight), rightAlias),
-				bottom: toTokenizedValue(toNumber(stroke.strokeBottomWeight), bottomAlias),
-				left: toTokenizedValue(toNumber(stroke.strokeLeftWeight), leftAlias),
+				top: toTokenizedValue(extracted.top, boundVariables?.strokeTopWeight),
+				right: toTokenizedValue(extracted.right, boundVariables?.strokeRightWeight),
+				bottom: toTokenizedValue(extracted.bottom, boundVariables?.strokeBottomWeight),
+				left: toTokenizedValue(extracted.left, boundVariables?.strokeLeftWeight),
 			};
 		}
-		return { type: 'uniform', value: toTokenizedValue(0, weightAlias) };
+
+		return { type: 'uniform', value: toTokenizedValue(extracted.value, boundVariables?.strokeWeight) };
 	}
 
-	return { type: 'uniform', value: toTokenizedValue(weight, weightAlias) };
-};
+	private buildCorner(
+		stroke: ExtractedStrokeProps,
+		boundVariables?: SceneNode['boundVariables'],
+	): NormalizedCorner | null {
+		const extracted = stroke.cornerRadius;
+		if (!extracted) return null;
 
-const buildCorner = (
-	stroke: ExtractedStrokeProps,
-	boundVariables?: SceneNode['boundVariables'],
-): NormalizedCorner | null => {
-	const smoothing = isNumber(stroke.cornerSmoothing) ? stroke.cornerSmoothing : 0;
-	const topLeftAlias = boundVariables?.topLeftRadius;
-	const topRightAlias = boundVariables?.topRightRadius;
-	const bottomRightAlias = boundVariables?.bottomRightRadius;
-	const bottomLeftAlias = boundVariables?.bottomLeftRadius;
-	const uniformAlias = topLeftAlias ?? topRightAlias ?? bottomRightAlias ?? bottomLeftAlias;
+		const smoothing = isNumber(stroke.cornerSmoothing?.value) ? stroke.cornerSmoothing.value : 0;
+		const topLeftAlias = boundVariables?.topLeftRadius;
+		const topRightAlias = boundVariables?.topRightRadius;
+		const bottomRightAlias = boundVariables?.bottomRightRadius;
+		const bottomLeftAlias = boundVariables?.bottomLeftRadius;
+		const uniformAlias = topLeftAlias ?? topRightAlias ?? bottomRightAlias ?? bottomLeftAlias;
 
-	if (stroke.cornerRadius === figma.mixed) {
-		const values = [
-			toTokenizedValue(toNumber(stroke.topLeftRadius), topLeftAlias),
-			toTokenizedValue(toNumber(stroke.topRightRadius), topRightAlias),
-			toTokenizedValue(toNumber(stroke.bottomRightRadius), bottomRightAlias),
-			toTokenizedValue(toNumber(stroke.bottomLeftRadius), bottomLeftAlias),
-		];
+		if (extracted.type === 'corner') {
+			const values = [
+				toTokenizedValue(extracted.topLeft, topLeftAlias),
+				toTokenizedValue(extracted.topRight, topRightAlias),
+				toTokenizedValue(extracted.bottomRight, bottomRightAlias),
+				toTokenizedValue(extracted.bottomLeft, bottomLeftAlias),
+			];
+			return {
+				radius: { type: 'mixed', values },
+				smoothing,
+			};
+		}
+
 		return {
-			radius: { type: 'mixed', values },
+			radius: { type: 'uniform', value: toTokenizedValue(extracted.value, uniformAlias) },
 			smoothing,
 		};
 	}
 
-	if (isNumber(stroke.cornerRadius)) {
-		return {
-			radius: { type: 'uniform', value: toTokenizedValue(stroke.cornerRadius, uniformAlias) },
-			smoothing,
-		};
+	private normalizeCap(extracted: ExtractedStrokeCap | undefined): NormalizedValue<StrokeCap> {
+		if (!extracted) {
+			return { type: 'uniform', value: 'NONE' };
+		}
+
+		if (extracted.type === 'vertex') {
+			const uniqueValues = Array.from(new Set(extracted.vertices.map((v) => v.value)));
+			if (uniqueValues.length === 1 && uniqueValues[0]) {
+				return { type: 'uniform', value: uniqueValues[0] };
+			}
+			if (uniqueValues.length > 0) {
+				return { type: 'mixed', values: uniqueValues.filter((v): v is StrokeCap => v !== undefined) };
+			}
+			return { type: 'uniform', value: 'NONE' };
+		}
+
+		return { type: 'uniform', value: extracted.value };
 	}
 
-	const hasIndividual =
-		isNumber(stroke.topLeftRadius) ||
-		isNumber(stroke.topRightRadius) ||
-		isNumber(stroke.bottomRightRadius) ||
-		isNumber(stroke.bottomLeftRadius);
+	private normalizeJoin(extracted: ExtractedStrokeJoin | undefined): NormalizedValue<StrokeJoin> {
+		if (!extracted) {
+			return { type: 'uniform', value: 'MITER' };
+		}
 
-	if (hasIndividual) {
-		const values = [
-			toTokenizedValue(toNumber(stroke.topLeftRadius), topLeftAlias),
-			toTokenizedValue(toNumber(stroke.topRightRadius), topRightAlias),
-			toTokenizedValue(toNumber(stroke.bottomRightRadius), bottomRightAlias),
-			toTokenizedValue(toNumber(stroke.bottomLeftRadius), bottomLeftAlias),
-		];
-		return {
-			radius: { type: 'mixed', values },
-			smoothing,
-		};
+		if (extracted.type === 'vertex') {
+			const uniqueValues = Array.from(new Set(extracted.vertices.map((v) => v.value)));
+			if (uniqueValues.length === 1 && uniqueValues[0]) {
+				return { type: 'uniform', value: uniqueValues[0] };
+			}
+			if (uniqueValues.length > 0) {
+				return { type: 'mixed', values: uniqueValues.filter((v): v is StrokeJoin => v !== undefined) };
+			}
+			return { type: 'uniform', value: 'MITER' };
+		}
+
+		return { type: 'uniform', value: extracted.value };
 	}
+}
 
-	return null;
-};
-
-const normalizeCap = (cap: StrokeCap | PluginAPI['mixed'] | undefined): NormalizedValue<StrokeCap> => {
-	if (cap === figma.mixed) {
-		return {
-			type: 'mixed',
-			values: [
-				'NONE',
-				'ROUND',
-				'SQUARE',
-				'ARROW_LINES',
-				'ARROW_EQUILATERAL',
-				'DIAMOND_FILLED',
-				'TRIANGLE_FILLED',
-				'CIRCLE_FILLED',
-			],
-		};
-	}
-	return { type: 'uniform', value: cap ?? 'NONE' };
-};
-
-const normalizeJoin = (join: StrokeJoin | PluginAPI['mixed'] | undefined): NormalizedValue<StrokeJoin> => {
-	if (join === figma.mixed) {
-		return { type: 'mixed', values: ['MITER', 'BEVEL', 'ROUND'] as const };
-	}
-	return { type: 'uniform', value: join ?? 'MITER' };
-};
-
-export const normalizeStroke = (
-	props: ExtractedStrokeProps,
-	boundVariables?: SceneNode['boundVariables'],
-): NormalizedStroke | null => {
-	const paints = normalizePaints(props.strokes);
-	if (paints.length === 0) return null;
-
-	const normalized: NormalizedStroke = {
-		paints: { type: 'uniform', value: paints },
-		weight: buildStrokeWeight(props, boundVariables),
-		align: props.strokeAlign ?? 'CENTER',
-		cap: normalizeCap(props.strokeCap),
-		join: normalizeJoin(props.strokeJoin),
-		dashPattern: props.dashPattern ?? [],
-		miterLimit: props.strokeMiterLimit ?? 0,
-	};
-
-	const corner = buildCorner(props, boundVariables);
-	if (corner) normalized.corner = corner;
-	if (props.vectorNetwork) normalized.vectorNetwork = props.vectorNetwork;
-
-	return normalized;
-};
+export const strokeNormalizer = new StrokeNormalizer();
