@@ -31,7 +31,7 @@ const Input = ({
 		width: '100%',
 	};
 
-	const iconStyle = {
+	const iconStyle: React.CSSProperties = {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
