@@ -102,6 +102,7 @@ export interface BaseReactNode<
 	instanceRef?: InstanceRef;
 	tokensRef?: TokenRefMapping[];
 	assets?: AssetRef[];
+	svgFallback?: string;
 }
 
 /*

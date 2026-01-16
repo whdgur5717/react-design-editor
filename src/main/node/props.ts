@@ -26,6 +26,8 @@ import type {
 } from './type';
 import { styleExtractor } from '../pipeline/extract/style';
 import { styleNormalizer } from '../pipeline/normalize/style';
+import { cssCompatibilityChecker } from '../pipeline/compatibility';
+import { exportSvg } from '../pipeline/export';
 import { tokenizedValueSchema, variableAliasSchema } from '../pipeline/shared/schemas';
 import { VariableRegistry } from '../pipeline/variables/registry';
 
@@ -34,6 +36,7 @@ type BuiltNodeData = {
 	instanceRef?: InstanceRef;
 	tokensRef?: TokenRefMapping[];
 	assets?: AssetRef[];
+	svgFallback?: string;
 };
 
 type TextSegment = NonNullable<ExtractedTextProps['characters']>[number];
@@ -567,6 +570,16 @@ export class NodeDataBuilder {
 
 	async build(node: SceneNode): Promise<BuiltNodeData> {
 		const extractedStyle = this.extractor.extract(node);
+		const compatibility = cssCompatibilityChecker.check(extractedStyle);
+
+		if (!compatibility.compatible) {
+			const svg = await exportSvg(node);
+			return {
+				props: { id: node.id, name: node.name },
+				svgFallback: svg,
+			};
+		}
+
 		const normalizedStyle = this.normalizer.normalize(extractedStyle);
 		const tokensRef = await buildTokenRefs(extractedStyle.boundVariables, this.tokenRegistry);
 		const tokenRefMap = buildTokenRefMap(tokensRef);
