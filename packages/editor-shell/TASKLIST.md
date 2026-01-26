@@ -134,6 +134,7 @@
 **진행 중**: Phase 4 (Codegen) - 기본 기능 완료, 개선 사항 남음
 
 **미구현 (Phase 2-4 내)**:
+
 - 스냅/가이드라인
 - aspect ratio, min/max 크기 제약
 - 별도 Component 라이브러리 패널

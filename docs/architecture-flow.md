@@ -249,34 +249,34 @@ ReactNode
 
 ## 각 단계별 파일 위치
 
-| 단계 | 파일 경로 | 클래스 | 메서드 |
-|------|----------|--------|--------|
-| Entry Point | `src/main/node/index.ts` | `NodeTreeBuilder` | `build()` |
-| Type Builders | `src/main/node/builders.ts` | - | `buildTextNode()`, `buildFrameNode()`, etc. |
-| Node Data Building | `src/main/node/props.ts` | `NodeDataBuilder` | `build()` |
-| Extract | `src/main/pipeline/extract/style.ts` | `StyleExtractor` | `extract()` |
-| Extract - Fills | `src/main/pipeline/extract/fills.ts` | `FillExtractor` | `extract()` |
-| Extract - Effects | `src/main/pipeline/extract/effects.ts` | `EffectsExtractor` | `extract()` |
-| Extract - Layout | `src/main/pipeline/extract/layout.ts` | `LayoutExtractor` | `extract()` |
-| Extract - Text | `src/main/pipeline/extract/text.ts` | `TextExtractor` | `extract()` |
-| Extract - Stroke | `src/main/pipeline/extract/stroke.ts` | `StrokeExtractor` | `extract()` |
-| Extract - Value Types | `src/main/pipeline/extract/value-types.ts` | - | 타입 정의 |
-| Normalize | `src/main/pipeline/normalize/style.ts` | `StyleNormalizer` | `normalize()` |
-| Normalize - Fills | `src/main/pipeline/normalize/fills.ts` | `PaintNormalizer` | `normalizeFills()` |
-| Normalize - Effects | `src/main/pipeline/normalize/effects.ts` | `EffectsNormalizer` | `normalizeEffects()` |
-| Normalize - Layout | `src/main/pipeline/normalize/layout.ts` | `LayoutNormalizer` | `normalizeLayout()` |
-| Normalize - Text | `src/main/pipeline/normalize/text.ts` | `TextNormalizer` | `normalizeText()` |
-| Normalize - Stroke | `src/main/pipeline/normalize/stroke.ts` | `StrokeNormalizer` | `normalizeStroke()` |
-| Variable Resolution | `src/main/pipeline/variables/registry.ts` | `VariableRegistry` | `resolveAlias()` |
-| Schema Validation | `src/main/pipeline/shared/schemas.ts` | - | Zod 스키마 정의 |
+| 단계                  | 파일 경로                                  | 클래스              | 메서드                                      |
+| --------------------- | ------------------------------------------ | ------------------- | ------------------------------------------- |
+| Entry Point           | `src/main/node/index.ts`                   | `NodeTreeBuilder`   | `build()`                                   |
+| Type Builders         | `src/main/node/builders.ts`                | -                   | `buildTextNode()`, `buildFrameNode()`, etc. |
+| Node Data Building    | `src/main/node/props.ts`                   | `NodeDataBuilder`   | `build()`                                   |
+| Extract               | `src/main/pipeline/extract/style.ts`       | `StyleExtractor`    | `extract()`                                 |
+| Extract - Fills       | `src/main/pipeline/extract/fills.ts`       | `FillExtractor`     | `extract()`                                 |
+| Extract - Effects     | `src/main/pipeline/extract/effects.ts`     | `EffectsExtractor`  | `extract()`                                 |
+| Extract - Layout      | `src/main/pipeline/extract/layout.ts`      | `LayoutExtractor`   | `extract()`                                 |
+| Extract - Text        | `src/main/pipeline/extract/text.ts`        | `TextExtractor`     | `extract()`                                 |
+| Extract - Stroke      | `src/main/pipeline/extract/stroke.ts`      | `StrokeExtractor`   | `extract()`                                 |
+| Extract - Value Types | `src/main/pipeline/extract/value-types.ts` | -                   | 타입 정의                                   |
+| Normalize             | `src/main/pipeline/normalize/style.ts`     | `StyleNormalizer`   | `normalize()`                               |
+| Normalize - Fills     | `src/main/pipeline/normalize/fills.ts`     | `PaintNormalizer`   | `normalizeFills()`                          |
+| Normalize - Effects   | `src/main/pipeline/normalize/effects.ts`   | `EffectsNormalizer` | `normalizeEffects()`                        |
+| Normalize - Layout    | `src/main/pipeline/normalize/layout.ts`    | `LayoutNormalizer`  | `normalizeLayout()`                         |
+| Normalize - Text      | `src/main/pipeline/normalize/text.ts`      | `TextNormalizer`    | `normalizeText()`                           |
+| Normalize - Stroke    | `src/main/pipeline/normalize/stroke.ts`    | `StrokeNormalizer`  | `normalizeStroke()`                         |
+| Variable Resolution   | `src/main/pipeline/variables/registry.ts`  | `VariableRegistry`  | `resolveAlias()`                            |
+| Schema Validation     | `src/main/pipeline/shared/schemas.ts`      | -                   | Zod 스키마 정의                             |
 
 ## 타입 정의 위치
 
-| 타입 | 파일 경로 |
-|------|----------|
-| ReactNode 관련 | `src/main/node/type.ts` |
-| ExtractedStyle 관련 | `src/main/pipeline/extract/types.ts` |
-| Extracted Value Types | `src/main/pipeline/extract/value-types.ts` |
-| NormalizedStyle 관련 | `src/main/pipeline/normalize/types.ts` |
-| TokenizedValue, TokenRef | `src/main/pipeline/normalize/types.ts` |
-| InstanceRef, AssetRef | `src/main/node/type.ts` |
+| 타입                     | 파일 경로                                  |
+| ------------------------ | ------------------------------------------ |
+| ReactNode 관련           | `src/main/node/type.ts`                    |
+| ExtractedStyle 관련      | `src/main/pipeline/extract/types.ts`       |
+| Extracted Value Types    | `src/main/pipeline/extract/value-types.ts` |
+| NormalizedStyle 관련     | `src/main/pipeline/normalize/types.ts`     |
+| TokenizedValue, TokenRef | `src/main/pipeline/normalize/types.ts`     |
+| InstanceRef, AssetRef    | `src/main/node/type.ts`                    |

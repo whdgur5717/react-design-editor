@@ -7,13 +7,13 @@
 ```ts
 // plugin-api.d.ts
 interface Image {
-	readonly hash: string;
-	getBytesAsync(): Promise<Uint8Array>;
-	getSizeAsync(): Promise<{ width: number; height: number }>;
+	readonly hash: string
+	getBytesAsync(): Promise<Uint8Array>
+	getSizeAsync(): Promise<{ width: number; height: number }>
 }
 
 interface Video {
-	readonly hash: string;
+	readonly hash: string
 }
 ```
 
@@ -25,29 +25,29 @@ interface Video {
 ```ts
 // plugin-api.d.ts (발췌)
 interface ExportSettingsConstraints {
-	readonly type: 'SCALE' | 'WIDTH' | 'HEIGHT';
-	readonly value: number;
+	readonly type: "SCALE" | "WIDTH" | "HEIGHT"
+	readonly value: number
 }
 
 interface ExportSettingsImage {
-	readonly format: 'JPG' | 'PNG';
-	readonly contentsOnly?: boolean;
-	readonly useAbsoluteBounds?: boolean;
-	readonly suffix?: string;
-	readonly constraint?: ExportSettingsConstraints;
-	readonly colorProfile?: 'DOCUMENT' | 'SRGB' | 'DISPLAY_P3_V4';
+	readonly format: "JPG" | "PNG"
+	readonly contentsOnly?: boolean
+	readonly useAbsoluteBounds?: boolean
+	readonly suffix?: string
+	readonly constraint?: ExportSettingsConstraints
+	readonly colorProfile?: "DOCUMENT" | "SRGB" | "DISPLAY_P3_V4"
 }
 
 interface ExportSettingsSVG extends ExportSettingsSVGBase {
-	readonly format: 'SVG';
+	readonly format: "SVG"
 }
 
 interface ExportSettingsPDF {
-	readonly format: 'PDF';
-	readonly contentsOnly?: boolean;
-	readonly useAbsoluteBounds?: boolean;
-	readonly suffix?: string;
-	readonly colorProfile?: 'DOCUMENT' | 'SRGB' | 'DISPLAY_P3_V4';
+	readonly format: "PDF"
+	readonly contentsOnly?: boolean
+	readonly useAbsoluteBounds?: boolean
+	readonly suffix?: string
+	readonly colorProfile?: "DOCUMENT" | "SRGB" | "DISPLAY_P3_V4"
 }
 ```
 

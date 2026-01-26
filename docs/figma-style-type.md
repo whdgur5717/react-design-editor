@@ -50,175 +50,175 @@ interface SolidPaint {
 	/**
 	 * The string literal "SOLID" representing the type of paint this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'SOLID';
+	readonly type: "SOLID"
 	/**
 	 * The color of the paint. This does not have a alpha property, use `opacity` instead.
 	 */
-	readonly color: RGB;
+	readonly color: RGB
 	/**
 	 * Whether the paint is visible. Defaults to true.
 	 */
-	readonly visible?: boolean;
+	readonly visible?: boolean
 	/**
 	 * The opacity of the paint. Must be a value between 0 and 1. Defaults to 1.
 	 */
-	readonly opacity?: number;
+	readonly opacity?: number
 	/**
 	 * Determines how the color of this paint blends with the colors underneath it. Defaults to "NORMAL".
 	 */
-	readonly blendMode?: BlendMode;
+	readonly blendMode?: BlendMode
 	/**
 	 * The variables bound to a particular field on this paint.
 	 */
 	readonly boundVariables?: {
-		[field in VariableBindablePaintField]?: VariableAlias;
-	};
+		[field in VariableBindablePaintField]?: VariableAlias
+	}
 }
 
 interface GradientPaint {
 	/**
 	 * The string literal representing the type of paint this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'GRADIENT_LINEAR' | 'GRADIENT_RADIAL' | 'GRADIENT_ANGULAR' | 'GRADIENT_DIAMOND';
+	readonly type: "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND"
 	/**
 	 * The positioning of the gradient within the layer.
 	 */
-	readonly gradientTransform: Transform;
+	readonly gradientTransform: Transform
 	/**
 	 * Array of colors and their position within the gradient.
 	 */
-	readonly gradientStops: ReadonlyArray<ColorStop>;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly gradientStops: ReadonlyArray<ColorStop>
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 
 interface ImagePaint {
 	/**
 	 * The string literal "IMAGE" representing the type of paint this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'IMAGE';
+	readonly type: "IMAGE"
 	/**
 	 * How the image is positioned and scaled within the layer. Same as in the properties panel.
 	 */
-	readonly scaleMode: 'FILL' | 'FIT' | 'CROP' | 'TILE';
+	readonly scaleMode: "FILL" | "FIT" | "CROP" | "TILE"
 	/**
 	 * The hash (id) of the image used for this paint, if any. Use {@link PluginAPI.getImageByHash} to get the corresponding image object.
 	 */
-	readonly imageHash: string | null;
+	readonly imageHash: string | null
 	/**
 	 * Applicable only for `scaleMode == "CROP"`.
 	 */
-	readonly imageTransform?: Transform;
+	readonly imageTransform?: Transform
 	/**
 	 * Applicable only for `scaleMode == "TILE"` (automatic for other modes).
 	 */
-	readonly scalingFactor?: number;
+	readonly scalingFactor?: number
 	/**
 	 * Applicable only for `scaleMode == "TILE" | "FILL" | "FIT"` (automatic for `scaleMode == "CROP"`). Must be in increments of +90.
 	 */
-	readonly rotation?: number;
+	readonly rotation?: number
 	/**
 	 * The values for the image filter sliders, equivalent to those in the paint picker.
 	 */
-	readonly filters?: ImageFilters;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly filters?: ImageFilters
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 
 interface VideoPaint {
 	/**
 	 * The string literal "VIDEO" representing the type of paint this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'VIDEO';
+	readonly type: "VIDEO"
 	/**
 	 * How the video is positioned and scaled within the layer. Same as in the properties panel.
 	 */
-	readonly scaleMode: 'FILL' | 'FIT' | 'CROP' | 'TILE';
+	readonly scaleMode: "FILL" | "FIT" | "CROP" | "TILE"
 	/**
 	 * The hash (id) of the video used for this paint, if any.
 	 */
-	readonly videoHash: string | null;
+	readonly videoHash: string | null
 	/**
 	 * Applicable only for `scaleMode == "CROP"`.
 	 */
-	readonly videoTransform?: Transform;
+	readonly videoTransform?: Transform
 	/**
 	 * Applicable only for `scaleMode == "TILE"` (automatic for other modes).
 	 */
-	readonly scalingFactor?: number;
+	readonly scalingFactor?: number
 	/**
 	 * Applicable only for `scaleMode == "TILE" | "FILL" | "FIT"` (automatic for `scaleMode == "CROP"`). Must be in increments of +90.
 	 */
-	readonly rotation?: number;
+	readonly rotation?: number
 	/**
 	 * The values for the video filter sliders, equivalent to those in the paint picker.
 	 */
-	readonly filters?: ImageFilters;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly filters?: ImageFilters
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 
 interface PatternPaint {
 	/**
 	 * The string literal representing the type of paint this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'PATTERN';
+	readonly type: "PATTERN"
 	/**
 	 * The node id of the source node for the pattern.
 	 */
-	readonly sourceNodeId: string;
+	readonly sourceNodeId: string
 	/**
 	 * The way the pattern is tiled.
 	 */
-	readonly tileType: 'RECTANGULAR' | 'HORIZONTAL_HEXAGONAL' | 'VERTICAL_HEXAGONAL';
+	readonly tileType: "RECTANGULAR" | "HORIZONTAL_HEXAGONAL" | "VERTICAL_HEXAGONAL"
 	/**
 	 * The scaling factor of the pattern.
 	 */
-	readonly scalingFactor: number;
+	readonly scalingFactor: number
 	/**
 	 * The spacing of the pattern.
 	 */
-	readonly spacing: Vector;
+	readonly spacing: Vector
 	/**
 	 * The horizontal alignment of the pattern.
 	 */
-	readonly horizontalAlignment: 'START' | 'CENTER' | 'END';
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly horizontalAlignment: "START" | "CENTER" | "END"
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 
 interface ColorStop {
 	/**
 	 * The position of the stop along the gradient between 0 and 1.
 	 */
-	readonly position: number;
+	readonly position: number
 	/**
 	 * The color value of the gradient stop.
 	 */
-	readonly color: RGBA;
+	readonly color: RGBA
 	/**
 	 * The variable bound to a gradient stop.
 	 */
 	readonly boundVariables?: {
-		[field in VariableBindableColorStopField]?: VariableAlias;
-	};
+		[field in VariableBindableColorStopField]?: VariableAlias
+	}
 }
 
 interface ImageFilters {
-	readonly exposure?: number;
-	readonly contrast?: number;
-	readonly saturation?: number;
-	readonly temperature?: number;
-	readonly tint?: number;
-	readonly highlights?: number;
-	readonly shadows?: number;
+	readonly exposure?: number
+	readonly contrast?: number
+	readonly saturation?: number
+	readonly temperature?: number
+	readonly tint?: number
+	readonly highlights?: number
+	readonly shadows?: number
 }
 
-type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint;
+type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint
 ```
 
 ### 해석 규칙
@@ -235,12 +235,14 @@ type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint
 ### 현재 구현 상태
 
 ⚠️ **구현 완료**:
+
 - ✅ `SolidPaint` → `NormalizedSolidFill`
 - ✅ `GradientPaint` (LINEAR, RADIAL, ANGULAR, DIAMOND) → `NormalizedGradientFill`
 - ✅ `ImagePaint` → `NormalizedImageFill`
 - ✅ `VideoPaint` → `NormalizedImageFill` (ImagePaint와 동일한 구조로 처리)
 
 ⚠️ **미구현** (향후 추가 예정):
+
 - ❌ `PatternPaint` - 패턴 fill은 현재 처리되지 않음 (normalizePaint()에서 null 반환)
 
 미구현된 Paint 타입(PatternPaint)을 가진 노드는 Extract 단계에서는 수집되지만, Normalize 단계에서 null을 반환하여 배열에서 제외됩니다.
@@ -256,66 +258,66 @@ interface MinimalStrokesMixin {
 	/**
 	 * The paints used to fill the area of the shape's strokes.
 	 */
-	strokes: ReadonlyArray<Paint>;
+	strokes: ReadonlyArray<Paint>
 	/**
 	 * The id of the PaintStyle object that `strokes` is linked to.
 	 */
-	strokeStyleId: string;
+	strokeStyleId: string
 	/**
 	 * The thickness of the stroke, in pixels.
 	 *
 	 * Caution: For rectangle nodes or frame-like nodes using different individual stroke weights, this property will return {@link PluginAPI.mixed}.
 	 */
-	strokeWeight: number | PluginAPI['mixed'];
+	strokeWeight: number | PluginAPI["mixed"]
 	/**
 	 * The decoration applied to vertices which have two or more connected segments.
 	 */
-	strokeJoin: StrokeJoin | PluginAPI['mixed'];
+	strokeJoin: StrokeJoin | PluginAPI["mixed"]
 	/**
 	 * The alignment of the stroke with respect to the boundaries of the shape.
 	 */
-	strokeAlign: 'CENTER' | 'INSIDE' | 'OUTSIDE';
+	strokeAlign: "CENTER" | "INSIDE" | "OUTSIDE"
 	/**
 	 * A list of numbers specifying alternating dash and gap lengths, in pixels.
 	 */
-	dashPattern: ReadonlyArray<number>;
+	dashPattern: ReadonlyArray<number>
 	/**
 	 * An array of paths representing the object strokes relative to the node.
 	 */
-	readonly strokeGeometry: VectorPaths;
+	readonly strokeGeometry: VectorPaths
 }
 
 interface IndividualStrokesMixin {
-	strokeTopWeight: number;
-	strokeBottomWeight: number;
-	strokeLeftWeight: number;
-	strokeRightWeight: number;
+	strokeTopWeight: number
+	strokeBottomWeight: number
+	strokeLeftWeight: number
+	strokeRightWeight: number
 }
 
 interface MinimalFillsMixin {
 	/**
 	 * The paints used to fill the area of the shape.
 	 */
-	fills: ReadonlyArray<Paint> | PluginAPI['mixed'];
+	fills: ReadonlyArray<Paint> | PluginAPI["mixed"]
 	/**
 	 * The id of the PaintStyle object that `fills` is linked to.
 	 */
-	fillStyleId: string | PluginAPI['mixed'];
+	fillStyleId: string | PluginAPI["mixed"]
 }
 
 interface GeometryMixin extends MinimalStrokesMixin, MinimalFillsMixin {
 	/**
 	 * The decoration applied to vertices which have only one connected segment.
 	 */
-	strokeCap: StrokeCap | PluginAPI['mixed'];
+	strokeCap: StrokeCap | PluginAPI["mixed"]
 	/**
 	 * The miter limit on the stroke.
 	 */
-	strokeMiterLimit: number;
+	strokeMiterLimit: number
 	/**
 	 * An array of paths representing the object fills relative to the node.
 	 */
-	readonly fillGeometry: VectorPaths;
+	readonly fillGeometry: VectorPaths
 }
 
 interface CornerMixin {
@@ -324,18 +326,18 @@ interface CornerMixin {
 	 *
 	 * This property can return {@link PluginAPI.mixed} if different vertices have different values.properties.
 	 */
-	cornerRadius: number | PluginAPI['mixed'];
+	cornerRadius: number | PluginAPI["mixed"]
 	/**
 	 * A value that lets you control how "smooth" the corners are. Ranges from 0 to 1.
 	 */
-	cornerSmoothing: number;
+	cornerSmoothing: number
 }
 
 interface RectangleCornerMixin {
-	topLeftRadius: number;
-	topRightRadius: number;
-	bottomLeftRadius: number;
-	bottomRightRadius: number;
+	topLeftRadius: number
+	topRightRadius: number
+	bottomLeftRadius: number
+	bottomRightRadius: number
 }
 ```
 
@@ -360,288 +362,288 @@ interface MinimalBlendMixin {
 	/**
 	 * Opacity of the node, as shown in the Layer panel. Must be between 0 and 1.
 	 */
-	opacity: number;
+	opacity: number
 	/**
 	 * Blend mode of this node, as shown in the Layer panel.
 	 */
-	blendMode: BlendMode;
+	blendMode: BlendMode
 }
 
 interface BlendMixin extends MinimalBlendMixin {
 	/**
 	 * Whether this node is a mask. A mask node masks its subsequent siblings.
 	 */
-	isMask: boolean;
+	isMask: boolean
 	/**
 	 * Type of masking to use if this node is a mask.
 	 */
-	maskType: MaskType;
+	maskType: MaskType
 	/**
 	 * Array of effects. See {@link Effect} type.
 	 */
-	effects: ReadonlyArray<Effect>;
+	effects: ReadonlyArray<Effect>
 	/**
 	 * The id of the {@link EffectStyle} object that the properties of this node are linked to.
 	 */
-	effectStyleId: string;
+	effectStyleId: string
 }
 
 interface DropShadowEffect {
 	/**
 	 * The string literal representing the type of effect this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'DROP_SHADOW';
+	readonly type: "DROP_SHADOW"
 	/**
 	 * The color of the shadow, including its opacity.
 	 */
-	readonly color: RGBA;
+	readonly color: RGBA
 	/**
 	 * The offset of the shadow relative to its object.
 	 */
-	readonly offset: Vector;
+	readonly offset: Vector
 	/**
 	 * The blur radius of the shadow.
 	 */
-	readonly radius: number;
+	readonly radius: number
 	/**
 	 * The distance by which to expand (or contract) the shadow.
 	 */
-	readonly spread?: number;
+	readonly spread?: number
 	/**
 	 * Whether this shadow is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * Determines how the color of this shadow blends with the colors underneath it.
 	 */
-	readonly blendMode: BlendMode;
+	readonly blendMode: BlendMode
 	/**
 	 * Whether the drop shadow should show behind translucent or transparent pixels.
 	 */
-	readonly showShadowBehindNode?: boolean;
+	readonly showShadowBehindNode?: boolean
 	/**
 	 * The variables bound to a particular field on this shadow effect.
 	 */
 	readonly boundVariables?: {
-		[field in VariableBindableEffectField]?: VariableAlias;
-	};
+		[field in VariableBindableEffectField]?: VariableAlias
+	}
 }
 
 interface InnerShadowEffect {
 	/**
 	 * The string literal representing the type of effect this is. Always check the `type` before reading other properties.
 	 */
-	readonly type: 'INNER_SHADOW';
+	readonly type: "INNER_SHADOW"
 	/**
 	 * The color of the shadow, including its opacity.
 	 */
-	readonly color: RGBA;
+	readonly color: RGBA
 	/**
 	 * The offset of the shadow relative to its object.
 	 */
-	readonly offset: Vector;
+	readonly offset: Vector
 	/**
 	 * The blur radius of the shadow.
 	 */
-	readonly radius: number;
+	readonly radius: number
 	/**
 	 * The distance by which to expand (or contract) the shadow.
 	 */
-	readonly spread?: number;
+	readonly spread?: number
 	/**
 	 * Whether this shadow is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * Determines how the color of this shadow blends with the colors underneath it.
 	 */
-	readonly blendMode: BlendMode;
+	readonly blendMode: BlendMode
 	/**
 	 * The variables bound to a particular field on this shadow effect.
 	 */
 	readonly boundVariables?: {
-		[field in VariableBindableEffectField]?: VariableAlias;
-	};
+		[field in VariableBindableEffectField]?: VariableAlias
+	}
 }
 
 interface BlurEffectBase {
 	/**
 	 * The string literal representing the type of effect this is.
 	 */
-	readonly type: 'LAYER_BLUR' | 'BACKGROUND_BLUR';
+	readonly type: "LAYER_BLUR" | "BACKGROUND_BLUR"
 	/**
 	 * The radius of the blur.
 	 */
-	readonly radius: number;
+	readonly radius: number
 	/**
 	 * Whether this blur is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * The variable bound to the radius field.
 	 */
 	readonly boundVariables?: {
-		['radius']?: VariableAlias;
-	};
+		["radius"]?: VariableAlias
+	}
 }
 
 interface BlurEffectNormal extends BlurEffectBase {
 	/**
 	 * The string literal representing the blur type.
 	 */
-	readonly blurType: 'NORMAL';
+	readonly blurType: "NORMAL"
 }
 
 interface BlurEffectProgressive extends BlurEffectBase {
 	/**
 	 * The string literal representing the blur type.
 	 */
-	readonly blurType: 'PROGRESSIVE';
+	readonly blurType: "PROGRESSIVE"
 	/**
 	 * Radius of the starting point of the progressive blur.
 	 */
-	readonly startRadius: number;
+	readonly startRadius: number
 	/**
 	 * Position of the starting point of the progressive blur.
 	 */
-	readonly startOffset: Vector;
+	readonly startOffset: Vector
 	/**
 	 * Position of the ending point of the progressive blur.
 	 */
-	readonly endOffset: Vector;
+	readonly endOffset: Vector
 }
 
-type BlurEffect = BlurEffectNormal | BlurEffectProgressive;
+type BlurEffect = BlurEffectNormal | BlurEffectProgressive
 
 interface NoiseEffectBase {
 	/**
 	 * The string literal representing the type of effect this is.
 	 */
-	readonly type: 'NOISE';
+	readonly type: "NOISE"
 	/**
 	 * The color of the noise effect.
 	 */
-	readonly color: RGBA;
+	readonly color: RGBA
 	/**
 	 * Whether the noise effect is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * The blend mode of the noise.
 	 */
-	readonly blendMode: BlendMode;
+	readonly blendMode: BlendMode
 	/**
 	 * The size of the noise effect.
 	 */
-	readonly noiseSize: number;
+	readonly noiseSize: number
 	/**
 	 * The density of the noise effect.
 	 */
-	readonly density: number;
+	readonly density: number
 	/**
 	 * Noise effects currently do not support binding variables.
 	 */
-	readonly boundVariables?: {};
+	readonly boundVariables?: {}
 }
 
 interface NoiseEffectMonotone extends NoiseEffectBase {
 	/**
 	 * The string literal representing the type of noise this is.
 	 */
-	readonly noiseType: 'MONOTONE';
+	readonly noiseType: "MONOTONE"
 }
 
 interface NoiseEffectDuotone extends NoiseEffectBase {
 	/**
 	 * The string literal representing the type of noise this is.
 	 */
-	readonly noiseType: 'DUOTONE';
+	readonly noiseType: "DUOTONE"
 	/**
 	 * The secondary color of the noise effect.
 	 */
-	readonly secondaryColor: RGBA;
+	readonly secondaryColor: RGBA
 }
 
 interface NoiseEffectMultitone extends NoiseEffectBase {
 	/**
 	 * The string literal representing the type of noise this is.
 	 */
-	readonly noiseType: 'MULTITONE';
+	readonly noiseType: "MULTITONE"
 	/**
 	 * The opacity of the noise effect.
 	 */
-	readonly opacity: number;
+	readonly opacity: number
 }
 
-type NoiseEffect = NoiseEffectMonotone | NoiseEffectDuotone | NoiseEffectMultitone;
+type NoiseEffect = NoiseEffectMonotone | NoiseEffectDuotone | NoiseEffectMultitone
 
 interface TextureEffect {
 	/**
 	 * The string literal representing the type of effect this is.
 	 */
-	readonly type: 'TEXTURE';
+	readonly type: "TEXTURE"
 	/**
 	 * Whether the texture effect is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * The size of the texture effect.
 	 */
-	readonly noiseSize: number;
+	readonly noiseSize: number
 	/**
 	 * The radius of the texture effect.
 	 */
-	readonly radius: number;
+	readonly radius: number
 	/**
 	 * Whether the texture is clipped to the shape.
 	 */
-	readonly clipToShape: boolean;
+	readonly clipToShape: boolean
 	/**
 	 * Texture effects currently do not support binding variables.
 	 */
-	readonly boundVariables?: {};
+	readonly boundVariables?: {}
 }
 
 interface GlassEffect {
 	/**
 	 * The string literal representing the type of effect this is.
 	 */
-	readonly type: 'GLASS';
+	readonly type: "GLASS"
 	/**
 	 * Whether this glass effect is visible.
 	 */
-	readonly visible: boolean;
+	readonly visible: boolean
 	/**
 	 * The intensity of specular highlights.
 	 */
-	readonly lightIntensity: number;
+	readonly lightIntensity: number
 	/**
 	 * The angle of the specular light in degrees.
 	 */
-	readonly lightAngle: number;
+	readonly lightAngle: number
 	/**
 	 * The intensity of the refraction distortion.
 	 */
-	readonly refraction: number;
+	readonly refraction: number
 	/**
 	 * The depth of the refraction effect.
 	 */
-	readonly depth: number;
+	readonly depth: number
 	/**
 	 * The amount of chromatic aberration (color separation).
 	 */
-	readonly dispersion: number;
+	readonly dispersion: number
 	/**
 	 * The radius of frost on the glass effect.
 	 */
-	readonly radius: number;
+	readonly radius: number
 	/**
 	 * Glass effects currently do not support binding variables.
 	 */
-	readonly boundVariables?: {};
+	readonly boundVariables?: {}
 }
 
-type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect | NoiseEffect | TextureEffect | GlassEffect;
+type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect | NoiseEffect | TextureEffect | GlassEffect
 ```
 
 ### 해석 규칙
@@ -665,54 +667,54 @@ interface PaintStyle extends BaseStyleMixin {
 	/**
 	 * The string literal "PAINT" representing the style type. Always check the `type` before reading other properties.
 	 */
-	type: 'PAINT';
+	type: "PAINT"
 	/**
 	 * List of {@link Paint} to replace the `fills`, `strokes`, or `backgrounds` property with.
 	 */
-	paints: ReadonlyArray<Paint>;
+	paints: ReadonlyArray<Paint>
 	/**
 	 * The variables bound to a particular field on this paint style.
 	 */
 	readonly boundVariables?: {
-		readonly [field in VariableBindablePaintStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindablePaintStyleField]?: VariableAlias[]
+	}
 }
 
 interface EffectStyle extends BaseStyleMixin {
 	/**
 	 * The string literal "EFFECT" representing the style type. Always check the `type` before reading other properties.
 	 */
-	type: 'EFFECT';
+	type: "EFFECT"
 	/**
 	 * List of {@link Effect} to replace the `effects` property with.
 	 */
-	effects: ReadonlyArray<Effect>;
+	effects: ReadonlyArray<Effect>
 	/**
 	 * The variables bound to a particular field on this effect style.
 	 */
 	readonly boundVariables?: {
-		readonly [field in VariableBindableEffectStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindableEffectStyleField]?: VariableAlias[]
+	}
 }
 
 interface GridStyle extends BaseStyleMixin {
 	/**
 	 * The string literal "GRID" representing the style type. Always check the `type` before reading other properties.
 	 */
-	type: 'GRID';
+	type: "GRID"
 	/**
 	 * List of {@link LayoutGrid} to replace the `layoutGrids` property with.
 	 */
-	layoutGrids: ReadonlyArray<LayoutGrid>;
+	layoutGrids: ReadonlyArray<LayoutGrid>
 	/**
 	 * The variables bound to a particular field on this grid style.
 	 */
 	readonly boundVariables?: {
-		readonly [field in VariableBindableGridStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindableGridStyleField]?: VariableAlias[]
+	}
 }
 
-type BaseStyle = PaintStyle | TextStyle | EffectStyle | GridStyle;
+type BaseStyle = PaintStyle | TextStyle | EffectStyle | GridStyle
 ```
 
 ### 해석 규칙
@@ -728,136 +730,136 @@ type BaseStyle = PaintStyle | TextStyle | EffectStyle | GridStyle;
 ### 타입 근거
 
 ```ts
-type ConstraintType = 'MIN' | 'CENTER' | 'MAX' | 'STRETCH' | 'SCALE';
+type ConstraintType = "MIN" | "CENTER" | "MAX" | "STRETCH" | "SCALE"
 interface Constraints {
-	readonly horizontal: ConstraintType;
-	readonly vertical: ConstraintType;
+	readonly horizontal: ConstraintType
+	readonly vertical: ConstraintType
 }
 
 interface ConstraintMixin {
 	/**
 	 * Constraints of this node relative to its containing {@link FrameNode}, if any.
 	 */
-	constraints: Constraints;
+	constraints: Constraints
 }
 
 interface LayoutMixin extends DimensionAndPositionMixin, AutoLayoutChildrenMixin, GridChildrenMixin {
 	/**
 	 * Shorthand for auto-layout sizing. Maps to layoutGrow/layoutAlign/axis sizing modes.
 	 */
-	layoutSizingHorizontal: 'FIXED' | 'HUG' | 'FILL';
-	layoutSizingVertical: 'FIXED' | 'HUG' | 'FILL';
+	layoutSizingHorizontal: "FIXED" | "HUG" | "FILL"
+	layoutSizingVertical: "FIXED" | "HUG" | "FILL"
 }
 
 interface AutoLayoutMixin {
 	/**
 	 * Determines whether this layer uses auto-layout to position its children.
 	 */
-	layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL' | 'GRID';
+	layoutMode: "NONE" | "HORIZONTAL" | "VERTICAL" | "GRID"
 	/**
 	 * Applicable only on auto-layout frames. Determines the padding between the border of the frame and its children.
 	 */
-	paddingLeft: number;
-	paddingRight: number;
-	paddingTop: number;
-	paddingBottom: number;
+	paddingLeft: number
+	paddingRight: number
+	paddingTop: number
+	paddingBottom: number
 	/**
 	 * @deprecated Use `paddingLeft`/`paddingRight`/`paddingTop`/`paddingBottom`.
 	 */
-	horizontalPadding: number;
-	verticalPadding: number;
+	horizontalPadding: number
+	verticalPadding: number
 	/**
 	 * Primary/counter axis sizing mode.
 	 */
-	primaryAxisSizingMode: 'FIXED' | 'AUTO';
-	counterAxisSizingMode: 'FIXED' | 'AUTO';
+	primaryAxisSizingMode: "FIXED" | "AUTO"
+	counterAxisSizingMode: "FIXED" | "AUTO"
 	/**
 	 * Whether strokes are included in layout calculations.
 	 */
-	strokesIncludedInLayout: boolean;
+	strokesIncludedInLayout: boolean
 	/**
 	 * Determines whether this layer should use wrapping auto-layout.
 	 */
-	layoutWrap: 'NO_WRAP' | 'WRAP';
+	layoutWrap: "NO_WRAP" | "WRAP"
 	/**
 	 * Alignment and spacing.
 	 */
-	primaryAxisAlignItems: 'MIN' | 'MAX' | 'CENTER' | 'SPACE_BETWEEN';
-	counterAxisAlignItems: 'MIN' | 'MAX' | 'CENTER' | 'BASELINE';
-	counterAxisAlignContent: 'AUTO' | 'SPACE_BETWEEN';
-	itemSpacing: number;
-	counterAxisSpacing: number | null;
-	itemReverseZIndex: boolean;
+	primaryAxisAlignItems: "MIN" | "MAX" | "CENTER" | "SPACE_BETWEEN"
+	counterAxisAlignItems: "MIN" | "MAX" | "CENTER" | "BASELINE"
+	counterAxisAlignContent: "AUTO" | "SPACE_BETWEEN"
+	itemSpacing: number
+	counterAxisSpacing: number | null
+	itemReverseZIndex: boolean
 }
 
 interface AutoLayoutChildrenMixin {
 	/**
 	 * Applicable only on direct children of auto-layout frames.
 	 */
-	layoutAlign: 'MIN' | 'CENTER' | 'MAX' | 'STRETCH' | 'INHERIT';
+	layoutAlign: "MIN" | "CENTER" | "MAX" | "STRETCH" | "INHERIT"
 	/**
 	 * Determines whether a layer should stretch along the parent’s primary axis.
 	 */
-	layoutGrow: number;
+	layoutGrow: number
 	/**
 	 * Determines whether a layer's size and position should be dermined by auto-layout settings or manually adjustable.
 	 */
-	layoutPositioning: 'AUTO' | 'ABSOLUTE';
+	layoutPositioning: "AUTO" | "ABSOLUTE"
 }
 
 interface GridTrackSize {
-	value?: number;
-	type: 'FLEX' | 'FIXED' | 'HUG';
+	value?: number
+	type: "FLEX" | "FIXED" | "HUG"
 }
 
 interface GridLayoutMixin {
 	/**
 	 * Applicable only on auto-layout frames with `layoutMode` set to "GRID".
 	 */
-	gridRowCount: number;
-	gridColumnCount: number;
-	gridRowGap: number;
-	gridColumnGap: number;
-	gridRowSizes: Array<GridTrackSize>;
-	gridColumnSizes: Array<GridTrackSize>;
-	appendChildAt(node: SceneNode, rowIndex: number, columnIndex: number): void;
+	gridRowCount: number
+	gridColumnCount: number
+	gridRowGap: number
+	gridColumnGap: number
+	gridRowSizes: Array<GridTrackSize>
+	gridColumnSizes: Array<GridTrackSize>
+	appendChildAt(node: SceneNode, rowIndex: number, columnIndex: number): void
 }
 
 interface GridChildrenMixin {
-	setGridChildPosition(rowIndex: number, columnIndex: number): void;
-	readonly gridRowAnchorIndex: number;
-	readonly gridColumnAnchorIndex: number;
-	gridRowSpan: number;
-	gridColumnSpan: number;
-	gridChildHorizontalAlign: 'MIN' | 'CENTER' | 'MAX' | 'AUTO';
-	gridChildVerticalAlign: 'MIN' | 'CENTER' | 'MAX' | 'AUTO';
+	setGridChildPosition(rowIndex: number, columnIndex: number): void
+	readonly gridRowAnchorIndex: number
+	readonly gridColumnAnchorIndex: number
+	gridRowSpan: number
+	gridColumnSpan: number
+	gridChildHorizontalAlign: "MIN" | "CENTER" | "MAX" | "AUTO"
+	gridChildVerticalAlign: "MIN" | "CENTER" | "MAX" | "AUTO"
 }
 
 interface RowsColsLayoutGrid {
-	readonly pattern: 'ROWS' | 'COLUMNS';
-	readonly alignment: 'MIN' | 'MAX' | 'STRETCH' | 'CENTER';
-	readonly gutterSize: number;
-	readonly count: number;
-	readonly sectionSize?: number;
-	readonly offset?: number;
-	readonly visible?: boolean;
-	readonly color?: RGBA;
+	readonly pattern: "ROWS" | "COLUMNS"
+	readonly alignment: "MIN" | "MAX" | "STRETCH" | "CENTER"
+	readonly gutterSize: number
+	readonly count: number
+	readonly sectionSize?: number
+	readonly offset?: number
+	readonly visible?: boolean
+	readonly color?: RGBA
 	readonly boundVariables?: {
-		[field in VariableBindableLayoutGridField]?: VariableAlias;
-	};
+		[field in VariableBindableLayoutGridField]?: VariableAlias
+	}
 }
 
 interface GridLayoutGrid {
-	readonly pattern: 'GRID';
-	readonly sectionSize: number;
-	readonly visible?: boolean;
-	readonly color?: RGBA;
+	readonly pattern: "GRID"
+	readonly sectionSize: number
+	readonly visible?: boolean
+	readonly color?: RGBA
 	readonly boundVariables?: {
-		['sectionSize']?: VariableAlias;
-	};
+		["sectionSize"]?: VariableAlias
+	}
 }
 
-type LayoutGrid = RowsColsLayoutGrid | GridLayoutGrid;
+type LayoutGrid = RowsColsLayoutGrid | GridLayoutGrid
 ```
 
 ### 해석 규칙
@@ -878,271 +880,271 @@ type LayoutGrid = RowsColsLayoutGrid | GridLayoutGrid;
 
 ```ts
 interface FontName {
-	readonly family: string;
-	readonly style: string;
+	readonly family: string
+	readonly style: string
 }
 
-type FontStyle = 'REGULAR' | 'ITALIC';
+type FontStyle = "REGULAR" | "ITALIC"
 
-type TextCase = 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE' | 'SMALL_CAPS' | 'SMALL_CAPS_FORCED';
+type TextCase = "ORIGINAL" | "UPPER" | "LOWER" | "TITLE" | "SMALL_CAPS" | "SMALL_CAPS_FORCED"
 
-type TextDecoration = 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH';
+type TextDecoration = "NONE" | "UNDERLINE" | "STRIKETHROUGH"
 
-type TextDecorationStyle = 'SOLID' | 'WAVY' | 'DOTTED';
+type TextDecorationStyle = "SOLID" | "WAVY" | "DOTTED"
 
 type TextDecorationOffset =
 	| {
-			readonly value: number;
-			readonly unit: 'PIXELS' | 'PERCENT';
+			readonly value: number
+			readonly unit: "PIXELS" | "PERCENT"
 	  }
 	| {
-			readonly unit: 'AUTO';
-	  };
+			readonly unit: "AUTO"
+	  }
 
 type TextDecorationThickness =
 	| {
-			readonly value: number;
-			readonly unit: 'PIXELS' | 'PERCENT';
+			readonly value: number
+			readonly unit: "PIXELS" | "PERCENT"
 	  }
 	| {
-			readonly unit: 'AUTO';
-	  };
+			readonly unit: "AUTO"
+	  }
 
 type TextDecorationColor =
 	| {
-			readonly value: SolidPaint;
+			readonly value: SolidPaint
 	  }
 	| {
-			readonly value: 'AUTO';
-	  };
+			readonly value: "AUTO"
+	  }
 
 interface LetterSpacing {
-	readonly value: number;
-	readonly unit: 'PIXELS' | 'PERCENT';
+	readonly value: number
+	readonly unit: "PIXELS" | "PERCENT"
 }
 
 type LineHeight =
 	| {
-			readonly value: number;
-			readonly unit: 'PIXELS' | 'PERCENT';
+			readonly value: number
+			readonly unit: "PIXELS" | "PERCENT"
 	  }
 	| {
-			readonly unit: 'AUTO';
-	  };
+			readonly unit: "AUTO"
+	  }
 
-type LeadingTrim = 'CAP_HEIGHT' | 'NONE';
+type LeadingTrim = "CAP_HEIGHT" | "NONE"
 
 type TextListOptions = {
-	type: 'ORDERED' | 'UNORDERED' | 'NONE';
-};
+	type: "ORDERED" | "UNORDERED" | "NONE"
+}
 
 type HyperlinkTarget = {
-	type: 'URL' | 'NODE';
-	value: string;
-};
+	type: "URL" | "NODE"
+	value: string
+}
 
 type TextStyleOverrideType = {
-	type: 'SEMANTIC_ITALIC' | 'SEMANTIC_WEIGHT' | 'HYPERLINK' | 'TEXT_DECORATION';
-};
+	type: "SEMANTIC_ITALIC" | "SEMANTIC_WEIGHT" | "HYPERLINK" | "TEXT_DECORATION"
+}
 
 interface StyledTextSegment {
 	/**
 	 * The characters in the range of text with the same styles.
 	 */
-	characters: string;
+	characters: string
 	/**
 	 * Start index (inclusive) of the range of characters.
 	 */
-	start: number;
+	start: number
 	/**
 	 * End index (exclusive) of the range of characters.
 	 */
-	end: number;
+	end: number
 	/**
 	 * The size of the font. Has minimum value of 1.
 	 */
-	fontSize: number;
+	fontSize: number
 	/**
 	 * The font family (e.g. "Inter"), and font style (e.g. "Regular").
 	 */
-	fontName: FontName;
+	fontName: FontName
 	/**
 	 * The weight of the font (e.g. 400 for "Regular", 700 for "Bold").
 	 */
-	fontWeight: number;
+	fontWeight: number
 	/**
 	 * The style of the font (i.e. "REGULAR", "ITALIC").
 	 */
-	fontStyle: FontStyle;
+	fontStyle: FontStyle
 	/**
 	 * Whether the text is underlined or has a strikethrough.
 	 */
-	textDecoration: TextDecoration;
+	textDecoration: TextDecoration
 	/**
 	 * The text decoration style. If not underlined, this is null.
 	 */
-	textDecorationStyle: TextDecorationStyle | null;
+	textDecorationStyle: TextDecorationStyle | null
 	/**
 	 * The text decoration offset. If not underlined, this is null.
 	 */
-	textDecorationOffset: TextDecorationOffset | null;
+	textDecorationOffset: TextDecorationOffset | null
 	/**
 	 * The text decoration thickness. If not underlined, this is null.
 	 */
-	textDecorationThickness: TextDecorationThickness | null;
+	textDecorationThickness: TextDecorationThickness | null
 	/**
 	 * The text decoration color. If not underlined, this is null.
 	 */
-	textDecorationColor: TextDecorationColor | null;
+	textDecorationColor: TextDecorationColor | null
 	/**
 	 * Whether the text decoration skips descenders. If not underlined, this is null.
 	 */
-	textDecorationSkipInk: boolean | null;
+	textDecorationSkipInk: boolean | null
 	/**
 	 * Overrides the case of the raw characters in the text node.
 	 */
-	textCase: TextCase;
+	textCase: TextCase
 	/**
 	 * The spacing between the lines in a paragraph of text.
 	 */
-	lineHeight: LineHeight;
+	lineHeight: LineHeight
 	/**
 	 * The spacing between the individual characters.
 	 */
-	letterSpacing: LetterSpacing;
+	letterSpacing: LetterSpacing
 	/**
 	 * The paints used to fill the area of the shape.
 	 */
-	fills: Paint[];
+	fills: Paint[]
 	/**
 	 * The id of the TextStyle object that the text properties of this node are linked to.
 	 */
-	textStyleId: string;
+	textStyleId: string
 	/**
 	 * The id of the PaintStyle object that the fills property of this node is linked to.
 	 */
-	fillStyleId: string;
+	fillStyleId: string
 	/**
 	 * The list settings.
 	 */
-	listOptions: TextListOptions;
+	listOptions: TextListOptions
 	/**
 	 * The spacing between list items.
 	 */
-	listSpacing: number;
+	listSpacing: number
 	/**
 	 * The indentation.
 	 */
-	indentation: number;
+	indentation: number
 	/**
 	 * The paragraph indent.
 	 */
-	paragraphIndent: number;
+	paragraphIndent: number
 	/**
 	 * The paragraph spacing.
 	 */
-	paragraphSpacing: number;
+	paragraphSpacing: number
 	/**
 	 * A HyperlinkTarget if the text node has exactly one hyperlink, or null if the node has none.
 	 */
-	hyperlink: HyperlinkTarget | null;
+	hyperlink: HyperlinkTarget | null
 	/**
 	 * OpenType features that have been explicitly enabled or disabled.
 	 */
 	openTypeFeatures: {
-		readonly [feature in OpenTypeFeature]: boolean;
-	};
+		readonly [feature in OpenTypeFeature]: boolean
+	}
 	/**
 	 * The variables bound to a particular field.
 	 */
 	boundVariables?: {
-		[field in VariableBindableTextField]?: VariableAlias;
-	};
+		[field in VariableBindableTextField]?: VariableAlias
+	}
 	/**
 	 * Overrides applied over a text style.
 	 */
-	textStyleOverrides: TextStyleOverrideType[];
+	textStyleOverrides: TextStyleOverrideType[]
 }
 
 interface BaseNonResizableTextMixin {
 	/**
 	 * Returns whether the text uses a font currently not available to the document.
 	 */
-	readonly hasMissingFont: boolean;
+	readonly hasMissingFont: boolean
 	/**
 	 * The size of the font. Has minimum value of 1.
 	 */
-	fontSize: number | PluginAPI['mixed'];
+	fontSize: number | PluginAPI["mixed"]
 	/**
 	 * The font family and style.
 	 */
-	fontName: FontName | PluginAPI['mixed'];
+	fontName: FontName | PluginAPI["mixed"]
 	/**
 	 * The weight of the font.
 	 */
-	readonly fontWeight: number | PluginAPI['mixed'];
+	readonly fontWeight: number | PluginAPI["mixed"]
 	/**
 	 * Overrides the case of the raw characters in the text node.
 	 */
-	textCase: TextCase | PluginAPI['mixed'];
+	textCase: TextCase | PluginAPI["mixed"]
 	/**
 	 * OpenType features that have been explicitly enabled or disabled.
 	 */
 	readonly openTypeFeatures:
 		| {
-				readonly [feature in OpenTypeFeature]: boolean;
+				readonly [feature in OpenTypeFeature]: boolean
 		  }
-		| PluginAPI['mixed'];
+		| PluginAPI["mixed"]
 	/**
 	 * The spacing between the individual characters.
 	 */
-	letterSpacing: LetterSpacing | PluginAPI['mixed'];
+	letterSpacing: LetterSpacing | PluginAPI["mixed"]
 	/**
 	 * A HyperlinkTarget if the text node has exactly one hyperlink, or null if the node has none.
 	 */
-	hyperlink: HyperlinkTarget | null | PluginAPI['mixed'];
+	hyperlink: HyperlinkTarget | null | PluginAPI["mixed"]
 	/**
 	 * The raw characters in the text node.
 	 */
-	characters: string;
+	characters: string
 }
 
 interface NonResizableTextMixin extends BaseNonResizableTextMixin {
-	paragraphIndent: number;
-	paragraphSpacing: number;
-	listSpacing: number;
-	hangingPunctuation: boolean;
-	hangingList: boolean;
-	textDecoration: TextDecoration | PluginAPI['mixed'];
-	textDecorationStyle: TextDecorationStyle | PluginAPI['mixed'] | null;
-	textDecorationOffset: TextDecorationOffset | PluginAPI['mixed'] | null;
-	textDecorationThickness: TextDecorationThickness | PluginAPI['mixed'] | null;
-	textDecorationColor: TextDecorationColor | PluginAPI['mixed'] | null;
-	textDecorationSkipInk: boolean | PluginAPI['mixed'] | null;
-	lineHeight: LineHeight | PluginAPI['mixed'];
-	leadingTrim: LeadingTrim | PluginAPI['mixed'];
+	paragraphIndent: number
+	paragraphSpacing: number
+	listSpacing: number
+	hangingPunctuation: boolean
+	hangingList: boolean
+	textDecoration: TextDecoration | PluginAPI["mixed"]
+	textDecorationStyle: TextDecorationStyle | PluginAPI["mixed"] | null
+	textDecorationOffset: TextDecorationOffset | PluginAPI["mixed"] | null
+	textDecorationThickness: TextDecorationThickness | PluginAPI["mixed"] | null
+	textDecorationColor: TextDecorationColor | PluginAPI["mixed"] | null
+	textDecorationSkipInk: boolean | PluginAPI["mixed"] | null
+	lineHeight: LineHeight | PluginAPI["mixed"]
+	leadingTrim: LeadingTrim | PluginAPI["mixed"]
 }
 
 interface TextStyle extends BaseStyleMixin {
 	/**
 	 * The string literal "TEXT" representing the style type.
 	 */
-	type: 'TEXT';
-	fontSize: number;
-	textDecoration: TextDecoration;
-	fontName: FontName;
-	letterSpacing: LetterSpacing;
-	lineHeight: LineHeight;
-	leadingTrim: LeadingTrim;
-	paragraphIndent: number;
-	paragraphSpacing: number;
-	listSpacing: number;
-	hangingPunctuation: boolean;
-	hangingList: boolean;
-	textCase: TextCase;
+	type: "TEXT"
+	fontSize: number
+	textDecoration: TextDecoration
+	fontName: FontName
+	letterSpacing: LetterSpacing
+	lineHeight: LineHeight
+	leadingTrim: LeadingTrim
+	paragraphIndent: number
+	paragraphSpacing: number
+	listSpacing: number
+	hangingPunctuation: boolean
+	hangingList: boolean
+	textCase: TextCase
 	boundVariables?: {
-		[field in VariableBindableTextField]?: VariableAlias;
-	};
+		[field in VariableBindableTextField]?: VariableAlias
+	}
 }
 
 interface TextNode
@@ -1150,23 +1152,23 @@ interface TextNode
 	/**
 	 * The type of this node, represented by the string literal "TEXT"
 	 */
-	readonly type: 'TEXT';
+	readonly type: "TEXT"
 	/**
 	 * The behavior of how the size of the text box adjusts to fit the characters.
 	 */
-	textAutoResize: 'NONE' | 'WIDTH_AND_HEIGHT' | 'HEIGHT' | 'TRUNCATE';
+	textAutoResize: "NONE" | "WIDTH_AND_HEIGHT" | "HEIGHT" | "TRUNCATE"
 	/**
 	 * Whether this text node will truncate with an ellipsis when the text node size is smaller than the text inside.
 	 */
-	textTruncation: 'DISABLED' | 'ENDING';
+	textTruncation: "DISABLED" | "ENDING"
 	/**
 	 * The maximum number of lines a text node can reach before it truncates.
 	 */
-	maxLines: number | null;
+	maxLines: number | null
 	/**
 	 * The id of the {@link TextStyle} object that the text properties of this node are linked to.
 	 */
-	textStyleId: string | PluginAPI['mixed'];
+	textStyleId: string | PluginAPI["mixed"]
 }
 ```
 

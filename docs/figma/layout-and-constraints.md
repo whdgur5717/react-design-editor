@@ -6,10 +6,10 @@
 
 ```ts
 // plugin-api.d.ts
-type ConstraintType = 'MIN' | 'CENTER' | 'MAX' | 'STRETCH' | 'SCALE';
+type ConstraintType = "MIN" | "CENTER" | "MAX" | "STRETCH" | "SCALE"
 interface Constraints {
-	readonly horizontal: ConstraintType;
-	readonly vertical: ConstraintType;
+	readonly horizontal: ConstraintType
+	readonly vertical: ConstraintType
 }
 ```
 
@@ -19,26 +19,26 @@ interface Constraints {
 
 ```ts
 interface RowsColsLayoutGrid {
-	readonly pattern: 'ROWS' | 'COLUMNS';
-	readonly alignment: 'MIN' | 'MAX' | 'STRETCH' | 'CENTER';
-	readonly gutterSize: number;
-	readonly count: number;
-	readonly sectionSize?: number;
-	readonly offset?: number;
-	readonly visible?: boolean;
-	readonly color?: RGBA;
-	readonly boundVariables?: { [field in VariableBindableLayoutGridField]?: VariableAlias };
+	readonly pattern: "ROWS" | "COLUMNS"
+	readonly alignment: "MIN" | "MAX" | "STRETCH" | "CENTER"
+	readonly gutterSize: number
+	readonly count: number
+	readonly sectionSize?: number
+	readonly offset?: number
+	readonly visible?: boolean
+	readonly color?: RGBA
+	readonly boundVariables?: { [field in VariableBindableLayoutGridField]?: VariableAlias }
 }
 
 interface GridLayoutGrid {
-	readonly pattern: 'GRID';
-	readonly sectionSize: number;
-	readonly visible?: boolean;
-	readonly color?: RGBA;
-	readonly boundVariables?: { ['sectionSize']?: VariableAlias };
+	readonly pattern: "GRID"
+	readonly sectionSize: number
+	readonly visible?: boolean
+	readonly color?: RGBA
+	readonly boundVariables?: { ["sectionSize"]?: VariableAlias }
 }
 
-type LayoutGrid = RowsColsLayoutGrid | GridLayoutGrid;
+type LayoutGrid = RowsColsLayoutGrid | GridLayoutGrid
 ```
 
 ### Typings 주석 발췌

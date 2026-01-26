@@ -30,8 +30,8 @@ Variable 바인딩을 나타내는 기본 타입입니다.
 
 ```typescript
 interface VariableAlias {
-	type: 'VARIABLE_ALIAS';
-	id: string; // Variable ID (예: "VariableID:1:7")
+	type: "VARIABLE_ALIAS"
+	id: string // Variable ID (예: "VariableID:1:7")
 }
 ```
 
@@ -43,7 +43,7 @@ interface VariableAlias {
 ### Variable ID로 실제 Variable 조회
 
 ```typescript
-const variable = await figma.variables.getVariableByIdAsync(alias.id);
+const variable = await figma.variables.getVariableByIdAsync(alias.id)
 // variable.name, variable.resolvedType 등 접근 가능
 ```
 
@@ -182,7 +182,7 @@ InstanceNode의 componentProperties는 value에 변수 바인딩을 가질 수 �
 boundVariables는 다음 형태로 나타날 수 있습니다.
 
 ```typescript
-type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue };
+type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue }
 ```
 
 예시: `size: { x, y }`, `individualStrokeWeights: { top, right, bottom, left }`
@@ -212,12 +212,12 @@ fills, strokes, effects는 배열이므로 인덱스별로 접근합니다.
 
 ```typescript
 // fills의 첫 번째 Paint에 바인딩된 color
-const fillAlias = node.boundVariables?.fills?.[0];
+const fillAlias = node.boundVariables?.fills?.[0]
 
 // 또는 Paint 객체에서 직접 접근
-const paint = node.fills[0];
-if ('boundVariables' in paint) {
-	const colorAlias = paint.boundVariables?.color;
+const paint = node.fills[0]
+if ("boundVariables" in paint) {
+	const colorAlias = paint.boundVariables?.color
 }
 ```
 
@@ -226,30 +226,30 @@ if ('boundVariables' in paint) {
 그라디언트의 각 stop에도 개별 바인딩이 가능합니다.
 
 ```typescript
-const gradientPaint = node.fills[0] as GradientPaint;
+const gradientPaint = node.fills[0] as GradientPaint
 gradientPaint.gradientStops.forEach((stop, index) => {
-	const colorAlias = stop.boundVariables?.color;
+	const colorAlias = stop.boundVariables?.color
 	// { type: 'VARIABLE_ALIAS', id: 'VariableID:...' }
-});
+})
 ```
 
 ### LayoutGrid
 
 ```typescript
-if ('layoutGrids' in node && Array.isArray(node.layoutGrids)) {
+if ("layoutGrids" in node && Array.isArray(node.layoutGrids)) {
 	node.layoutGrids.forEach((grid) => {
-		const gridAlias = grid.boundVariables;
-	});
+		const gridAlias = grid.boundVariables
+	})
 }
 ```
 
 ### ComponentProperties (Instance)
 
 ```typescript
-if ('componentProperties' in node && node.componentProperties) {
+if ("componentProperties" in node && node.componentProperties) {
 	Object.values(node.componentProperties).forEach((prop) => {
-		const valueAlias = prop.boundVariables?.value;
-	});
+		const valueAlias = prop.boundVariables?.value
+	})
 }
 ```
 
@@ -257,13 +257,13 @@ if ('componentProperties' in node && node.componentProperties) {
 
 ```typescript
 // 특정 범위의 특정 속성
-const fontWeightAlias = textNode.getRangeBoundVariable(0, 5, 'fontWeight');
+const fontWeightAlias = textNode.getRangeBoundVariable(0, 5, "fontWeight")
 
 // 모든 세그먼트의 boundVariables
-const segments = textNode.getStyledTextSegments(['boundVariables']);
+const segments = textNode.getStyledTextSegments(["boundVariables"])
 segments.forEach((segment) => {
-	console.log(segment.start, segment.end, segment.boundVariables);
-});
+	console.log(segment.start, segment.end, segment.boundVariables)
+})
 ```
 
 ---
@@ -273,121 +273,121 @@ segments.forEach((segment) => {
 ### boundVariables 전체 수집 (Extract 패턴)
 
 ```typescript
-type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue };
+type BoundVariableValue = VariableAlias | VariableAlias[] | { [key: string]: BoundVariableValue }
 
 const isVariableAlias = (value: unknown): value is VariableAlias => {
 	return (
 		!!value &&
-		typeof value === 'object' &&
-		'type' in value &&
-		'id' in value &&
-		(value as { type?: unknown }).type === 'VARIABLE_ALIAS' &&
-		typeof (value as { id?: unknown }).id === 'string'
-	);
-};
+		typeof value === "object" &&
+		"type" in value &&
+		"id" in value &&
+		(value as { type?: unknown }).type === "VARIABLE_ALIAS" &&
+		typeof (value as { id?: unknown }).id === "string"
+	)
+}
 
 const collectAliases = (value: BoundVariableValue | undefined, ids: Set<string>): void => {
-	if (!value) return;
+	if (!value) return
 	if (Array.isArray(value)) {
-		value.forEach((entry) => collectAliases(entry as BoundVariableValue, ids));
-		return;
+		value.forEach((entry) => collectAliases(entry as BoundVariableValue, ids))
+		return
 	}
 	if (isVariableAlias(value)) {
-		ids.add(value.id);
-		return;
+		ids.add(value.id)
+		return
 	}
-	if (typeof value === 'object') {
+	if (typeof value === "object") {
 		Object.values(value as Record<string, BoundVariableValue>).forEach((entry) => {
-			collectAliases(entry, ids);
-		});
+			collectAliases(entry, ids)
+		})
 	}
-};
+}
 
 const collectBoundVariableIds = (node: SceneNode): string[] => {
-	const ids = new Set<string>();
+	const ids = new Set<string>()
 
 	// 1. 노드 레벨 boundVariables
-	collectAliases(node.boundVariables as BoundVariableValue | undefined, ids);
+	collectAliases(node.boundVariables as BoundVariableValue | undefined, ids)
 
 	// 2. Paint (fills, strokes) + gradient stops
 	const collectFromPaints = (paints: readonly Paint[] | typeof figma.mixed) => {
-		if (paints === figma.mixed || !Array.isArray(paints)) return;
+		if (paints === figma.mixed || !Array.isArray(paints)) return
 		paints.forEach((paint) => {
-			if ('boundVariables' in paint) {
-				collectAliases(paint.boundVariables as BoundVariableValue | undefined, ids);
+			if ("boundVariables" in paint) {
+				collectAliases(paint.boundVariables as BoundVariableValue | undefined, ids)
 			}
-			if ('gradientStops' in paint) {
+			if ("gradientStops" in paint) {
 				paint.gradientStops.forEach((stop) => {
-					collectAliases(stop.boundVariables as BoundVariableValue | undefined, ids);
-				});
+					collectAliases(stop.boundVariables as BoundVariableValue | undefined, ids)
+				})
 			}
-		});
-	};
+		})
+	}
 
-	if ('fills' in node) collectFromPaints(node.fills);
-	if ('strokes' in node) collectFromPaints(node.strokes);
+	if ("fills" in node) collectFromPaints(node.fills)
+	if ("strokes" in node) collectFromPaints(node.strokes)
 
 	// 3. Effects
-	if ('effects' in node && Array.isArray(node.effects)) {
+	if ("effects" in node && Array.isArray(node.effects)) {
 		node.effects.forEach((effect) => {
-			if ('boundVariables' in effect) {
-				collectAliases(effect.boundVariables as BoundVariableValue | undefined, ids);
+			if ("boundVariables" in effect) {
+				collectAliases(effect.boundVariables as BoundVariableValue | undefined, ids)
 			}
-		});
+		})
 	}
 
 	// 4. Layout grids
-	if ('layoutGrids' in node && Array.isArray(node.layoutGrids)) {
+	if ("layoutGrids" in node && Array.isArray(node.layoutGrids)) {
 		node.layoutGrids.forEach((grid) => {
-			if ('boundVariables' in grid) {
-				collectAliases(grid.boundVariables as BoundVariableValue | undefined, ids);
+			if ("boundVariables" in grid) {
+				collectAliases(grid.boundVariables as BoundVariableValue | undefined, ids)
 			}
-		});
+		})
 	}
 
 	// 5. Component properties (Instance)
-	if ('componentProperties' in node && node.componentProperties) {
+	if ("componentProperties" in node && node.componentProperties) {
 		Object.values(node.componentProperties).forEach((prop) => {
-			collectAliases(prop.boundVariables?.value as BoundVariableValue | undefined, ids);
-		});
+			collectAliases(prop.boundVariables?.value as BoundVariableValue | undefined, ids)
+		})
 	}
 
 	// 6. Text segments
-	if (node.type === 'TEXT') {
-		const segments = node.getStyledTextSegments(['boundVariables']);
+	if (node.type === "TEXT") {
+		const segments = node.getStyledTextSegments(["boundVariables"])
 		segments.forEach((segment) => {
-			collectAliases(segment.boundVariables as BoundVariableValue | undefined, ids);
-		});
+			collectAliases(segment.boundVariables as BoundVariableValue | undefined, ids)
+		})
 	}
 
-	return Array.from(ids);
-};
+	return Array.from(ids)
+}
 
 const collectStyleBoundVariableIds = (style: PaintStyle | EffectStyle | GridStyle): string[] => {
-	const ids = new Set<string>();
-	collectAliases(style.boundVariables as BoundVariableValue | undefined, ids);
-	return Array.from(ids);
-};
+	const ids = new Set<string>()
+	collectAliases(style.boundVariables as BoundVariableValue | undefined, ids)
+	return Array.from(ids)
+}
 ```
 
 ### TokenizedValue 패턴 (Normalize용)
 
 ```typescript
 type TokenRef = {
-	id: string;
-	name?: string;
-	collectionId?: string;
-	collectionName?: string;
-};
+	id: string
+	name?: string
+	collectionId?: string
+	collectionName?: string
+}
 
-type TokenizedValue<T> = T | { tokenRef: TokenRef; fallback: T };
+type TokenizedValue<T> = T | { tokenRef: TokenRef; fallback: T }
 
 const toTokenizedValue = <T>(value: T, alias: VariableAlias | null | undefined): TokenizedValue<T> => {
-	return alias ? { tokenRef: { id: alias.id }, fallback: value } : value;
-};
+	return alias ? { tokenRef: { id: alias.id }, fallback: value } : value
+}
 
 // 사용 예시
-const normalizedColor = toTokenizedValue({ hex: '#FF0000', rgb: 'rgb(255,0,0)' }, paint.boundVariables?.color);
+const normalizedColor = toTokenizedValue({ hex: "#FF0000", rgb: "rgb(255,0,0)" }, paint.boundVariables?.color)
 ```
 
 ---

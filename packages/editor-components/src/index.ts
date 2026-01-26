@@ -1,2 +1,2 @@
-export { componentRegistry, getComponent, registerComponent } from './registry';
-export * from './primitives/index';
+export * from "./primitives/index"
+export { componentRegistry, getComponent, registerComponent } from "./registry"

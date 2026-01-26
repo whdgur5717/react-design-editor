@@ -37,33 +37,33 @@ packages/
 
 ### editor-core
 
-| 파일 | 역할 |
-|------|------|
-| `types/node.ts` | NodeData, DocumentNode, Position, Size, ComponentDefinition, InstanceNode |
-| `types/editor.ts` | EditorState, EditorActions, EditorStore |
-| `codegen/serialize.ts` | NodeData → JSX 코드 문자열 변환 |
+| 파일                   | 역할                                                                      |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `types/node.ts`        | NodeData, DocumentNode, Position, Size, ComponentDefinition, InstanceNode |
+| `types/editor.ts`      | EditorState, EditorActions, EditorStore                                   |
+| `codegen/serialize.ts` | NodeData → JSX 코드 문자열 변환                                           |
 
 ### editor-shell
 
-| 파일 | 역할 |
-|------|------|
-| `store/editor.ts` | Zustand 스토어 (document, selection, components 등) |
-| `protocol/types.ts` | Shell↔Canvas 통신 인터페이스 (CanvasMethods, ShellMethods) |
-| `components/Toolbar.tsx` | 도구 선택, 줌, 컴포넌트 메뉴 |
-| `components/LayersPanel.tsx` | 노드 트리, 순서 변경, 가시성/잠금 토글 |
-| `components/PropertiesPanel.tsx` | 스타일 편집, 코드 프리뷰 |
+| 파일                             | 역할                                                       |
+| -------------------------------- | ---------------------------------------------------------- |
+| `store/editor.ts`                | Zustand 스토어 (document, selection, components 등)        |
+| `protocol/types.ts`              | Shell↔Canvas 통신 인터페이스 (CanvasMethods, ShellMethods) |
+| `components/Toolbar.tsx`         | 도구 선택, 줌, 컴포넌트 메뉴                               |
+| `components/LayersPanel.tsx`     | 노드 트리, 순서 변경, 가시성/잠금 토글                     |
+| `components/PropertiesPanel.tsx` | 스타일 편집, 코드 프리뷰                                   |
 
 ### editor-canvas
 
-| 파일 | 역할 |
-|------|------|
+| 파일                          | 역할                             |
+| ----------------------------- | -------------------------------- |
 | `renderer/CanvasRenderer.tsx` | NodeData → React 컴포넌트 렌더링 |
-| `renderer/NodeWrapper.tsx` | 선택/드래그/리사이즈 인터랙션 |
+| `renderer/NodeWrapper.tsx`    | 선택/드래그/리사이즈 인터랙션    |
 
 ### editor-components
 
-| 파일 | 역할 |
-|------|------|
+| 파일                   | 역할                                            |
+| ---------------------- | ----------------------------------------------- |
 | `primitives/index.tsx` | Frame, Text, Flex 등 기본 컴포넌트 + 레지스트리 |
 
 ---
@@ -74,41 +74,43 @@ packages/
 
 ```typescript
 interface NodeData {
-  id: string;
-  type: string;              // 'Frame', 'Text', 'Flex', '__INSTANCE__'
-  props?: Record<string, unknown>;
-  style?: CSSProperties;
-  children?: NodeData[] | string;
-  visible?: boolean;
-  locked?: boolean;
+	id: string
+	type: string // 'Frame', 'Text', 'Flex', '__INSTANCE__'
+	props?: Record<string, unknown>
+	style?: CSSProperties
+	children?: NodeData[] | string
+	visible?: boolean
+	locked?: boolean
 }
 
 interface DocumentNode extends NodeData {
-  meta?: { name?: string; createdAt?: string; };
+	meta?: { name?: string; createdAt?: string }
 }
 ```
 
 **EditorState**:
 
-| 상태 | 타입 | 설명 |
-|------|------|------|
-| document | DocumentNode | 노드 트리 (source of truth) |
-| components | ComponentDefinition[] | 정의된 컴포넌트들 |
-| selection | string[] | 선택된 노드 ID들 |
-| hoveredId | string \| null | 호버 중인 노드 |
-| activeTool | EditorTool | 현재 도구 (select, frame, text, shape) |
-| zoom | number | 줌 레벨 |
+| 상태       | 타입                  | 설명                                   |
+| ---------- | --------------------- | -------------------------------------- |
+| document   | DocumentNode          | 노드 트리 (source of truth)            |
+| components | ComponentDefinition[] | 정의된 컴포넌트들                      |
+| selection  | string[]              | 선택된 노드 ID들                       |
+| hoveredId  | string \| null        | 호버 중인 노드                         |
+| activeTool | EditorTool            | 현재 도구 (select, frame, text, shape) |
+| zoom       | number                | 줌 레벨                                |
 
 ---
 
 ## 통신 프로토콜 (Penpal)
 
 **Shell → Canvas** (`CanvasMethods`):
+
 - `syncState(document, components)` - 상태 동기화
 - `selectNodes(ids)` - 선택 상태 동기화
 - `setZoom(zoom)` - 줌 동기화
 
 **Canvas → Shell** (`ShellMethods`):
+
 - `onNodeClicked(id, shiftKey)` - 노드 클릭
 - `onNodeHovered(id | null)` - 호버 변경
 - `onNodeMoved(id, position)` - 드래그 이동
@@ -142,10 +144,10 @@ mouseDown → window에 mousemove 리스너 등록
 
 ```typescript
 interface ComponentDefinition {
-  id: string;
-  name: string;
-  root: NodeData;       // 템플릿 노드
-  createdAt: string;
+	id: string
+	name: string
+	root: NodeData // 템플릿 노드
+	createdAt: string
 }
 ```
 
@@ -153,11 +155,11 @@ interface ComponentDefinition {
 
 ```typescript
 interface InstanceNode {
-  id: string;
-  type: '__INSTANCE__';
-  componentId: string;  // 참조할 컴포넌트 ID
-  style?: CSSProperties;
-  overrides?: { [nodeId: string]: { props?, style?, children? } };
+	id: string
+	type: "__INSTANCE__"
+	componentId: string // 참조할 컴포넌트 ID
+	style?: CSSProperties
+	overrides?: { [nodeId: string]: { props?; style?; children? } }
 }
 ```
 
@@ -168,8 +170,8 @@ interface InstanceNode {
 ## Codegen
 
 ```typescript
-serializeNode(node)      // NodeData → JSX 문자열
-serializeDocument(node)  // NodeData → React 컴포넌트 문자열
+serializeNode(node) // NodeData → JSX 문자열
+serializeDocument(node) // NodeData → React 컴포넌트 문자열
 ```
 
 ```typescript
@@ -191,9 +193,9 @@ export function Component() {
 
 ## 외부 라이브러리
 
-| 라이브러리 | 용도 |
-|-----------|------|
-| zustand | 상태 관리 |
-| penpal | iframe 양방향 통신 |
-| re-resizable | 노드 리사이즈 |
-| @dnd-kit | LayersPanel 드래그 정렬 |
+| 라이브러리   | 용도                    |
+| ------------ | ----------------------- |
+| zustand      | 상태 관리               |
+| penpal       | iframe 양방향 통신      |
+| re-resizable | 노드 리사이즈           |
+| @dnd-kit     | LayersPanel 드래그 정렬 |

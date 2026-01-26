@@ -9,8 +9,8 @@
 ```ts
 // plugin-api.d.ts
 interface Vector {
-	readonly x: number;
-	readonly y: number;
+	readonly x: number
+	readonly y: number
 }
 ```
 
@@ -25,10 +25,10 @@ interface Vector {
 ```ts
 // plugin-api.d.ts
 interface Rect {
-	readonly x: number;
-	readonly y: number;
-	readonly width: number;
-	readonly height: number;
+	readonly x: number
+	readonly y: number
+	readonly width: number
+	readonly height: number
 }
 ```
 
@@ -42,7 +42,7 @@ interface Rect {
 
 ```ts
 // plugin-api.d.ts
-type Transform = [[number, number, number], [number, number, number]];
+type Transform = [[number, number, number], [number, number, number]]
 ```
 
 **사용 위치**
@@ -56,16 +56,16 @@ type Transform = [[number, number, number], [number, number, number]];
 ```ts
 // plugin-api.d.ts
 interface RGB {
-	readonly r: number;
-	readonly g: number;
-	readonly b: number;
+	readonly r: number
+	readonly g: number
+	readonly b: number
 }
 
 interface RGBA {
-	readonly r: number;
-	readonly g: number;
-	readonly b: number;
-	readonly a: number;
+	readonly r: number
+	readonly g: number
+	readonly b: number
+	readonly a: number
 }
 ```
 
