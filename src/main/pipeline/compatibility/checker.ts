@@ -9,7 +9,6 @@ export class CssCompatibilityChecker {
 		if (this.hasIncompatibleEffects(style)) return { compatible: false };
 		if (this.hasIncompatibleFills(style)) return { compatible: false };
 		if (this.hasIncompatibleStrokes(style)) return { compatible: false };
-		if (this.hasIncompatibleBlendMode(style)) return { compatible: false };
 		return { compatible: true };
 	}
 
@@ -39,9 +38,6 @@ export class CssCompatibilityChecker {
 		return false;
 	}
 
-	private hasIncompatibleBlendMode(style: ExtractedStyle): boolean {
-		return style.effects.blendMode?.value === 'PASS_THROUGH';
-	}
 }
 
 export const cssCompatibilityChecker = new CssCompatibilityChecker();

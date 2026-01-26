@@ -447,9 +447,9 @@ export const buildComponentProperties = (
 	return result;
 };
 
-const buildInstanceRef = (node: SceneNode): InstanceRef | undefined => {
+const buildInstanceRef = async (node: SceneNode): Promise<InstanceRef | undefined> => {
 	if (node.type !== 'INSTANCE') return undefined;
-	const mainComponent = node.mainComponent;
+	const mainComponent = await node.getMainComponentAsync();
 	if (!mainComponent) return undefined;
 	const variantProperties =
 		'variantProperties' in node
@@ -576,7 +576,7 @@ export class NodeDataBuilder {
 			const svg = await exportSvg(node);
 			return {
 				props: { id: node.id, name: node.name },
-				svgFallback: svg,
+				svgFallback: svg ?? undefined,
 			};
 		}
 
@@ -594,7 +594,7 @@ export class NodeDataBuilder {
 
 		return {
 			props,
-			instanceRef: buildInstanceRef(node),
+			instanceRef: await buildInstanceRef(node),
 			tokensRef,
 			assets: buildAssetRefs(normalizedStyle),
 		};
