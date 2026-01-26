@@ -6,7 +6,7 @@
 
 ```ts
 // plugin-api.d.ts
-type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect | NoiseEffect | TextureEffect | GlassEffect;
+type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect | NoiseEffect | TextureEffect | GlassEffect
 ```
 
 ### Typings 주석 발췌
@@ -21,25 +21,25 @@ type Effect = DropShadowEffect | InnerShadowEffect | BlurEffect | NoiseEffect | 
 
 ```ts
 interface DropShadowEffect {
-	readonly type: 'DROP_SHADOW';
-	readonly color: RGBA;
-	readonly offset: Vector;
-	readonly radius: number;
-	readonly spread?: number;
-	readonly visible: boolean;
-	readonly blendMode: BlendMode;
-	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias };
+	readonly type: "DROP_SHADOW"
+	readonly color: RGBA
+	readonly offset: Vector
+	readonly radius: number
+	readonly spread?: number
+	readonly visible: boolean
+	readonly blendMode: BlendMode
+	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias }
 }
 
 interface InnerShadowEffect {
-	readonly type: 'INNER_SHADOW';
-	readonly color: RGBA;
-	readonly offset: Vector;
-	readonly radius: number;
-	readonly spread?: number;
-	readonly visible: boolean;
-	readonly blendMode: BlendMode;
-	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias };
+	readonly type: "INNER_SHADOW"
+	readonly color: RGBA
+	readonly offset: Vector
+	readonly radius: number
+	readonly spread?: number
+	readonly visible: boolean
+	readonly blendMode: BlendMode
+	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias }
 }
 ```
 
@@ -47,37 +47,37 @@ interface InnerShadowEffect {
 
 ```ts
 interface BlurEffect {
-	readonly type: 'LAYER_BLUR' | 'BACKGROUND_BLUR';
-	readonly radius: number;
-	readonly visible: boolean;
-	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias };
+	readonly type: "LAYER_BLUR" | "BACKGROUND_BLUR"
+	readonly radius: number
+	readonly visible: boolean
+	readonly boundVariables?: { [field in VariableBindableEffectField]?: VariableAlias }
 }
 ```
 
 ## Noise / Texture / Glass
 
 ```ts
-type NoiseEffect = NoiseEffectMonotone | NoiseEffectDuotone | NoiseEffectMultitone;
+type NoiseEffect = NoiseEffectMonotone | NoiseEffectDuotone | NoiseEffectMultitone
 
 interface TextureEffect {
-	readonly type: 'TEXTURE';
-	readonly visible: boolean;
-	readonly noiseSize: number;
-	readonly radius: number;
-	readonly clipToShape: boolean;
-	readonly boundVariables?: {};
+	readonly type: "TEXTURE"
+	readonly visible: boolean
+	readonly noiseSize: number
+	readonly radius: number
+	readonly clipToShape: boolean
+	readonly boundVariables?: {}
 }
 
 interface GlassEffect {
-	readonly type: 'GLASS';
-	readonly visible: boolean;
-	readonly lightIntensity: number;
-	readonly lightAngle: number;
-	readonly refraction: number;
-	readonly depth: number;
-	readonly dispersion: number;
-	readonly radius: number;
-	readonly boundVariables?: {};
+	readonly type: "GLASS"
+	readonly visible: boolean
+	readonly lightIntensity: number
+	readonly lightAngle: number
+	readonly refraction: number
+	readonly depth: number
+	readonly dispersion: number
+	readonly radius: number
+	readonly boundVariables?: {}
 }
 ```
 

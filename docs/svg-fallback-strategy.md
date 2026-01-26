@@ -51,7 +51,7 @@ Figma는 웹 CSS보다 풍부한 시각적 표현력을 가진 디자인 도구�
 CSS로 표현 불가능한 효과가 포함된 노드는 Figma의 `exportAsync` API를 사용하여 SVG로 렌더링한다.
 
 ```typescript
-const svgString = new TextDecoder().decode(await node.exportAsync({ format: 'SVG' }));
+const svgString = new TextDecoder().decode(await node.exportAsync({ format: "SVG" }))
 ```
 
 ### 이 전략의 장점

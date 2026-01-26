@@ -7,13 +7,13 @@
 ```ts
 // plugin-api.d.ts
 interface FontName {
-	readonly family: string;
-	readonly style: string;
+	readonly family: string
+	readonly style: string
 }
 
-type TextCase = 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE' | 'SMALL_CAPS' | 'SMALL_CAPS_FORCED';
+type TextCase = "ORIGINAL" | "UPPER" | "LOWER" | "TITLE" | "SMALL_CAPS" | "SMALL_CAPS_FORCED"
 
-type TextDecoration = 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH';
+type TextDecoration = "NONE" | "UNDERLINE" | "STRIKETHROUGH"
 ```
 
 ## LetterSpacing / LineHeight
@@ -24,11 +24,11 @@ type TextDecoration = 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH';
 ```ts
 // plugin-api.d.ts (발췌)
 interface LetterSpacing {
-	readonly value: number;
-	readonly unit: 'PIXELS' | 'PERCENT';
+	readonly value: number
+	readonly unit: "PIXELS" | "PERCENT"
 }
 
-type LineHeight = { readonly value: number; readonly unit: 'PIXELS' | 'PERCENT' } | { readonly unit: 'AUTO' };
+type LineHeight = { readonly value: number; readonly unit: "PIXELS" | "PERCENT" } | { readonly unit: "AUTO" }
 ```
 
 ## StyledTextSegment
@@ -38,18 +38,18 @@ type LineHeight = { readonly value: number; readonly unit: 'PIXELS' | 'PERCENT' 
 ```ts
 // plugin-api.d.ts (발췌)
 interface StyledTextSegment {
-	characters: string;
-	start: number;
-	end: number;
-	fontName: FontName;
-	fontSize: number;
-	textDecoration: TextDecoration;
-	textCase: TextCase;
-	lineHeight: LineHeight;
-	letterSpacing: LetterSpacing;
-	fills: Paint[] | PluginAPI['mixed'];
-	textStyleId: string;
-	listOptions: TextListOptions;
+	characters: string
+	start: number
+	end: number
+	fontName: FontName
+	fontSize: number
+	textDecoration: TextDecoration
+	textCase: TextCase
+	lineHeight: LineHeight
+	letterSpacing: LetterSpacing
+	fills: Paint[] | PluginAPI["mixed"]
+	textStyleId: string
+	listOptions: TextListOptions
 }
 ```
 
@@ -66,11 +66,11 @@ interface StyledTextSegment {
 ```ts
 // plugin-api.d.ts (발췌)
 interface BaseNonResizableTextMixin {
-	fontName: FontName | PluginAPI['mixed'];
-	textCase: TextCase | PluginAPI['mixed'];
-	letterSpacing: LetterSpacing | PluginAPI['mixed'];
-	getRangeFontName(start: number, end: number): FontName | PluginAPI['mixed'];
-	setRangeFontName(start: number, end: number, value: FontName): void;
+	fontName: FontName | PluginAPI["mixed"]
+	textCase: TextCase | PluginAPI["mixed"]
+	letterSpacing: LetterSpacing | PluginAPI["mixed"]
+	getRangeFontName(start: number, end: number): FontName | PluginAPI["mixed"]
+	setRangeFontName(start: number, end: number, value: FontName): void
 }
 ```
 

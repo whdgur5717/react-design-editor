@@ -42,7 +42,7 @@ type SceneNode =
 	| SlideNode
 	| SlideRowNode
 	| SlideGridNode
-	| InteractiveSlideElementNode;
+	| InteractiveSlideElementNode
 ```
 
 **요점**
@@ -56,8 +56,8 @@ type SceneNode =
 
 ```ts
 // plugin-api.d.ts
-type BaseNode = DocumentNode | PageNode | SceneNode;
-type NodeType = BaseNode['type'];
+type BaseNode = DocumentNode | PageNode | SceneNode
+type NodeType = BaseNode["type"]
 ```
 
 ## BaseNodeMixin (핵심 공통 데이터)
@@ -67,17 +67,17 @@ type NodeType = BaseNode['type'];
 ```ts
 // plugin-api.d.ts (발췌)
 interface BaseNodeMixin extends PluginDataMixin, DevResourcesMixin {
-	readonly id: string;
-	readonly parent: (BaseNode & ChildrenMixin) | null;
-	name: string;
-	readonly removed: boolean;
-	toString(): string;
-	remove(): void;
-	setRelaunchData(data: { [command: string]: string }): void;
-	getRelaunchData(): { [command: string]: string };
-	readonly isAsset: boolean;
-	getCSSAsync(): Promise<{ [key: string]: string }>;
-	getTopLevelFrame(): FrameNode | undefined;
+	readonly id: string
+	readonly parent: (BaseNode & ChildrenMixin) | null
+	name: string
+	readonly removed: boolean
+	toString(): string
+	remove(): void
+	setRelaunchData(data: { [command: string]: string }): void
+	getRelaunchData(): { [command: string]: string }
+	readonly isAsset: boolean
+	getCSSAsync(): Promise<{ [key: string]: string }>
+	getTopLevelFrame(): FrameNode | undefined
 }
 ```
 
@@ -128,24 +128,24 @@ interface BaseNodeMixin extends PluginDataMixin, DevResourcesMixin {
 ```ts
 // plugin-api.d.ts (발췌)
 interface MinimalStrokesMixin {
-	strokeWeight: number | PluginAPI['mixed'];
-	strokeJoin: StrokeJoin | PluginAPI['mixed'];
+	strokeWeight: number | PluginAPI["mixed"]
+	strokeJoin: StrokeJoin | PluginAPI["mixed"]
 }
 interface GeometryMixin {
-	strokeCap: StrokeCap | PluginAPI['mixed'];
+	strokeCap: StrokeCap | PluginAPI["mixed"]
 }
 interface MinimalFillsMixin {
-	fills: ReadonlyArray<Paint> | PluginAPI['mixed'];
-	fillStyleId: string | PluginAPI['mixed'];
+	fills: ReadonlyArray<Paint> | PluginAPI["mixed"]
+	fillStyleId: string | PluginAPI["mixed"]
 }
 interface CornerMixin {
-	cornerRadius: number | PluginAPI['mixed'];
+	cornerRadius: number | PluginAPI["mixed"]
 }
 interface VectorLikeMixin {
-	handleMirroring: HandleMirroring | PluginAPI['mixed'];
+	handleMirroring: HandleMirroring | PluginAPI["mixed"]
 }
 interface LabelSublayerNode {
-	fills: Paint[] | PluginAPI['mixed'];
+	fills: Paint[] | PluginAPI["mixed"]
 }
 ```
 

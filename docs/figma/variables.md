@@ -111,15 +111,15 @@
 - **데이터 개념**: 변수 바인딩 가능한 필드 집합.
 - **공식 설명 요약**: Node/Text/Paint/Effect/LayoutGrid/Style/ColorStop별 필드 정의.
 - **typings 구조**:
-    - `VariableBindableNodeField`
-    - `VariableBindableTextField`
-    - `VariableBindablePaintField = 'color'`
-    - `VariableBindableEffectField`
-    - `VariableBindableLayoutGridField`
-    - `VariableBindablePaintStyleField = 'color'`
-    - `VariableBindableEffectStyleField = 'effects'`
-    - `VariableBindableGridStyleField = 'layoutGrids'`
-    - `VariableBindableColorStopField = 'color'`
+  - `VariableBindableNodeField`
+  - `VariableBindableTextField`
+  - `VariableBindablePaintField = 'color'`
+  - `VariableBindableEffectField`
+  - `VariableBindableLayoutGridField`
+  - `VariableBindablePaintStyleField = 'color'`
+  - `VariableBindableEffectStyleField = 'effects'`
+  - `VariableBindableGridStyleField = 'layoutGrids'`
+  - `VariableBindableColorStopField = 'color'`
 - **예제 데이터**
 
 ```json

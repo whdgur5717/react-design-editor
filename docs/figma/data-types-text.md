@@ -103,10 +103,10 @@
 - **데이터 개념**: 텍스트 장식(밑줄/취소선) 및 스타일/두께/색.
 - **공식 설명 요약**: `TextDecoration`과 `TextDecorationStyle`, `TextDecorationOffset`, `TextDecorationThickness`, `TextDecorationColor`로 구성.
 - **typings 구조**:
-    - `TextDecoration = 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH'`
-    - `TextDecorationStyle = 'SOLID' | 'WAVY' | 'DOTTED'`
-    - `TextDecorationOffset`/`Thickness`: `{ value, unit } | { unit: 'AUTO' }`
-    - `TextDecorationColor`: `{ value: SolidPaint } | { value: 'AUTO' }`
+  - `TextDecoration = 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH'`
+  - `TextDecorationStyle = 'SOLID' | 'WAVY' | 'DOTTED'`
+  - `TextDecorationOffset`/`Thickness`: `{ value, unit } | { unit: 'AUTO' }`
+  - `TextDecorationColor`: `{ value: SolidPaint } | { value: 'AUTO' }`
 - **예제 데이터 (유니온 전체)**
 
 ```json

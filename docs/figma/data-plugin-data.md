@@ -8,12 +8,12 @@
 ```ts
 // plugin-api.d.ts (발췌)
 interface PluginDataMixin {
-	getPluginData(key: string): string;
-	setPluginData(key: string, value: string): void;
-	getPluginDataKeys(): string[];
-	getSharedPluginData(namespace: string, key: string): string;
-	setSharedPluginData(namespace: string, key: string, value: string): void;
-	getSharedPluginDataKeys(namespace: string): string[];
+	getPluginData(key: string): string
+	setPluginData(key: string, value: string): void
+	getPluginDataKeys(): string[]
+	getSharedPluginData(namespace: string, key: string): string
+	setSharedPluginData(namespace: string, key: string, value: string): void
+	getSharedPluginDataKeys(namespace: string): string[]
 }
 ```
 

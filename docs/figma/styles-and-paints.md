@@ -6,7 +6,7 @@
 
 ```ts
 // plugin-api.d.ts
-type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint;
+type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint
 ```
 
 ### Typings 주석 발췌
@@ -21,12 +21,12 @@ type Paint = SolidPaint | GradientPaint | ImagePaint | VideoPaint | PatternPaint
 
 ```ts
 interface SolidPaint {
-	readonly type: 'SOLID';
-	readonly color: RGB;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
-	readonly boundVariables?: { [field in VariableBindablePaintField]?: VariableAlias };
+	readonly type: "SOLID"
+	readonly color: RGB
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
+	readonly boundVariables?: { [field in VariableBindablePaintField]?: VariableAlias }
 }
 ```
 
@@ -34,12 +34,12 @@ interface SolidPaint {
 
 ```ts
 interface GradientPaint {
-	readonly type: 'GRADIENT_LINEAR' | 'GRADIENT_RADIAL' | 'GRADIENT_ANGULAR' | 'GRADIENT_DIAMOND';
-	readonly gradientTransform: Transform;
-	readonly gradientStops: ReadonlyArray<ColorStop>;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly type: "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND"
+	readonly gradientTransform: Transform
+	readonly gradientStops: ReadonlyArray<ColorStop>
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 ```
 
@@ -47,16 +47,16 @@ interface GradientPaint {
 
 ```ts
 interface ImagePaint {
-	readonly type: 'IMAGE';
-	readonly scaleMode: 'FILL' | 'FIT' | 'CROP' | 'TILE';
-	readonly imageHash: string | null;
-	readonly imageTransform?: Transform;
-	readonly scalingFactor?: number;
-	readonly rotation?: number;
-	readonly filters?: ImageFilters;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly type: "IMAGE"
+	readonly scaleMode: "FILL" | "FIT" | "CROP" | "TILE"
+	readonly imageHash: string | null
+	readonly imageTransform?: Transform
+	readonly scalingFactor?: number
+	readonly rotation?: number
+	readonly filters?: ImageFilters
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 ```
 
@@ -64,16 +64,16 @@ interface ImagePaint {
 
 ```ts
 interface VideoPaint {
-	readonly type: 'VIDEO';
-	readonly scaleMode: 'FILL' | 'FIT' | 'CROP' | 'TILE';
-	readonly videoHash: string | null;
-	readonly videoTransform?: Transform;
-	readonly scalingFactor?: number;
-	readonly rotation?: number;
-	readonly filters?: ImageFilters;
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly type: "VIDEO"
+	readonly scaleMode: "FILL" | "FIT" | "CROP" | "TILE"
+	readonly videoHash: string | null
+	readonly videoTransform?: Transform
+	readonly scalingFactor?: number
+	readonly rotation?: number
+	readonly filters?: ImageFilters
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 ```
 
@@ -81,15 +81,15 @@ interface VideoPaint {
 
 ```ts
 interface PatternPaint {
-	readonly type: 'PATTERN';
-	readonly sourceNodeId: string;
-	readonly tileType: 'RECTANGULAR' | 'HORIZONTAL_HEXAGONAL' | 'VERTICAL_HEXAGONAL';
-	readonly scalingFactor: number;
-	readonly spacing: Vector;
-	readonly horizontalAlignment: 'START' | 'CENTER' | 'END';
-	readonly visible?: boolean;
-	readonly opacity?: number;
-	readonly blendMode?: BlendMode;
+	readonly type: "PATTERN"
+	readonly sourceNodeId: string
+	readonly tileType: "RECTANGULAR" | "HORIZONTAL_HEXAGONAL" | "VERTICAL_HEXAGONAL"
+	readonly scalingFactor: number
+	readonly spacing: Vector
+	readonly horizontalAlignment: "START" | "CENTER" | "END"
+	readonly visible?: boolean
+	readonly opacity?: number
+	readonly blendMode?: BlendMode
 }
 ```
 
@@ -113,57 +113,57 @@ interface PatternPaint {
 
 ```ts
 // plugin-api.d.ts (발췌)
-type StyleType = 'PAINT' | 'TEXT' | 'EFFECT' | 'GRID';
+type StyleType = "PAINT" | "TEXT" | "EFFECT" | "GRID"
 
-type BaseStyle = PaintStyle | TextStyle | EffectStyle | GridStyle;
+type BaseStyle = PaintStyle | TextStyle | EffectStyle | GridStyle
 ```
 
 ```ts
 interface PaintStyle extends BaseStyleMixin {
-	type: 'PAINT';
-	paints: ReadonlyArray<Paint>;
+	type: "PAINT"
+	paints: ReadonlyArray<Paint>
 	readonly boundVariables?: {
-		readonly [field in VariableBindablePaintStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindablePaintStyleField]?: VariableAlias[]
+	}
 }
 ```
 
 ```ts
 interface TextStyle extends BaseStyleMixin {
-	type: 'TEXT';
-	fontSize: number;
-	textDecoration: TextDecoration;
-	fontName: FontName;
-	letterSpacing: LetterSpacing;
-	lineHeight: LineHeight;
-	leadingTrim: LeadingTrim;
-	paragraphIndent: number;
-	paragraphSpacing: number;
-	listSpacing: number;
-	hangingPunctuation: boolean;
-	hangingList: boolean;
-	textCase: TextCase;
-	boundVariables?: { [field in VariableBindableTextField]?: VariableAlias };
+	type: "TEXT"
+	fontSize: number
+	textDecoration: TextDecoration
+	fontName: FontName
+	letterSpacing: LetterSpacing
+	lineHeight: LineHeight
+	leadingTrim: LeadingTrim
+	paragraphIndent: number
+	paragraphSpacing: number
+	listSpacing: number
+	hangingPunctuation: boolean
+	hangingList: boolean
+	textCase: TextCase
+	boundVariables?: { [field in VariableBindableTextField]?: VariableAlias }
 }
 ```
 
 ```ts
 interface EffectStyle extends BaseStyleMixin {
-	type: 'EFFECT';
-	effects: ReadonlyArray<Effect>;
+	type: "EFFECT"
+	effects: ReadonlyArray<Effect>
 	readonly boundVariables?: {
-		readonly [field in VariableBindableEffectStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindableEffectStyleField]?: VariableAlias[]
+	}
 }
 ```
 
 ```ts
 interface GridStyle extends BaseStyleMixin {
-	type: 'GRID';
-	layoutGrids: ReadonlyArray<LayoutGrid>;
+	type: "GRID"
+	layoutGrids: ReadonlyArray<LayoutGrid>
 	readonly boundVariables?: {
-		readonly [field in VariableBindableGridStyleField]?: VariableAlias[];
-	};
+		readonly [field in VariableBindableGridStyleField]?: VariableAlias[]
+	}
 }
 ```
 

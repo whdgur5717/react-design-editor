@@ -15,21 +15,21 @@
 
 - **데이터 개념**: 동일 노드 내에서 범위/세그먼트별 값이 다르면 `figma.mixed`가 반환된다.
 - **typings 구조 예시**:
-    - `fills: ReadonlyArray<Paint> | PluginAPI['mixed']`
-    - `fillStyleId: string | PluginAPI['mixed']`
-    - `strokes: ReadonlyArray<Paint> | PluginAPI['mixed']`
-    - `strokeWeight: number | PluginAPI['mixed']`
-    - `strokeCap: StrokeCap | PluginAPI['mixed']`
-    - `strokeJoin: StrokeJoin | PluginAPI['mixed']`
-    - `cornerRadius: number | PluginAPI['mixed']`
-    - `handleMirroring: HandleMirroring | PluginAPI['mixed']`
-    - `fontSize: number | PluginAPI['mixed']`
-    - `fontName: FontName | PluginAPI['mixed']`
-    - `fontWeight: number | PluginAPI['mixed']`
-    - `textCase: TextCase | PluginAPI['mixed']`
-    - `letterSpacing: LetterSpacing | PluginAPI['mixed']`
-    - `lineHeight: LineHeight | PluginAPI['mixed']`
-    - `textDecoration*`: `TextDecoration* | PluginAPI['mixed'] | null`
+  - `fills: ReadonlyArray<Paint> | PluginAPI['mixed']`
+  - `fillStyleId: string | PluginAPI['mixed']`
+  - `strokes: ReadonlyArray<Paint> | PluginAPI['mixed']`
+  - `strokeWeight: number | PluginAPI['mixed']`
+  - `strokeCap: StrokeCap | PluginAPI['mixed']`
+  - `strokeJoin: StrokeJoin | PluginAPI['mixed']`
+  - `cornerRadius: number | PluginAPI['mixed']`
+  - `handleMirroring: HandleMirroring | PluginAPI['mixed']`
+  - `fontSize: number | PluginAPI['mixed']`
+  - `fontName: FontName | PluginAPI['mixed']`
+  - `fontWeight: number | PluginAPI['mixed']`
+  - `textCase: TextCase | PluginAPI['mixed']`
+  - `letterSpacing: LetterSpacing | PluginAPI['mixed']`
+  - `lineHeight: LineHeight | PluginAPI['mixed']`
+  - `textDecoration*`: `TextDecoration* | PluginAPI['mixed'] | null`
 - **예제 데이터 (mixed)**
 
 ```json

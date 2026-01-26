@@ -7,52 +7,52 @@
 ```ts
 // plugin-api.d.ts
 interface VariableAlias {
-	type: 'VARIABLE_ALIAS';
-	id: string;
+	type: "VARIABLE_ALIAS"
+	id: string
 }
 
-type VariableResolvedDataType = 'BOOLEAN' | 'COLOR' | 'FLOAT' | 'STRING';
+type VariableResolvedDataType = "BOOLEAN" | "COLOR" | "FLOAT" | "STRING"
 
-type VariableValue = boolean | string | number | RGB | RGBA | VariableAlias;
+type VariableValue = boolean | string | number | RGB | RGBA | VariableAlias
 
 type VariableScope =
-	| 'ALL_SCOPES'
-	| 'TEXT_CONTENT'
-	| 'CORNER_RADIUS'
-	| 'WIDTH_HEIGHT'
-	| 'GAP'
-	| 'ALL_FILLS'
-	| 'FRAME_FILL'
-	| 'SHAPE_FILL'
-	| 'TEXT_FILL'
-	| 'STROKE_COLOR'
-	| 'STROKE_FLOAT'
-	| 'EFFECT_FLOAT'
-	| 'EFFECT_COLOR'
-	| 'OPACITY'
-	| 'FONT_FAMILY'
-	| 'FONT_STYLE'
-	| 'FONT_WEIGHT'
-	| 'FONT_SIZE'
-	| 'LINE_HEIGHT'
-	| 'LETTER_SPACING'
-	| 'PARAGRAPH_SPACING'
-	| 'PARAGRAPH_INDENT';
+	| "ALL_SCOPES"
+	| "TEXT_CONTENT"
+	| "CORNER_RADIUS"
+	| "WIDTH_HEIGHT"
+	| "GAP"
+	| "ALL_FILLS"
+	| "FRAME_FILL"
+	| "SHAPE_FILL"
+	| "TEXT_FILL"
+	| "STROKE_COLOR"
+	| "STROKE_FLOAT"
+	| "EFFECT_FLOAT"
+	| "EFFECT_COLOR"
+	| "OPACITY"
+	| "FONT_FAMILY"
+	| "FONT_STYLE"
+	| "FONT_WEIGHT"
+	| "FONT_SIZE"
+	| "LINE_HEIGHT"
+	| "LETTER_SPACING"
+	| "PARAGRAPH_SPACING"
+	| "PARAGRAPH_INDENT"
 ```
 
 ```ts
 // plugin-api.d.ts (발췌)
 interface Variable extends PluginDataMixin {
-	readonly id: string;
-	name: string;
-	description: string;
-	hiddenFromPublishing: boolean;
-	getPublishStatusAsync(): Promise<PublishStatus>;
-	readonly remote: boolean;
-	readonly variableCollectionId: string;
-	readonly key: string;
-	readonly resolvedType: VariableResolvedDataType;
-	resolveForConsumer(consumer: SceneNode): { value: VariableValue; resolvedType: VariableResolvedDataType };
+	readonly id: string
+	name: string
+	description: string
+	hiddenFromPublishing: boolean
+	getPublishStatusAsync(): Promise<PublishStatus>
+	readonly remote: boolean
+	readonly variableCollectionId: string
+	readonly key: string
+	readonly resolvedType: VariableResolvedDataType
+	resolveForConsumer(consumer: SceneNode): { value: VariableValue; resolvedType: VariableResolvedDataType }
 }
 ```
 
