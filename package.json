@@ -2,6 +2,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"dev": "concurrently \"pnpm --filter @design-editor/shell dev\" \"pnpm --filter @design-editor/canvas dev\"",
 		"format": "prettier --write .",
 		"lint": "pnpm -r run lint -- .",
 		"type-check": "pnpm -r run type-check",
@@ -9,6 +10,7 @@
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "^7.0.0-dev.20260124.1",
+		"concurrently": "^9.2.1",
 		"eslint": "^9.39.2",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
