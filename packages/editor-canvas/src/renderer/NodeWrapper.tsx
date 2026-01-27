@@ -1,8 +1,9 @@
 import "./NodeWrapper.css"
 
 import type { NodeData, Position, Size } from "@design-editor/core"
+import { toNumber } from "es-toolkit/compat"
 import { Resizable } from "re-resizable"
-import { type ReactNode,useRef, useState } from "react"
+import { type ReactNode, useRef, useState } from "react"
 
 interface NodeWrapperProps {
 	node: NodeData
@@ -20,9 +21,20 @@ export function NodeWrapper({ node, isSelected, onSelect, onHover, onMove, onRes
 	const wrapperRef = useRef<HTMLDivElement>(null)
 
 	const style = node.style ?? {}
-	const width = (style.width as number) ?? "auto"
-	const height = (style.height as number) ?? "auto"
+	const width = style.width ?? "auto"
+	const height = style.height ?? "auto"
 	const isLocked = node.locked === true
+
+	// position 관련 스타일을 wrapper에 적용하여 선택 보더가 노드와 함께 이동하도록 함
+	const wrapperStyle: React.CSSProperties = {
+		position: style.position,
+		left: style.left,
+		top: style.top,
+		right: style.right,
+		bottom: style.bottom,
+		width,
+		height,
+	}
 
 	const handleMouseDown = (e: React.MouseEvent) => {
 		if (e.button !== 0) return
@@ -33,8 +45,14 @@ export function NodeWrapper({ node, isSelected, onSelect, onHover, onMove, onRes
 		// Locked nodes cannot be dragged
 		if (isLocked) return
 
-		const nodeX = (style.left as number) ?? 0
-		const nodeY = (style.top as number) ?? 0
+		// Don't start drag when clicking on resize handles
+		const target = e.target as HTMLElement
+		if (target.classList.contains("resize-handle") || target.closest(".resize-handle")) {
+			return
+		}
+
+		const nodeX = toNumber(style.left ?? 0)
+		const nodeY = toNumber(style.top ?? 0)
 
 		dragStartRef.current = {
 			x: e.clientX,
@@ -68,33 +86,24 @@ export function NodeWrapper({ node, isSelected, onSelect, onHover, onMove, onRes
 		window.addEventListener("mouseup", handleMouseUp)
 	}
 
-	const handleResizeStop = (
-		_e: MouseEvent | TouchEvent,
-		_direction: string,
-		_ref: HTMLElement,
-		d: { width: number; height: number },
-	) => {
-		const currentWidth = typeof width === "number" ? width : 0
-		const currentHeight = typeof height === "number" ? height : 0
-
-		onResize({
-			width: currentWidth + d.width,
-			height: currentHeight + d.height,
-		})
-	}
-
 	return (
 		<div
 			ref={wrapperRef}
 			className={`node-wrapper ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isLocked ? "locked" : ""}`}
+			style={wrapperStyle}
 			onMouseDown={handleMouseDown}
 			onMouseEnter={() => onHover(true)}
 			onMouseLeave={() => onHover(false)}
 		>
 			{isSelected && !isLocked ? (
 				<Resizable
-					size={{ width, height }}
-					onResizeStop={handleResizeStop}
+					defaultSize={{ width, height }}
+					onResizeStop={(_e, _direction, ref) => {
+						onResize({
+							width: ref.offsetWidth,
+							height: ref.offsetHeight,
+						})
+					}}
 					enable={{
 						top: true,
 						right: true,
