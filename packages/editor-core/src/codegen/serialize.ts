@@ -1,4 +1,4 @@
-import type { NodeData } from "../types/node"
+import type { ElementNode } from "../types/node"
 
 /**
  * Codegen 출력 옵션
@@ -49,19 +49,19 @@ function serializeProps(props: Record<string, unknown>): string {
 }
 
 /**
- * NodeData를 JSX 코드로 serialize
+ * ElementNode를 JSX 코드로 serialize
+ * InstanceNode는 resolve된 후에 호출해야 함
  */
-export function serializeNode(node: NodeData, options: SerializeOptions = {}): string {
+export function serializeNode(node: ElementNode, options: SerializeOptions = {}): string {
 	const opts = { ...DEFAULT_OPTIONS, ...options }
 	return serializeNodeInternal(node, opts, 0)
 }
 
-function serializeNodeInternal(node: NodeData, options: Required<SerializeOptions>, depth: number): string {
+function serializeNodeInternal(node: ElementNode, options: Required<SerializeOptions>, depth: number): string {
 	const { indent } = options
 	const currentIndent = indent.repeat(depth)
-	// const childIndent = indent.repeat(depth + 1);
 
-	const { type, props = {}, style, children } = node
+	const { tag, props = {}, style, children } = node
 
 	// 속성 문자열 생성
 	const attrs: string[] = []
@@ -78,25 +78,28 @@ function serializeNodeInternal(node: NodeData, options: Required<SerializeOption
 
 	// 자식이 없는 경우
 	if (!children || (Array.isArray(children) && children.length === 0)) {
-		return `${currentIndent}<${type}${attrStr} />`
+		return `${currentIndent}<${tag}${attrStr} />`
 	}
 
 	// 텍스트 자식인 경우
 	if (typeof children === "string") {
-		return `${currentIndent}<${type}${attrStr}>${children}</${type}>`
+		return `${currentIndent}<${tag}${attrStr}>${children}</${tag}>`
 	}
 
-	// 배열 자식인 경우
-	const childrenStr = children.map((child) => serializeNodeInternal(child, options, depth + 1)).join("\n")
+	// 배열 자식인 경우 - ElementNode만 serialize (InstanceNode는 스킵하거나 resolve 필요)
+	const childrenStr = children
+		.filter((child): child is ElementNode => child.type === "element")
+		.map((child) => serializeNodeInternal(child, options, depth + 1))
+		.join("\n")
 
-	return `${currentIndent}<${type}${attrStr}>\n${childrenStr}\n${currentIndent}</${type}>`
+	return `${currentIndent}<${tag}${attrStr}>\n${childrenStr}\n${currentIndent}</${tag}>`
 }
 
 /**
- * DocumentNode를 완전한 React 컴포넌트 코드로 serialize
+ * ElementNode를 완전한 React 컴포넌트 코드로 serialize
  */
 export function serializeDocument(
-	node: NodeData,
+	node: ElementNode,
 	componentName: string = "Component",
 	options: SerializeOptions = {},
 ): string {
