@@ -13,10 +13,7 @@ import type {
 import type { CSSProperties } from "react"
 import { create } from "zustand"
 
-/**
- * 현재 페이지의 children에서 노드를 찾는 헬퍼
- */
-function findNodeInPage(page: PageNode, id: string): SceneNode | null {
+function findNodeInPage(page: PageNode, id: string) {
 	for (const node of page.children) {
 		const found = findNodeInTree(node, id)
 		if (found) return found
@@ -24,9 +21,6 @@ function findNodeInPage(page: PageNode, id: string): SceneNode | null {
 	return null
 }
 
-/**
- * SceneNode 트리에서 특정 노드를 찾는 헬퍼
- */
 function findNodeInTree(node: SceneNode, id: string): SceneNode | null {
 	if (node.id === id) return node
 	if ("children" in node && Array.isArray(node.children)) {
@@ -80,7 +74,7 @@ function removeNodeFromTree(node: SceneNode, id: string): SceneNode {
 /**
  * 페이지에서 노드를 삭제하는 헬퍼
  */
-function removeNodeFromPage(page: PageNode, id: string): PageNode {
+function removeNodeFromPage(page: PageNode, id: string) {
 	return {
 		...page,
 		children: page.children.filter((node) => node.id !== id).map((node) => removeNodeFromTree(node, id)),
@@ -90,7 +84,7 @@ function removeNodeFromPage(page: PageNode, id: string): PageNode {
 /**
  * 노드의 부모를 찾는 헬퍼 (페이지 또는 SceneNode)
  */
-function findParentInPage(page: PageNode, id: string): SceneNode | PageNode | null {
+function findParentInPage(page: PageNode, id: string) {
 	// 페이지의 직접 자식인지 확인
 	if (page.children.some((child) => child.id === id)) {
 		return page
@@ -121,24 +115,20 @@ function cloneNodeWithNewIds(node: SceneNode): SceneNode {
 	const prefix = node.type === "element" ? node.tag.toLowerCase() : "instance"
 	const newId = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
-	if (node.type === "instance") {
-		return { ...node, id: newId }
-	}
-
-	const cloned: ElementNode = {
+	return {
 		...node,
 		id: newId,
+		...(node.type === "element" &&
+			Array.isArray(node.children) && {
+				children: node.children.map(cloneNodeWithNewIds),
+			}),
 	}
-	if (Array.isArray(node.children)) {
-		cloned.children = node.children.map(cloneNodeWithNewIds)
-	}
-	return cloned
 }
 
 /**
  * 현재 페이지 가져오기
  */
-function getCurrentPage(document: DocumentNode, currentPageId: string): PageNode | null {
+function getCurrentPage(document: DocumentNode, currentPageId: string) {
 	return document.children.find((page) => page.id === currentPageId) ?? null
 }
 
@@ -452,7 +442,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 		return componentId
 	},
 
-	createInstance(componentId: string, parentId: string): string | null {
+	createInstance(componentId: string, parentId: string) {
 		const state = get()
 		const component = state.components.find((c) => c.id === componentId)
 		if (!component) return null
