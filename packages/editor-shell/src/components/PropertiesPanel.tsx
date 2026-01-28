@@ -1,6 +1,6 @@
 import "./PropertiesPanel.css"
 
-import type { NodeData } from "@design-editor/core"
+import type { DocumentNode, PageNode, SceneNode } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
@@ -8,18 +8,32 @@ import { useEditorStore } from "../store/editor"
 
 type Tab = "design" | "prototype" | "code"
 
-function findNode(root: NodeData, id: string): NodeData | null {
-	if (root.id === id) return root
-	if (Array.isArray(root.children)) {
-		for (const child of root.children) {
-			const found = findNode(child, id)
+function findNodeInPage(page: PageNode, id: string): SceneNode | null {
+	for (const node of page.children) {
+		const found = findNodeInTree(node, id)
+		if (found) return found
+	}
+	return null
+}
+
+function findNodeInTree(node: SceneNode, id: string): SceneNode | null {
+	if (node.id === id) return node
+	if ("children" in node && Array.isArray(node.children)) {
+		for (const child of node.children) {
+			const found = findNodeInTree(child, id)
 			if (found) return found
 		}
 	}
 	return null
 }
 
-function DesignTab({ node }: { node: NodeData }) {
+function findNode(document: DocumentNode, currentPageId: string, id: string): SceneNode | null {
+	const page = document.children.find((p) => p.id === currentPageId)
+	if (!page) return null
+	return findNodeInPage(page, id)
+}
+
+function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
 	const style = node.style ?? {}
 
@@ -267,9 +281,18 @@ function DesignTab({ node }: { node: NodeData }) {
 	)
 }
 
-function CodeTab({ node }: { node: NodeData }) {
+function CodeTab({ node }: { node: SceneNode }) {
 	const [showFull, setShowFull] = useState(false)
 	const [copied, setCopied] = useState(false)
+
+	// InstanceNode는 코드 생성 불가
+	if (node.type === "instance") {
+		return (
+			<div className="code-tab">
+				<div className="empty-state">Instance nodes cannot be exported to code directly</div>
+			</div>
+		)
+	}
 
 	const code = showFull ? serializeDocument(node, "Component") : serializeNode(node)
 
@@ -304,9 +327,10 @@ function CodeTab({ node }: { node: NodeData }) {
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
 	const document = useEditorStore((state) => state.document)
+	const currentPageId = useEditorStore((state) => state.currentPageId)
 	const selection = useEditorStore((state) => state.selection)
 
-	const selectedNode = selection.length === 1 ? findNode(document, selection[0]) : null
+	const selectedNode = selection.length === 1 ? findNode(document, currentPageId, selection[0]) : null
 
 	return (
 		<div className="properties-panel">
