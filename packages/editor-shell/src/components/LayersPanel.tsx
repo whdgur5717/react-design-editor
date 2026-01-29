@@ -1,6 +1,6 @@
 import "./LayersPanel.css"
 
-import type { NodeData } from "@design-editor/core"
+import type { SceneNode } from "@design-editor/core"
 import {
 	closestCenter,
 	DndContext,
@@ -22,7 +22,7 @@ import { useState } from "react"
 import { useEditorStore } from "../store/editor"
 
 interface SortableLayerItemProps {
-	node: NodeData
+	node: SceneNode
 	depth: number
 	parentId: string | null
 	index: number
@@ -57,7 +57,7 @@ function SortableLayerItem({
 	const isHovered = hoveredId === node.id
 	const isVisible = node.visible !== false
 	const isLocked = node.locked === true
-	const hasChildren = Array.isArray(node.children) && node.children.length > 0
+	const hasChildren = "children" in node && Array.isArray(node.children) && node.children.length > 0
 	const isCollapsed = collapsedIds.has(node.id)
 
 	const handleRowClick = (e: React.MouseEvent) => {
@@ -93,7 +93,7 @@ function SortableLayerItem({
 					{hasChildren ? (isCollapsed ? "▶" : "▼") : "─"}
 				</button>
 				<span className="layer-name" {...attributes} {...listeners}>
-					{node.type}
+					{node.type === "element" ? node.tag : "Instance"}
 				</span>
 				<div className="layer-actions">
 					<button
@@ -112,9 +112,9 @@ function SortableLayerItem({
 					</button>
 				</div>
 			</div>
-			{hasChildren && !isCollapsed && (
+			{hasChildren && !isCollapsed && "children" in node && Array.isArray(node.children) && (
 				<LayerChildren
-					children={node.children as NodeData[]}
+					children={node.children}
 					depth={depth + 1}
 					parentId={node.id}
 					collapsedIds={collapsedIds}
@@ -126,7 +126,7 @@ function SortableLayerItem({
 }
 
 interface LayerChildrenProps {
-	children: NodeData[]
+	children: SceneNode[]
 	depth: number
 	parentId: string
 	collapsedIds: Set<string>
@@ -182,7 +182,10 @@ function LayerChildren({ children, depth, parentId, collapsedIds, onToggleCollap
 
 export function LayersPanel() {
 	const document = useEditorStore((state) => state.document)
+	const currentPageId = useEditorStore((state) => state.currentPageId)
 	const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
+
+	const currentPage = document.children.find((p) => p.id === currentPageId)
 
 	const toggleCollapse = (id: string) => {
 		setCollapsedIds((prev) => {
@@ -196,8 +199,17 @@ export function LayersPanel() {
 		})
 	}
 
-	const hasChildren = Array.isArray(document.children) && document.children.length > 0
-	const isCollapsed = collapsedIds.has(document.id)
+	if (!currentPage) {
+		return (
+			<div className="layers-panel">
+				<div className="panel-header">Layers</div>
+				<div className="layers-list">No page selected</div>
+			</div>
+		)
+	}
+
+	const hasChildren = currentPage.children.length > 0
+	const isCollapsed = collapsedIds.has(currentPage.id)
 
 	return (
 		<div className="layers-panel">
@@ -205,16 +217,16 @@ export function LayersPanel() {
 			<div className="layers-list">
 				<div className="layer-item">
 					<div className="layer-row root-layer" style={{ paddingLeft: 8 }}>
-						<button className="layer-collapse-btn" onClick={() => toggleCollapse(document.id)} disabled={!hasChildren}>
+						<button className="layer-collapse-btn" onClick={() => toggleCollapse(currentPage.id)} disabled={!hasChildren}>
 							{hasChildren ? (isCollapsed ? "▶" : "▼") : "─"}
 						</button>
-						<span className="layer-name">{document.meta?.name || document.type}</span>
+						<span className="layer-name">{currentPage.name}</span>
 					</div>
 					{hasChildren && !isCollapsed && (
 						<LayerChildren
-							children={document.children as NodeData[]}
+							children={currentPage.children}
 							depth={1}
-							parentId={document.id}
+							parentId={currentPage.id}
 							collapsedIds={collapsedIds}
 							onToggleCollapse={toggleCollapse}
 						/>
