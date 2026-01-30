@@ -571,4 +571,11 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 			},
 		}))
 	},
+
+	// 유틸리티 메서드
+	findNode(id: string): SceneNode | null {
+		const page = getCurrentPage(get().document, get().currentPageId)
+		if (!page) return null
+		return findNodeInPage(page, id)
+	},
 }))

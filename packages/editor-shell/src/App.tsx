@@ -5,19 +5,43 @@ import { connectToChild } from "penpal"
 import { useEffect, useRef } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
+import { registerAllCommands } from "./commands"
 import { LayersPanel } from "./components/LayersPanel"
 import { PropertiesPanel } from "./components/PropertiesPanel"
 import { Toolbar } from "./components/Toolbar"
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts"
+import {
+	type CanvasKeyEvent,
+	type CanvasPointerEvent,
+	eventBus,
+	eventRouter,
+	type EventType,
+	EventTypes,
+} from "./events"
 import type { CanvasMethods } from "./protocol/types"
 import { useEditorStore } from "./store/editor"
+import { useHistoryStore } from "./store/history"
+import { SelectTool, toolRegistry } from "./tools"
 
 export function App() {
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canvasRef = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
 
-	// 키보드 단축키 활성화
-	useKeyboardShortcuts()
+	// 이벤트 시스템 초기화 (한 번만)
+	useEffect(() => {
+		// Tool 등록
+		toolRegistry.register("select", new SelectTool())
+		// TODO: 다른 Tool들도 등록 (frame, text, shape)
+
+		// Command 등록
+		registerAllCommands()
+
+		// EventRouter 초기화
+		eventRouter.init()
+
+		return () => {
+			eventRouter.destroy()
+		}
+	}, [])
 
 	useEffect(() => {
 		if (!iframeRef.current) return
@@ -25,21 +49,31 @@ export function App() {
 		const canvasConnection = connectToChild<CanvasMethods>({
 			iframe: iframeRef.current,
 			methods: {
-				onNodeClicked(id: string, shiftKey: boolean) {
-					if (shiftKey) {
-						useEditorStore.getState().toggleSelection(id)
-					} else {
-						useEditorStore.getState().setSelection([id])
+				// 새로운 이벤트 시스템
+				onCanvasPointerEvent(event: CanvasPointerEvent) {
+					// 리사이즈 이벤트 처리
+					if (event.isResizeStart) {
+						useHistoryStore.getState().startTransaction()
+						return
 					}
+					if (event.isResizeEnd) {
+						const nodeId = event.targetNodeId
+						if (nodeId && event.width !== undefined && event.height !== undefined) {
+							useEditorStore.getState().resizeNode(nodeId, {
+								width: event.width,
+								height: event.height,
+							})
+						}
+						useHistoryStore.getState().endTransaction()
+						return
+					}
+
+					// 일반 포인터 이벤트
+					const eventType = event.type === "dragend" ? EventTypes.CANVAS_DRAG_END : (`canvas:${event.type}` as EventType)
+					eventBus.dispatch(eventType, event)
 				},
-				onNodeHovered(id: string | null) {
-					useEditorStore.getState().setHoveredId(id)
-				},
-				onNodeMoved(id: string, position: { x: number; y: number }) {
-					useEditorStore.getState().moveNode(id, position)
-				},
-				onNodeResized(id: string, size: { width: number; height: number }) {
-					useEditorStore.getState().resizeNode(id, size)
+				onCanvasKeyEvent(event: CanvasKeyEvent) {
+					eventBus.dispatch(`canvas:${event.type}` as EventType, event)
 				},
 			},
 		})
@@ -50,9 +84,11 @@ export function App() {
 			const state = useEditorStore.getState()
 			child.syncState({
 				document: state.document,
+				currentPageId: state.currentPageId,
 				components: state.components,
 				zoom: state.zoom,
 				selection: state.selection,
+				activeTool: state.activeTool,
 			})
 		})
 
@@ -60,15 +96,52 @@ export function App() {
 		const unsubscribe = useEditorStore.subscribe((state) => {
 			canvasRef.current?.syncState({
 				document: state.document,
+				currentPageId: state.currentPageId,
 				components: state.components,
 				zoom: state.zoom,
 				selection: state.selection,
+				activeTool: state.activeTool,
 			})
 		})
+
+		// Shell 키보드 이벤트 캡처
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// iframe 내부에서 발생한 이벤트는 무시 (Canvas에서 별도 처리)
+			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
+
+			eventBus.dispatch(EventTypes.SHELL_KEY_DOWN, {
+				type: "keydown" as const,
+				key: e.key,
+				code: e.code,
+				shiftKey: e.shiftKey,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+				altKey: e.altKey,
+			})
+		}
+
+		const handleKeyUp = (e: KeyboardEvent) => {
+			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
+
+			eventBus.dispatch(EventTypes.SHELL_KEY_UP, {
+				type: "keyup" as const,
+				key: e.key,
+				code: e.code,
+				shiftKey: e.shiftKey,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+				altKey: e.altKey,
+			})
+		}
+
+		window.addEventListener("keydown", handleKeyDown, { capture: true })
+		window.addEventListener("keyup", handleKeyUp, { capture: true })
 
 		return () => {
 			unsubscribe()
 			canvasConnection.destroy()
+			window.removeEventListener("keydown", handleKeyDown, { capture: true })
+			window.removeEventListener("keyup", handleKeyUp, { capture: true })
 		}
 	}, [])
 
