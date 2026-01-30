@@ -1,5 +1,6 @@
 // Types
 export * from "./types/editor"
+export * from "./types/event"
 export * from "./types/node"
 
 // Schema
