@@ -1,31 +1,23 @@
 import "./NodeWrapper.css"
 
-import type { Position, SceneNode, Size } from "@design-editor/core"
-import { toNumber } from "es-toolkit/compat"
+import type { SceneNode } from "@design-editor/core"
 import { Resizable } from "re-resizable"
-import { type ReactNode, useRef, useState } from "react"
+import type { ReactNode } from "react"
 
 interface NodeWrapperProps {
 	node: SceneNode
 	isSelected: boolean
-	onSelect: (shiftKey: boolean) => void
-	onHover: (hovered: boolean) => void
-	onMove: (position: Position) => void
-	onResize: (size: Size) => void
+	onResizeStart: () => void
+	onResizeEnd: (width: number, height: number) => void
 	children: ReactNode
 }
 
-export function NodeWrapper({ node, isSelected, onSelect, onHover, onMove, onResize, children }: NodeWrapperProps) {
-	const [isDragging, setIsDragging] = useState(false)
-	const dragStartRef = useRef<{ x: number; y: number; nodeX: number; nodeY: number } | null>(null)
-	const wrapperRef = useRef<HTMLDivElement>(null)
-
+export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, children }: NodeWrapperProps) {
 	const style = node.style ?? {}
 	const width = style.width ?? "auto"
 	const height = style.height ?? "auto"
 	const isLocked = node.locked === true
 
-	// position 관련 스타일을 wrapper에 적용하여 선택 보더가 노드와 함께 이동하도록 함
 	const wrapperStyle: React.CSSProperties = {
 		position: style.position,
 		left: style.left,
@@ -36,73 +28,19 @@ export function NodeWrapper({ node, isSelected, onSelect, onHover, onMove, onRes
 		height,
 	}
 
-	const handleMouseDown = (e: React.MouseEvent) => {
-		if (e.button !== 0) return
-		e.stopPropagation()
-
-		onSelect(e.shiftKey)
-
-		// Locked nodes cannot be dragged
-		if (isLocked) return
-
-		// Don't start drag when clicking on resize handles
-		const target = e.target as HTMLElement
-		if (target.classList.contains("resize-handle") || target.closest(".resize-handle")) {
-			return
-		}
-
-		const nodeX = toNumber(style.left ?? 0)
-		const nodeY = toNumber(style.top ?? 0)
-
-		dragStartRef.current = {
-			x: e.clientX,
-			y: e.clientY,
-			nodeX,
-			nodeY,
-		}
-
-		setIsDragging(true)
-
-		const handleMouseMove = (e: MouseEvent) => {
-			if (!dragStartRef.current) return
-
-			const dx = e.clientX - dragStartRef.current.x
-			const dy = e.clientY - dragStartRef.current.y
-
-			onMove({
-				x: dragStartRef.current.nodeX + dx,
-				y: dragStartRef.current.nodeY + dy,
-			})
-		}
-
-		const handleMouseUp = () => {
-			setIsDragging(false)
-			dragStartRef.current = null
-			window.removeEventListener("mousemove", handleMouseMove)
-			window.removeEventListener("mouseup", handleMouseUp)
-		}
-
-		window.addEventListener("mousemove", handleMouseMove)
-		window.addEventListener("mouseup", handleMouseUp)
-	}
-
 	return (
 		<div
-			ref={wrapperRef}
-			className={`node-wrapper ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isLocked ? "locked" : ""}`}
+			data-node-id={node.id}
+			className={`node-wrapper ${isSelected ? "selected" : ""} ${isLocked ? "locked" : ""}`}
 			style={wrapperStyle}
-			onMouseDown={handleMouseDown}
-			onMouseEnter={() => onHover(true)}
-			onMouseLeave={() => onHover(false)}
 		>
 			{isSelected && !isLocked ? (
 				<Resizable
+					key={`${width}-${height}`}
 					defaultSize={{ width, height }}
+					onResizeStart={() => onResizeStart()}
 					onResizeStop={(_e, _direction, ref) => {
-						onResize({
-							width: ref.offsetWidth,
-							height: ref.offsetHeight,
-						})
+						onResizeEnd(ref.offsetWidth, ref.offsetHeight)
 					}}
 					enable={{
 						top: true,
