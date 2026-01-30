@@ -110,6 +110,9 @@ export interface EditorActions {
 
 	/** 페이지 이름 변경 */
 	renamePage: (pageId: string, name: string) => void
+
+	/** 노드 찾기 */
+	findNode: (id: string) => SceneNode | null
 }
 
 /**

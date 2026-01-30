@@ -10,8 +10,8 @@
 		"type-check": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@design-editor/core": "workspace:*",
 		"@base-ui/react": "^1.0.0",
+		"@design-editor/core": "workspace:*",
 		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
@@ -19,6 +19,7 @@
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"react-resizable-panels": "^2.1.0",
+		"zundo": "^2.3.0",
 		"zustand": "^5.0.0"
 	},
 	"devDependencies": {

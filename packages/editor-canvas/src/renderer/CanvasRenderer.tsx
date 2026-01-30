@@ -1,13 +1,5 @@
 import { getComponent } from "@design-editor/components"
-import type {
-	ComponentDefinition,
-	ElementNode,
-	InstanceNode,
-	PageNode,
-	Position,
-	SceneNode,
-	Size,
-} from "@design-editor/core"
+import type { ComponentDefinition, ElementNode, InstanceNode, PageNode, SceneNode } from "@design-editor/core"
 import React from "react"
 
 import { NodeWrapper } from "./NodeWrapper"
@@ -16,21 +8,11 @@ interface CanvasRendererProps {
 	page: PageNode
 	components: ComponentDefinition[]
 	selectedIds: string[]
-	onNodeClick: (id: string, shiftKey: boolean) => void
-	onNodeHover: (id: string | null) => void
-	onNodeMove: (id: string, position: Position) => void
-	onNodeResize: (id: string, size: Size) => void
+	onResizeStart: () => void
+	onResizeEnd: (nodeId: string, width: number, height: number) => void
 }
 
-export function CanvasRenderer({
-	page,
-	components,
-	selectedIds,
-	onNodeClick,
-	onNodeHover,
-	onNodeMove,
-	onNodeResize,
-}: CanvasRendererProps) {
+export function CanvasRenderer({ page, components, selectedIds, onResizeStart, onResizeEnd }: CanvasRendererProps) {
 	return (
 		<>
 			{page.children
@@ -40,12 +22,10 @@ export function CanvasRenderer({
 						key={child.id}
 						node={child}
 						isSelected={selectedIds.includes(child.id)}
-						onSelect={(shiftKey) => onNodeClick(child.id, shiftKey)}
-						onHover={(hovered) => onNodeHover(hovered ? child.id : null)}
-						onMove={(pos) => onNodeMove(child.id, pos)}
-						onResize={(size) => onNodeResize(child.id, size)}
+						onResizeStart={onResizeStart}
+						onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
 					>
-						{renderNode(child, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize)}
+						{renderNode(child, components, selectedIds, onResizeStart, onResizeEnd)}
 					</NodeWrapper>
 				))}
 		</>
@@ -59,10 +39,8 @@ function renderInstance(
 	instance: InstanceNode,
 	components: ComponentDefinition[],
 	selectedIds: string[],
-	onNodeClick: (id: string, shiftKey: boolean) => void,
-	onNodeHover: (id: string | null) => void,
-	onNodeMove: (id: string, position: Position) => void,
-	onNodeResize: (id: string, size: Size) => void,
+	onResizeStart: () => void,
+	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
 	const component = components.find((c) => c.id === instance.componentId)
 	if (!component) {
@@ -79,7 +57,7 @@ function renderInstance(
 	// 오버라이드 적용
 	const rootWithOverrides = applyOverrides(mergedRoot, instance.overrides)
 
-	return renderNode(rootWithOverrides, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize)
+	return renderNode(rootWithOverrides, components, selectedIds, onResizeStart, onResizeEnd)
 }
 
 /**
@@ -118,14 +96,12 @@ function renderNode(
 	node: SceneNode,
 	components: ComponentDefinition[],
 	selectedIds: string[],
-	onNodeClick: (id: string, shiftKey: boolean) => void,
-	onNodeHover: (id: string | null) => void,
-	onNodeMove: (id: string, position: Position) => void,
-	onNodeResize: (id: string, size: Size) => void,
+	onResizeStart: () => void,
+	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
 	// 인스턴스인 경우 컴포넌트 참조하여 렌더링
 	if (node.type === "instance") {
-		return renderInstance(node, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize)
+		return renderInstance(node, components, selectedIds, onResizeStart, onResizeEnd)
 	}
 
 	const Component = getComponent(node.tag)
@@ -141,13 +117,13 @@ function renderNode(
 		return React.createElement(
 			node.tag,
 			{ style: contentStyle, ...node.props },
-			renderChildren(node.children, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize),
+			renderChildren(node.children, components, selectedIds, onResizeStart, onResizeEnd),
 		)
 	}
 
 	return (
 		<Component style={contentStyle} {...node.props}>
-			{renderChildren(node.children, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize)}
+			{renderChildren(node.children, components, selectedIds, onResizeStart, onResizeEnd)}
 		</Component>
 	)
 }
@@ -156,10 +132,8 @@ function renderChildren(
 	children: ElementNode["children"],
 	components: ComponentDefinition[],
 	selectedIds: string[],
-	onNodeClick: (id: string, shiftKey: boolean) => void,
-	onNodeHover: (id: string | null) => void,
-	onNodeMove: (id: string, position: Position) => void,
-	onNodeResize: (id: string, size: Size) => void,
+	onResizeStart: () => void,
+	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
 	if (!children) return null
 
@@ -174,12 +148,10 @@ function renderChildren(
 				key={child.id}
 				node={child}
 				isSelected={selectedIds.includes(child.id)}
-				onSelect={(shiftKey) => onNodeClick(child.id, shiftKey)}
-				onHover={(hovered) => onNodeHover(hovered ? child.id : null)}
-				onMove={(pos) => onNodeMove(child.id, pos)}
-				onResize={(size) => onNodeResize(child.id, size)}
+				onResizeStart={onResizeStart}
+				onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
 			>
-				{renderNode(child, components, selectedIds, onNodeClick, onNodeHover, onNodeMove, onNodeResize)}
+				{renderNode(child, components, selectedIds, onResizeStart, onResizeEnd)}
 			</NodeWrapper>
 		))
 }

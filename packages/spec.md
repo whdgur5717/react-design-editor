@@ -103,38 +103,103 @@ interface DocumentNode extends NodeData {
 
 ## 통신 프로토콜 (Penpal)
 
-**Shell → Canvas** (`CanvasMethods`):
+Shell과 Canvas는 Penpal을 통해 양방향 통신. `methods`는 "상대방이 호출할 함수"를 정의.
 
-- `syncState(document, components)` - 상태 동기화
-- `selectNodes(ids)` - 선택 상태 동기화
-- `setZoom(zoom)` - 줌 동기화
+| 방향           | 용도        | 설명                                    |
+| -------------- | ----------- | --------------------------------------- |
+| Shell → Canvas | 상태 동기화 | 문서, 선택, 줌 등 전체 상태 전달        |
+| Canvas → Shell | 이벤트 전달 | 포인터/키보드 raw 이벤트를 Shell로 전달 |
 
-**Canvas → Shell** (`ShellMethods`):
-
-- `onNodeClicked(id, shiftKey)` - 노드 클릭
-- `onNodeHovered(id | null)` - 호버 변경
-- `onNodeMoved(id, position)` - 드래그 이동
-- `onNodeResized(id, size)` - 리사이즈
+**Canvas는 상태를 직접 변경하지 않음**. 이벤트만 Shell에 알리고, Shell이 상태 업데이트 후 다시 동기화.
 
 ---
 
-## 데이터 흐름
+## 이벤트 시스템
 
-### 속성 편집 (PropertiesPanel)
-
-```
-input 변경 → updateNode(id, { style }) → Zustand 업데이트
-→ useEffect에서 canvas.syncState() → Canvas 리렌더
-```
-
-### 드래그 (Canvas)
+Shell이 모든 이벤트의 중앙 처리자. Canvas와 Shell 어디서 발생하든 동일한 흐름으로 처리.
 
 ```
-mouseDown → window에 mousemove 리스너 등록
-→ mousemove → onNodeMoved(id, position)
-→ Shell의 moveNode() → document 업데이트
-→ syncState → Canvas 리렌더
+┌─────────────────────────────────────────────────────────────────┐
+│ Shell                                                           │
+│                                                                 │
+│  Canvas/Shell 이벤트                                            │
+│        │                                                        │
+│        ▼                                                        │
+│  ┌──────────┐                                                   │
+│  │ EventBus │  ← Pub/Sub 중앙 허브                              │
+│  └────┬─────┘                                                   │
+│       │                                                         │
+│       ▼                                                         │
+│  ┌─────────────┐                                                │
+│  │ EventRouter │  ← 이벤트 종류에 따라 분기                      │
+│  └──────┬──────┘                                                │
+│         │                                                       │
+│    ┌────┴────┐                                                  │
+│    ▼         ▼                                                  │
+│ 키보드     포인터                                                │
+│    │         │                                                  │
+│    ▼         ▼                                                  │
+│ Keybinding  Tool                                                │
+│ Registry    Registry                                            │
+│    │         │                                                  │
+│    ▼         │                                                  │
+│ Command     현재 Tool에                                          │
+│ Registry    위임                                                 │
+│    │         │                                                  │
+│    └────┬────┘                                                  │
+│         ▼                                                       │
+│      Store 업데이트 → syncState → Canvas                        │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### 키보드 이벤트 흐름
+
+```
+키 입력 → EventBus → KeybindingRegistry(키 매칭) → CommandRegistry(실행)
+```
+
+### 포인터 이벤트 흐름
+
+```
+클릭/드래그 → EventBus → ToolRegistry → 현재 활성 Tool이 처리
+```
+
+---
+
+## Tool 시스템
+
+Strategy 패턴. 활성 Tool에 따라 같은 이벤트를 다르게 처리.
+
+| Tool   | 포인터 다운 동작       |
+| ------ | ---------------------- |
+| Select | 노드 선택, 드래그 시작 |
+| Frame  | 새 Frame 그리기 시작   |
+| Text   | 새 Text 노드 생성      |
+
+**Tool 추가**: Tool 인터페이스 구현 후 ToolRegistry에 등록.
+
+---
+
+## Command 시스템
+
+Command 패턴. 액션을 객체로 정의하여 단축키, 메뉴, 툴바에서 재사용.
+
+```
+Command 예시: history:undo, history:redo, node:delete, selection:clear
+```
+
+**Keybinding**: 키 조합 → Command ID 매핑
+
+```
+Cmd+Z → history:undo
+Delete → node:delete (선택된 노드 있을 때만)
+Escape → selection:clear
+```
+
+**Command/Keybinding 추가**:
+
+1. Command 함수 정의 후 CommandRegistry에 등록
+2. keybindings/defaults.ts에 키 매핑 추가
 
 ---
 

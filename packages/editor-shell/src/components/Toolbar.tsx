@@ -2,6 +2,7 @@ import "./Toolbar.css"
 
 import type { EditorTool } from "@design-editor/core"
 import { useState } from "react"
+import { useStore } from "zustand"
 import { useShallow } from "zustand/react/shallow"
 
 import { useEditorStore } from "../store/editor"
@@ -29,6 +30,19 @@ export function Toolbar() {
 			})),
 		)
 
+	const { undo, redo, pastStates, futureStates } = useStore(
+		useEditorStore.temporal,
+		useShallow((state) => ({
+			undo: state.undo,
+			redo: state.redo,
+			pastStates: state.pastStates,
+			futureStates: state.futureStates,
+		})),
+	)
+
+	const canUndo = pastStates.length > 0
+	const canRedo = futureStates.length > 0
+
 	const [showComponentMenu, setShowComponentMenu] = useState(false)
 
 	const canCreateComponent = selection.length === 1 && selection[0] !== document.id
@@ -50,6 +64,13 @@ export function Toolbar() {
 	return (
 		<div className="toolbar">
 			<div className="toolbar-left">
+				<button className="toolbar-button" onClick={() => undo()} disabled={!canUndo} title="Undo">
+					↶
+				</button>
+				<button className="toolbar-button" onClick={() => redo()} disabled={!canRedo} title="Redo">
+					↷
+				</button>
+				<div className="toolbar-separator" />
 				{tools.map((tool) => (
 					<button
 						key={tool.id}
