@@ -1,4 +1,4 @@
-import { useHistoryStore } from "../store/history"
+import { useEditorStore } from "../store/editor"
 import { commandRegistry } from "./CommandRegistry"
 
 /**
@@ -6,10 +6,10 @@ import { commandRegistry } from "./CommandRegistry"
  */
 export function registerHistoryCommands(): void {
 	commandRegistry.register("history:undo", () => {
-		useHistoryStore.getState().undo()
+		useEditorStore.temporal.getState().undo()
 	})
 
 	commandRegistry.register("history:redo", () => {
-		useHistoryStore.getState().redo()
+		useEditorStore.temporal.getState().redo()
 	})
 }

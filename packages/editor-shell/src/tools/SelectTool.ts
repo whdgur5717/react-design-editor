@@ -1,6 +1,5 @@
 import type { CanvasKeyEvent, CanvasPointerEvent } from "../events"
 import { useEditorStore } from "../store/editor"
-import { useHistoryStore } from "../store/history"
 import { BaseTool, type DragEndEvent } from "./types"
 
 /**
@@ -19,8 +18,8 @@ export class SelectTool extends BaseTool {
 				useEditorStore.getState().setSelection([e.targetNodeId])
 			}
 
-			// 드래그 시작 (트랜잭션 시작)
-			useHistoryStore.getState().startTransaction()
+			// 드래그 시작 (히스토리 일시정지)
+			useEditorStore.temporal.getState().pause()
 		} else {
 			// 빈 공간 클릭 → 선택 해제
 			useEditorStore.getState().setSelection([])
@@ -44,8 +43,8 @@ export class SelectTool extends BaseTool {
 	}
 
 	override onDragEnd(_e: DragEndEvent): void {
-		// 드래그 완료 → 트랜잭션 종료 (위치는 이미 onPointerMove에서 업데이트됨)
-		useHistoryStore.getState().endTransaction()
+		// 드래그 완료 → 히스토리 재개 (위치는 이미 onPointerMove에서 업데이트됨)
+		useEditorStore.temporal.getState().resume()
 	}
 
 	override onKeyDown(e: CanvasKeyEvent): void {

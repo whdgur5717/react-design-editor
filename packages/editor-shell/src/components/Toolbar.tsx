@@ -2,10 +2,10 @@ import "./Toolbar.css"
 
 import type { EditorTool } from "@design-editor/core"
 import { useState } from "react"
+import { useStore } from "zustand"
 import { useShallow } from "zustand/react/shallow"
 
 import { useEditorStore } from "../store/editor"
-import { useHistoryStore } from "../store/history"
 
 const tools: { id: EditorTool; label: string; icon: string }[] = [
 	{ id: "select", label: "Select", icon: "↖" },
@@ -30,14 +30,18 @@ export function Toolbar() {
 			})),
 		)
 
-	const { undo, redo, canUndo, canRedo } = useHistoryStore(
+	const { undo, redo, pastStates, futureStates } = useStore(
+		useEditorStore.temporal,
 		useShallow((state) => ({
 			undo: state.undo,
 			redo: state.redo,
-			canUndo: state.canUndo,
-			canRedo: state.canRedo,
+			pastStates: state.pastStates,
+			futureStates: state.futureStates,
 		})),
 	)
+
+	const canUndo = pastStates.length > 0
+	const canRedo = futureStates.length > 0
 
 	const [showComponentMenu, setShowComponentMenu] = useState(false)
 
@@ -60,10 +64,10 @@ export function Toolbar() {
 	return (
 		<div className="toolbar">
 			<div className="toolbar-left">
-				<button className="toolbar-button" onClick={undo} disabled={!canUndo()} title="Undo">
+				<button className="toolbar-button" onClick={() => undo()} disabled={!canUndo} title="Undo">
 					↶
 				</button>
-				<button className="toolbar-button" onClick={redo} disabled={!canRedo()} title="Redo">
+				<button className="toolbar-button" onClick={() => redo()} disabled={!canRedo} title="Redo">
 					↷
 				</button>
 				<div className="toolbar-separator" />

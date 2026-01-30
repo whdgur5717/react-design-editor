@@ -19,7 +19,6 @@ import {
 } from "./events"
 import type { CanvasMethods } from "./protocol/types"
 import { useEditorStore } from "./store/editor"
-import { useHistoryStore } from "./store/history"
 import { SelectTool, toolRegistry } from "./tools"
 
 export function App() {
@@ -53,7 +52,7 @@ export function App() {
 				onCanvasPointerEvent(event: CanvasPointerEvent) {
 					// 리사이즈 이벤트 처리
 					if (event.isResizeStart) {
-						useHistoryStore.getState().startTransaction()
+						useEditorStore.temporal.getState().pause()
 						return
 					}
 					if (event.isResizeEnd) {
@@ -64,7 +63,7 @@ export function App() {
 								height: event.height,
 							})
 						}
-						useHistoryStore.getState().endTransaction()
+						useEditorStore.temporal.getState().resume()
 						return
 					}
 
