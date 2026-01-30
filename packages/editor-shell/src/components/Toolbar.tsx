@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useShallow } from "zustand/react/shallow"
 
 import { useEditorStore } from "../store/editor"
+import { useHistoryStore } from "../store/history"
 
 const tools: { id: EditorTool; label: string; icon: string }[] = [
 	{ id: "select", label: "Select", icon: "↖" },
@@ -29,6 +30,15 @@ export function Toolbar() {
 			})),
 		)
 
+	const { undo, redo, canUndo, canRedo } = useHistoryStore(
+		useShallow((state) => ({
+			undo: state.undo,
+			redo: state.redo,
+			canUndo: state.canUndo,
+			canRedo: state.canRedo,
+		})),
+	)
+
 	const [showComponentMenu, setShowComponentMenu] = useState(false)
 
 	const canCreateComponent = selection.length === 1 && selection[0] !== document.id
@@ -50,6 +60,13 @@ export function Toolbar() {
 	return (
 		<div className="toolbar">
 			<div className="toolbar-left">
+				<button className="toolbar-button" onClick={undo} disabled={!canUndo()} title="Undo">
+					↶
+				</button>
+				<button className="toolbar-button" onClick={redo} disabled={!canRedo()} title="Redo">
+					↷
+				</button>
+				<div className="toolbar-separator" />
 				{tools.map((tool) => (
 					<button
 						key={tool.id}

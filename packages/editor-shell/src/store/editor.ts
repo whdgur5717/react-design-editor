@@ -13,6 +13,8 @@ import type {
 import type { CSSProperties } from "react"
 import { create } from "zustand"
 
+import { useHistoryStore } from "./history"
+
 function findNodeInPage(page: PageNode, id: string) {
 	for (const node of page.children) {
 		const found = findNodeInTree(node, id)
@@ -192,6 +194,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 
 	// 노드 액션
 	updateNode(id: string, updates: Partial<SceneNode>) {
+		useHistoryStore.getState().takeSnapshot()
 		set((state) => {
 			const pageIndex = state.document.children.findIndex((p) => p.id === state.currentPageId)
 			if (pageIndex === -1) return state
@@ -206,6 +209,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 	},
 
 	addNode(parentId: string, node: SceneNode, index?: number) {
+		useHistoryStore.getState().takeSnapshot()
 		set((state) => {
 			const page = getCurrentPage(state.document, state.currentPageId)
 			if (!page) return state
@@ -244,6 +248,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 	},
 
 	removeNode(id: string) {
+		useHistoryStore.getState().takeSnapshot()
 		set((state) => {
 			const pageIndex = state.document.children.findIndex((p) => p.id === state.currentPageId)
 			if (pageIndex === -1) return state
@@ -319,6 +324,7 @@ export const useEditorStore = create<EditorStore>()((set, get) => ({
 	},
 
 	reorderNode(parentId: string, fromIndex: number, toIndex: number) {
+		useHistoryStore.getState().takeSnapshot()
 		set((state) => {
 			const page = getCurrentPage(state.document, state.currentPageId)
 			if (!page) return state
