@@ -3,7 +3,7 @@ import "@design-editor/components"
 
 import type { ComponentDefinition, DocumentNode, EditorTool, PageNode } from "@design-editor/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 
 import type { ShellMethods } from "./protocol/types"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
@@ -20,6 +20,7 @@ export function App() {
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [zoom, setZoom] = useState(1)
 	const [activeTool, setActiveTool] = useState<EditorTool>("select")
+	const [cursor, setCursor] = useState<CSSProperties["cursor"]>("default")
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
 
 	// 드래그 추적용 (시작점 기준 delta 계산)
@@ -37,6 +38,7 @@ export function App() {
 					zoom: number
 					selection: string[]
 					activeTool: EditorTool
+					cursor: CSSProperties["cursor"]
 				}) {
 					const page = state.document.children.find((p) => p.id === state.currentPageId)
 					setCurrentPage(page ?? null)
@@ -44,6 +46,7 @@ export function App() {
 					setZoom(state.zoom)
 					setSelectedIds(state.selection)
 					setActiveTool(state.activeTool)
+					setCursor(state.cursor)
 				},
 			},
 		})
@@ -134,10 +137,18 @@ export function App() {
 				altKey: e.altKey,
 			})
 
-			// 노드 클릭이면 로컬 드래그 상태 시작
-			if (targetNodeId && activeTool === "select") {
+			// 드래그 상태 시작
+			if (activeTool === "select" && targetNodeId) {
+				// select tool: 노드 클릭 시 드래그
 				setLocalDragState({
 					nodeId: targetNodeId,
+					startX: e.clientX,
+					startY: e.clientY,
+				})
+			} else if (activeTool === "frame" || activeTool === "text") {
+				// 생성 도구: 빈 공간 드래그
+				setLocalDragState({
+					nodeId: "__creation__",
 					startX: e.clientX,
 					startY: e.clientY,
 				})
@@ -271,7 +282,7 @@ export function App() {
 	return (
 		<div
 			className="canvas-app"
-			style={{ transform: `scale(${zoom})` }}
+			style={{ transform: `scale(${zoom})`, cursor }}
 			onMouseDown={handleCanvasMouseDown}
 			onMouseMove={handleCanvasMouseMove}
 			onMouseUp={handleCanvasMouseUp}
