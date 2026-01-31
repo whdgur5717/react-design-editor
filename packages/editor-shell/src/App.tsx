@@ -1,5 +1,6 @@
 import "./App.css"
 
+import type { CanvasMethods } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
 import { useEffect, useRef } from "react"
@@ -17,7 +18,6 @@ import {
 	type EventType,
 	EventTypes,
 } from "./events"
-import type { CanvasMethods } from "./protocol/types"
 import { useEditorStore } from "./store/editor"
 import { FrameTool, SelectTool, TextTool, toolRegistry } from "./tools"
 

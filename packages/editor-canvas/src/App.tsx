@@ -1,11 +1,10 @@
 import "./App.css"
 import "@design-editor/components"
 
-import type { ComponentDefinition, DocumentNode, EditorTool, PageNode } from "@design-editor/core"
+import type { ComponentDefinition, EditorTool, PageNode, ShellMethods, SyncStatePayload } from "@design-editor/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 
-import type { ShellMethods } from "./protocol/types"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
 
 interface DragState {
@@ -31,15 +30,7 @@ export function App() {
 	useEffect(() => {
 		const connection = connectToParent<ShellMethods>({
 			methods: {
-				syncState(state: {
-					document: DocumentNode
-					currentPageId: string
-					components: ComponentDefinition[]
-					zoom: number
-					selection: string[]
-					activeTool: EditorTool
-					cursor: CSSProperties["cursor"]
-				}) {
+				syncState(state: SyncStatePayload) {
 					const page = state.document.children.find((p) => p.id === state.currentPageId)
 					setCurrentPage(page ?? null)
 					setComponents(state.components)
