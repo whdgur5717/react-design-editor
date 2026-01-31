@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+
 import type { CanvasKeyEvent, CanvasPointerEvent, DragEndEvent } from "../events"
 
 export type { DragEndEvent }
@@ -10,7 +12,7 @@ export interface Tool {
 	name: string
 
 	/** 마우스 커서 스타일 */
-	cursor: string
+	cursor: CSSProperties["cursor"]
 
 	/** Tool 활성화 시 호출 */
 	onActivate(): void
@@ -39,7 +41,7 @@ export interface Tool {
  */
 export abstract class BaseTool implements Tool {
 	abstract name: string
-	cursor = "default"
+	cursor: CSSProperties["cursor"] = "default"
 
 	onActivate(): void {}
 	onDeactivate(): void {}

@@ -73,10 +73,7 @@ export interface Position {
 /**
  * 노드 크기 정보
  */
-export interface Size {
-	width: number
-	height: number
-}
+export type Size = Pick<CSSProperties, "width" | "height">
 
 /**
  * 노드 바운딩 박스

@@ -1,3 +1,6 @@
+export { FrameTool } from "./FrameTool"
+export { createFrameNode, createTextNode } from "./nodeFactory"
 export { SelectTool } from "./SelectTool"
+export { TextTool } from "./TextTool"
 export { toolRegistry } from "./ToolRegistry"
 export { BaseTool, type DragEndEvent, type Tool } from "./types"
