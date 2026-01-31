@@ -19,7 +19,7 @@ import {
 } from "./events"
 import type { CanvasMethods } from "./protocol/types"
 import { useEditorStore } from "./store/editor"
-import { SelectTool, toolRegistry } from "./tools"
+import { FrameTool, SelectTool, TextTool, toolRegistry } from "./tools"
 
 export function App() {
 	const iframeRef = useRef<HTMLIFrameElement>(null)
@@ -29,7 +29,8 @@ export function App() {
 	useEffect(() => {
 		// Tool 등록
 		toolRegistry.register("select", new SelectTool())
-		// TODO: 다른 Tool들도 등록 (frame, text, shape)
+		toolRegistry.register("frame", new FrameTool())
+		toolRegistry.register("text", new TextTool())
 
 		// Command 등록
 		registerAllCommands()
@@ -88,6 +89,7 @@ export function App() {
 				zoom: state.zoom,
 				selection: state.selection,
 				activeTool: state.activeTool,
+				cursor: toolRegistry.getActiveTool()?.cursor ?? "default",
 			})
 		})
 
@@ -100,6 +102,7 @@ export function App() {
 				zoom: state.zoom,
 				selection: state.selection,
 				activeTool: state.activeTool,
+				cursor: toolRegistry.getActiveTool()?.cursor ?? "default",
 			})
 		})
 
