@@ -1,0 +1,20 @@
+{
+	"name": "@design-editor/ui",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./components": "./src/components/index.tsx"
+	},
+	"dependencies": {
+		"@design-editor/theme": "workspace:*",
+		"radix-ui": "^1.0.0"
+	},
+	"devDependencies": {
+		"@design-editor/tsconfig": "workspace:*"
+	},
+	"peerDependencies": {
+		"react": ">=18",
+		"@types/react": ">=18"
+	}
+}
