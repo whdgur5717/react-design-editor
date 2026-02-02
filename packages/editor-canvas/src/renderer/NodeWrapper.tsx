@@ -1,7 +1,7 @@
 import "./NodeWrapper.css"
 
 import type { SceneNode } from "@design-editor/core"
-import { useDraggable } from "@dnd-kit/core"
+import { useDraggable, useDroppable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 import { Resizable } from "re-resizable"
 import type { ReactNode } from "react"
@@ -20,7 +20,13 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 	const height = style.height ?? "auto"
 	const isLocked = node.locked === true
 
-	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+	const {
+		attributes,
+		listeners,
+		setNodeRef: setDragRef,
+		transform,
+		isDragging,
+	} = useDraggable({
 		id: node.id,
 		disabled: isLocked,
 		data: {
@@ -28,6 +34,16 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 			top: node.style?.top,
 		},
 	})
+
+	const { setNodeRef: setDropRef, isOver } = useDroppable({
+		id: node.id,
+		disabled: isLocked || node.type === "instance",
+	})
+
+	const setRefs = (el: HTMLDivElement | null) => {
+		setDragRef(el)
+		setDropRef(el)
+	}
 
 	const wrapperStyle: React.CSSProperties = {
 		position: style.position,
@@ -44,13 +60,15 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 
 	return (
 		<div
-			ref={setNodeRef}
+			ref={setRefs}
 			data-node-id={node.id}
-			className={`node-wrapper ${isSelected ? "selected" : ""} ${isLocked ? "locked" : ""} ${isDragging ? "dragging" : ""}`}
+			className={`node-wrapper ${isSelected ? "selected" : ""} ${isLocked ? "locked" : ""} ${isDragging ? "dragging" : ""} ${isOver ? "drop-target" : ""}`}
 			style={wrapperStyle}
 			{...attributes}
 			{...listeners}
 		>
+			{isOver && <div className="drop-indicator" />}
+
 			{isSelected && !isLocked ? (
 				<Resizable
 					// TODO: size prop 사용 시 resize 시 깜빡임으로 인해 defaultSize + key 변경으로 강제 렌더링 적용. 더 좋은 방법 찾기

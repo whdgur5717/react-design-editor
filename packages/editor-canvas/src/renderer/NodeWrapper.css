@@ -93,3 +93,16 @@
 	left: -4px;
 	cursor: nwse-resize;
 }
+
+.node-wrapper.drop-target {
+	outline: 2px dashed #10b981 !important;
+	outline-offset: 2px;
+}
+
+.drop-indicator {
+	position: absolute;
+	inset: 0;
+	background-color: rgba(16, 185, 129, 0.1);
+	pointer-events: none;
+	z-index: 1000;
+}

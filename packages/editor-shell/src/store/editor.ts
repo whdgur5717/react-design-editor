@@ -133,6 +133,22 @@ function getCurrentPage(document: DocumentNode, currentPageId: string) {
 	return document.children.find((page) => page.id === currentPageId) ?? null
 }
 
+function isAncestorOf(page: PageNode, sourceId: string, targetId: string): boolean {
+	const sourceNode = findNodeInPage(page, sourceId)
+	if (!sourceNode) return false
+	return hasDescendant(sourceNode, targetId)
+}
+
+function hasDescendant(node: SceneNode, targetId: string): boolean {
+	if (node.id === targetId) return true
+	if ("children" in node && Array.isArray(node.children)) {
+		for (const child of node.children) {
+			if (hasDescendant(child, targetId)) return true
+		}
+	}
+	return false
+}
+
 /**
  * 초기 문서 상태
  */
@@ -360,18 +376,76 @@ export const useEditorStore = create<EditorStore>()(
 				const currentParent = findParentInPage(page, sourceId)
 				if (!currentParent) return
 
-				// 같은 부모 내에서만 위치 이동
-				if (targetId !== currentParent.id) return
+				if (targetId === currentParent.id) {
+					const node = findNodeInPage(page, sourceId)
+					if (!node) return
 
-				const node = findNodeInPage(page, sourceId)
-				if (!node) return
+					const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
+					const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
 
-				const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-				const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+					get().moveNode(sourceId, {
+						x: currentLeft + delta.x,
+						y: currentTop + delta.y,
+					})
+				} else {
+					get().reparentNode(sourceId, targetId)
+				}
+			},
 
-				get().moveNode(sourceId, {
-					x: currentLeft + delta.x,
-					y: currentTop + delta.y,
+			reparentNode(sourceId: string, newParentId: string) {
+				set((state) => {
+					const page = getCurrentPage(state.document, state.currentPageId)
+					if (!page) return state
+
+					const sourceNode = findNodeInPage(page, sourceId)
+					if (!sourceNode) return state
+
+					if (sourceId === newParentId) return state
+					if (isAncestorOf(page, sourceId, newParentId)) return state
+
+					if (newParentId === page.id) {
+						let newPage = removeNodeFromPage(page, sourceId)
+						newPage = {
+							...newPage,
+							children: [...newPage.children, sourceNode],
+						}
+
+						const pageIndex = state.document.children.findIndex((p) => p.id === state.currentPageId)
+						const newPages = [...state.document.children]
+						newPages[pageIndex] = newPage
+
+						return { document: { ...state.document, children: newPages } }
+					}
+
+					const newParent = findNodeInPage(page, newParentId)
+					if (!newParent) return state
+					if (newParent.type === "instance") return state
+
+					let newPage = removeNodeFromPage(page, sourceId)
+
+					const reparentedNode: SceneNode = {
+						...sourceNode,
+						style: {
+							...sourceNode.style,
+							position: undefined,
+							left: undefined,
+							top: undefined,
+						},
+					}
+
+					const newParentChildren = Array.isArray(newParent.children) ? newParent.children : []
+					newPage = updatePageChildren(newPage, newParentId, {
+						children: [...newParentChildren, reparentedNode],
+					})
+
+					const pageIndex = state.document.children.findIndex((p) => p.id === state.currentPageId)
+					const newPages = [...state.document.children]
+					newPages[pageIndex] = newPage
+
+					return {
+						document: { ...state.document, children: newPages },
+						selection: [sourceId],
+					}
 				})
 			},
 
