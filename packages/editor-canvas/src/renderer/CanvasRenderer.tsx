@@ -8,26 +8,47 @@ interface CanvasRendererProps {
 	page: PageNode
 	components: ComponentDefinition[]
 	selectedIds: string[]
+	positionOverrides: Map<string, { x: number; y: number }>
 	onResizeStart: () => void
 	onResizeEnd: (nodeId: string, width: number, height: number) => void
 }
 
-export function CanvasRenderer({ page, components, selectedIds, onResizeStart, onResizeEnd }: CanvasRendererProps) {
+// 노드에 위치 오버라이드 적용
+function applyPositionOverride(node: SceneNode, positionOverrides: Map<string, { x: number; y: number }>) {
+	const override = positionOverrides.get(node.id)
+	if (!override) return node
+	return {
+		...node,
+		style: { ...node.style, left: override.x, top: override.y },
+	}
+}
+
+export function CanvasRenderer({
+	page,
+	components,
+	selectedIds,
+	positionOverrides,
+	onResizeStart,
+	onResizeEnd,
+}: CanvasRendererProps) {
 	return (
 		<>
 			{page.children
 				.filter((child) => child.visible !== false)
-				.map((child) => (
-					<NodeWrapper
-						key={child.id}
-						node={child}
-						isSelected={selectedIds.includes(child.id)}
-						onResizeStart={onResizeStart}
-						onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
-					>
-						{renderNode(child, components, selectedIds, onResizeStart, onResizeEnd)}
-					</NodeWrapper>
-				))}
+				.map((child) => {
+					const effectiveNode = applyPositionOverride(child, positionOverrides)
+					return (
+						<NodeWrapper
+							key={child.id}
+							node={effectiveNode}
+							isSelected={selectedIds.includes(child.id)}
+							onResizeStart={onResizeStart}
+							onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
+						>
+							{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
+						</NodeWrapper>
+					)
+				})}
 		</>
 	)
 }
@@ -39,6 +60,7 @@ function renderInstance(
 	instance: InstanceNode,
 	components: ComponentDefinition[],
 	selectedIds: string[],
+	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
@@ -57,7 +79,7 @@ function renderInstance(
 	// 오버라이드 적용
 	const rootWithOverrides = applyOverrides(mergedRoot, instance.overrides)
 
-	return renderNode(rootWithOverrides, components, selectedIds, onResizeStart, onResizeEnd)
+	return renderNode(rootWithOverrides, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)
 }
 
 /**
@@ -96,12 +118,13 @@ function renderNode(
 	node: SceneNode,
 	components: ComponentDefinition[],
 	selectedIds: string[],
+	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
 	// 인스턴스인 경우 컴포넌트 참조하여 렌더링
 	if (node.type === "instance") {
-		return renderInstance(node, components, selectedIds, onResizeStart, onResizeEnd)
+		return renderInstance(node, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)
 	}
 
 	const Component = getComponent(node.tag)
@@ -117,13 +140,13 @@ function renderNode(
 		return React.createElement(
 			node.tag,
 			{ style: contentStyle, ...node.props },
-			renderChildren(node.children, components, selectedIds, onResizeStart, onResizeEnd),
+			renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd),
 		)
 	}
 
 	return (
 		<Component style={contentStyle} {...node.props}>
-			{renderChildren(node.children, components, selectedIds, onResizeStart, onResizeEnd)}
+			{renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
 		</Component>
 	)
 }
@@ -132,6 +155,7 @@ function renderChildren(
 	children: ElementNode["children"],
 	components: ComponentDefinition[],
 	selectedIds: string[],
+	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
 ): React.ReactNode {
@@ -143,15 +167,18 @@ function renderChildren(
 
 	return children
 		.filter((child) => child.visible !== false)
-		.map((child) => (
-			<NodeWrapper
-				key={child.id}
-				node={child}
-				isSelected={selectedIds.includes(child.id)}
-				onResizeStart={onResizeStart}
-				onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
-			>
-				{renderNode(child, components, selectedIds, onResizeStart, onResizeEnd)}
-			</NodeWrapper>
-		))
+		.map((child) => {
+			const effectiveNode = applyPositionOverride(child, positionOverrides)
+			return (
+				<NodeWrapper
+					key={child.id}
+					node={effectiveNode}
+					isSelected={selectedIds.includes(child.id)}
+					onResizeStart={onResizeStart}
+					onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
+				>
+					{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
+				</NodeWrapper>
+			)
+		})
 }

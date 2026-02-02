@@ -353,6 +353,28 @@ export const useEditorStore = create<EditorStore>()(
 				})
 			},
 
+			dropNode(sourceId: string, targetId: string, delta: { x: number; y: number }) {
+				const page = getCurrentPage(get().document, get().currentPageId)
+				if (!page) return
+
+				const currentParent = findParentInPage(page, sourceId)
+				if (!currentParent) return
+
+				// 같은 부모 내에서만 위치 이동
+				if (targetId !== currentParent.id) return
+
+				const node = findNodeInPage(page, sourceId)
+				if (!node) return
+
+				const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
+				const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+
+				get().moveNode(sourceId, {
+					x: currentLeft + delta.x,
+					y: currentTop + delta.y,
+				})
+			},
+
 			toggleVisibility(id: string) {
 				const page = getCurrentPage(get().document, get().currentPageId)
 				if (!page) return

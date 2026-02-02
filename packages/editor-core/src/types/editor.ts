@@ -53,6 +53,9 @@ export interface EditorActions {
 	/** 노드 순서 변경 (같은 부모 내에서) */
 	reorderNode: (parentId: string, fromIndex: number, toIndex: number) => void
 
+	/** 노드 드롭 처리 (위치 이동) */
+	dropNode: (sourceId: string, targetId: string, delta: { x: number; y: number }) => void
+
 	/** 선택 변경 */
 	setSelection: (ids: string[]) => void
 

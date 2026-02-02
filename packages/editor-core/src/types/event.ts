@@ -37,11 +37,21 @@ export interface CanvasKeyEvent {
 }
 
 /**
- * 드래그 종료 이벤트
+ * 드래그 종료 이벤트 (기존 Tool 시스템용)
  */
 export interface DragEndEvent {
 	type: "dragend"
 	nodeId: string
 	deltaX: number
 	deltaY: number
+}
+
+/**
+ * dnd-kit 드래그 종료 이벤트 (Canvas → Shell)
+ */
+export interface CanvasDndEndEvent {
+	type: "dnd:end"
+	activeNodeId: string
+	overNodeId: string // 드롭 타겟 (최소 페이지 ID)
+	delta: { x: number; y: number }
 }

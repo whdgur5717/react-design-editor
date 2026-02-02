@@ -2,13 +2,14 @@ import "./App.css"
 import "@design-editor/components"
 
 import type { ComponentDefinition, EditorTool, PageNode, ShellMethods, SyncStatePayload } from "@design-editor/core"
+import { DndContext, type DragEndEvent, pointerWithin, useDroppable, useSensor, useSensors } from "@dnd-kit/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 
+import { ResizeAwareSensor } from "./dnd"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
 
-interface DragState {
-	nodeId: string
+interface CreationDragState {
 	startX: number
 	startY: number
 }
@@ -22,10 +23,20 @@ export function App() {
 	const [cursor, setCursor] = useState<CSSProperties["cursor"]>("default")
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
 
-	// 드래그 추적용 (시작점 기준 delta 계산)
-	const [localDragState, setLocalDragState] = useState<DragState | null>(null)
+	const [creationDragState, setCreationDragState] = useState<CreationDragState | null>(null)
 
-	console.log(localDragState)
+	// Shell 응답 전 깜빡임 방지용 로컬 위치 오버라이드
+	const [positionOverrides, setPositionOverrides] = useState<Map<string, { x: number; y: number }>>(new Map())
+
+	const sensors = useSensors(
+		useSensor(ResizeAwareSensor, {
+			activationConstraint: { distance: 8 },
+		}),
+	)
+
+	const { setNodeRef: setCanvasDropRef } = useDroppable({
+		id: currentPage?.id ?? "canvas",
+	})
 
 	useEffect(() => {
 		const connection = connectToParent<ShellMethods>({
@@ -38,6 +49,7 @@ export function App() {
 					setSelectedIds(state.selection)
 					setActiveTool(state.activeTool)
 					setCursor(state.cursor)
+					setPositionOverrides(new Map())
 				},
 			},
 		})
@@ -51,7 +63,6 @@ export function App() {
 		}
 	}, [])
 
-	// Canvas 키보드 이벤트 캡처 → Shell로 전달
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			parentMethodsRef.current?.onCanvasKeyEvent({
@@ -86,7 +97,6 @@ export function App() {
 		}
 	}, [])
 
-	// 클릭된 노드 ID 찾기 (data-node-id 속성으로)
 	const getTargetNodeId = useCallback((target: EventTarget): string | null => {
 		let el = target as HTMLElement
 		while (el && el !== document.body) {
@@ -98,48 +108,85 @@ export function App() {
 		return null
 	}, [])
 
-	// resize handle 클릭 여부 확인
 	const isResizeHandle = useCallback((target: EventTarget): boolean => {
 		const el = target as HTMLElement
 		return el.classList.contains("resize-handle") || el.closest(".resize-handle") !== null
 	}, [])
 
-	// Canvas 마우스 이벤트 핸들러
+	const handleDragEnd = useCallback(
+		(event: DragEndEvent) => {
+			const { active, over, delta } = event
+
+			if (!active || !currentPage) return
+
+			const activeNodeId = String(active.id)
+			const overNodeId = over ? String(over.id) : currentPage.id
+
+			// zoom 보정
+			const adjustedDelta = {
+				x: delta.x / zoom,
+				y: delta.y / zoom,
+			}
+
+			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
+			const { left = 0, top = 0 } = (active.data.current ?? {}) as { left?: number; top?: number }
+			setPositionOverrides((prev) => {
+				const next = new Map(prev)
+				next.set(activeNodeId, {
+					x: left + adjustedDelta.x,
+					y: top + adjustedDelta.y,
+				})
+				return next
+			})
+
+			parentMethodsRef.current?.onCanvasDndEnd({
+				type: "dnd:end",
+				activeNodeId,
+				overNodeId,
+				delta: adjustedDelta,
+			})
+		},
+		[currentPage, zoom],
+	)
+
 	const handleCanvasMouseDown = useCallback(
 		(e: React.MouseEvent) => {
-			// resize handle 클릭이면 드래그 시작 안 함
 			if (isResizeHandle(e.target)) {
 				return
 			}
 
 			const targetNodeId = getTargetNodeId(e.target)
 
-			// Shell에 mousedown 이벤트 전달
-			parentMethodsRef.current?.onCanvasPointerEvent({
-				type: "mousedown",
-				x: e.clientX,
-				y: e.clientY,
-				clientX: e.clientX,
-				clientY: e.clientY,
-				targetNodeId,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
-			})
-
-			// 드래그 상태 시작
-			if (activeTool === "select" && targetNodeId) {
-				// select tool: 노드 클릭 시 드래그
-				setLocalDragState({
-					nodeId: targetNodeId,
-					startX: e.clientX,
-					startY: e.clientY,
+			if (activeTool === "select") {
+				parentMethodsRef.current?.onCanvasPointerEvent({
+					type: "mousedown",
+					x: e.clientX,
+					y: e.clientY,
+					clientX: e.clientX,
+					clientY: e.clientY,
+					targetNodeId,
+					shiftKey: e.shiftKey,
+					ctrlKey: e.ctrlKey,
+					metaKey: e.metaKey,
+					altKey: e.altKey,
 				})
-			} else if (activeTool === "frame" || activeTool === "text") {
-				// 생성 도구: 빈 공간 드래그
-				setLocalDragState({
-					nodeId: "__creation__",
+				return
+			}
+
+			if (activeTool === "frame" || activeTool === "text") {
+				parentMethodsRef.current?.onCanvasPointerEvent({
+					type: "mousedown",
+					x: e.clientX,
+					y: e.clientY,
+					clientX: e.clientX,
+					clientY: e.clientY,
+					targetNodeId,
+					shiftKey: e.shiftKey,
+					ctrlKey: e.ctrlKey,
+					metaKey: e.metaKey,
+					altKey: e.altKey,
+				})
+				setCreationDragState({
 					startX: e.clientX,
 					startY: e.clientY,
 				})
@@ -150,33 +197,29 @@ export function App() {
 
 	const handleCanvasMouseMove = useCallback(
 		(e: React.MouseEvent) => {
-			if (localDragState) {
-				// 드래그 중: Shell에 이벤트 전달 → store 업데이트 → syncState로 리렌더
-				const dx = e.clientX - localDragState.startX
-				const dy = e.clientY - localDragState.startY
+			if (creationDragState) {
+				const dx = e.clientX - creationDragState.startX
+				const dy = e.clientY - creationDragState.startY
 				parentMethodsRef.current?.onCanvasPointerEvent({
 					type: "mousemove",
 					x: e.clientX,
 					y: e.clientY,
 					clientX: e.clientX,
 					clientY: e.clientY,
-					targetNodeId: localDragState.nodeId,
+					targetNodeId: "__creation__",
 					shiftKey: e.shiftKey,
 					ctrlKey: e.ctrlKey,
 					metaKey: e.metaKey,
 					altKey: e.altKey,
-					nodeId: localDragState.nodeId,
+					nodeId: "__creation__",
 					deltaX: dx,
 					deltaY: dy,
 				})
-				// 다음 이동 계산용 시작점 갱신
-				setLocalDragState({
-					...localDragState,
+				setCreationDragState({
 					startX: e.clientX,
 					startY: e.clientY,
 				})
 			} else {
-				// hover 처리
 				const targetNodeId = getTargetNodeId(e.target)
 				parentMethodsRef.current?.onCanvasPointerEvent({
 					type: "mousemove",
@@ -192,27 +235,26 @@ export function App() {
 				})
 			}
 		},
-		[localDragState, getTargetNodeId],
+		[creationDragState, getTargetNodeId],
 	)
 
 	const handleCanvasMouseUp = useCallback(
 		(e: React.MouseEvent) => {
-			if (localDragState) {
-				// 드래그 완료
+			if (creationDragState) {
 				parentMethodsRef.current?.onCanvasPointerEvent({
 					type: "dragend",
 					x: e.clientX,
 					y: e.clientY,
 					clientX: e.clientX,
 					clientY: e.clientY,
-					targetNodeId: localDragState.nodeId,
+					targetNodeId: "__creation__",
 					shiftKey: e.shiftKey,
 					ctrlKey: e.ctrlKey,
 					metaKey: e.metaKey,
 					altKey: e.altKey,
-					nodeId: localDragState.nodeId,
+					nodeId: "__creation__",
 				})
-				setLocalDragState(null)
+				setCreationDragState(null)
 			} else {
 				parentMethodsRef.current?.onCanvasPointerEvent({
 					type: "mouseup",
@@ -228,10 +270,9 @@ export function App() {
 				})
 			}
 		},
-		[localDragState, getTargetNodeId],
+		[creationDragState, getTargetNodeId],
 	)
 
-	// 리사이즈 이벤트 핸들러 (re-resizable용)
 	const handleResizeStart = useCallback(() => {
 		parentMethodsRef.current?.onCanvasPointerEvent({
 			type: "mousedown",
@@ -271,20 +312,24 @@ export function App() {
 	}
 
 	return (
-		<div
-			className="canvas-app"
-			style={{ transform: `scale(${zoom})`, cursor }}
-			onMouseDown={handleCanvasMouseDown}
-			onMouseMove={handleCanvasMouseMove}
-			onMouseUp={handleCanvasMouseUp}
-		>
-			<CanvasRenderer
-				page={currentPage}
-				components={components}
-				selectedIds={selectedIds}
-				onResizeStart={handleResizeStart}
-				onResizeEnd={handleResizeEnd}
-			/>
-		</div>
+		<DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+			<div
+				ref={setCanvasDropRef}
+				className="canvas-app"
+				style={{ transform: `scale(${zoom})`, cursor }}
+				onMouseDown={handleCanvasMouseDown}
+				onMouseMove={handleCanvasMouseMove}
+				onMouseUp={handleCanvasMouseUp}
+			>
+				<CanvasRenderer
+					page={currentPage}
+					components={components}
+					selectedIds={selectedIds}
+					positionOverrides={positionOverrides}
+					onResizeStart={handleResizeStart}
+					onResizeEnd={handleResizeEnd}
+				/>
+			</div>
+		</DndContext>
 	)
 }
