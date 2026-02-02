@@ -1,0 +1,47 @@
+{
+	"name": "@design-editor/theme",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "panda codegen && panda emit-pkg",
+		"prepare": "panda codegen"
+	},
+	"devDependencies": {
+		"@pandacss/dev": "^1.8.0",
+		"@design-editor/tsconfig": "workspace:*",
+		"panda-animation": "^0.1.0"
+	},
+	"peerDependencies": {
+		"react": ">=18"
+	},
+	"exports": {
+		"./css": {
+			"types": "./css/index.d.ts",
+			"require": "./css/index.mjs",
+			"import": "./css/index.mjs"
+		},
+		"./tokens": {
+			"types": "./tokens/index.d.ts",
+			"require": "./tokens/index.mjs",
+			"import": "./tokens/index.mjs"
+		},
+		"./types": {
+			"types": "./types/index.d.ts",
+			"require": "./types/index.mjs",
+			"import": "./types/index.mjs"
+		},
+		"./patterns": {
+			"types": "./patterns/index.d.ts",
+			"require": "./patterns/index.mjs",
+			"import": "./patterns/index.mjs"
+		},
+		"./jsx": {
+			"types": "./jsx/index.d.ts",
+			"require": "./jsx/index.mjs",
+			"import": "./jsx/index.mjs"
+		},
+		"./preset": "./preset.ts",
+		"./styles.css": "./styles.css"
+	}
+}

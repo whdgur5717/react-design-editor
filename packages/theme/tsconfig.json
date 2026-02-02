@@ -1,0 +1,4 @@
+{
+	"extends": "@design-editor/tsconfig/base.json",
+	"include": [".", "src"]
+}
