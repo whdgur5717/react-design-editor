@@ -50,3 +50,14 @@ tsconfig.tsbuildinfo
 # Task files
 # tasks.json
 # tasks/ 
+
+**/styled-system/
+
+# PandaCSS generated files in theme package
+packages/theme/css/
+packages/theme/tokens/
+packages/theme/patterns/
+packages/theme/types/
+packages/theme/jsx/
+packages/theme/helpers.mjs
+packages/theme/styles.css

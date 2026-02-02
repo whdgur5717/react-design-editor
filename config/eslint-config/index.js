@@ -8,7 +8,7 @@ export default [
 	js.configs.recommended,
 	...tseslint.configs.recommended,
 	{
-		ignores: ["node_modules/**", "dist/**", "*.config.{js,ts}"],
+		ignores: ["node_modules/**", "dist/**", "*.config.{js,ts,cjs}", "styled-system/**"],
 	},
 	{
 		plugins: {
