@@ -1,6 +1,6 @@
 import "./App.css"
 
-import type { CanvasMethods } from "@design-editor/core"
+import type { CanvasDndEndEvent, CanvasMethods } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
 import { useEffect, useRef } from "react"
@@ -74,6 +74,10 @@ export function App() {
 				},
 				onCanvasKeyEvent(event: CanvasKeyEvent) {
 					eventBus.dispatch(`canvas:${event.type}` as EventType, event)
+				},
+				onCanvasDndEnd(event: CanvasDndEndEvent) {
+					const { activeNodeId, overNodeId, delta } = event
+					useEditorStore.getState().dropNode(activeNodeId, overNodeId, delta)
 				},
 			},
 		})

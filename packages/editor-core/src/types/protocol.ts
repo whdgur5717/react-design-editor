@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 
 import type { EditorTool } from "./editor"
-import type { CanvasKeyEvent, CanvasPointerEvent } from "./event"
+import type { CanvasDndEndEvent, CanvasKeyEvent, CanvasPointerEvent } from "./event"
 import type { ComponentDefinition, DocumentNode } from "./node"
 
 /**
@@ -30,4 +30,5 @@ export interface CanvasMethods {
 export interface ShellMethods {
 	onCanvasPointerEvent: (event: CanvasPointerEvent) => void
 	onCanvasKeyEvent: (event: CanvasKeyEvent) => void
+	onCanvasDndEnd: (event: CanvasDndEndEvent) => void
 }

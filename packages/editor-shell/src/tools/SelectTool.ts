@@ -3,7 +3,7 @@ import { useEditorStore } from "../store/editor"
 import { BaseTool, type DragEndEvent } from "./types"
 
 /**
- * 선택 도구 - 노드 선택, 드래그 이동
+ * 선택 도구 - 노드 선택 (드래그 이동은 dnd-kit이 처리)
  */
 export class SelectTool extends BaseTool {
 	override name = "select"
@@ -17,34 +17,20 @@ export class SelectTool extends BaseTool {
 			} else {
 				useEditorStore.getState().setSelection([e.targetNodeId])
 			}
-
-			// 드래그 시작 (히스토리 일시정지)
-			useEditorStore.temporal.getState().pause()
+			// 드래그는 dnd-kit이 처리하므로 히스토리 pause 불필요
 		} else {
 			// 빈 공간 클릭 → 선택 해제
 			useEditorStore.getState().setSelection([])
 		}
 	}
 
-	override onPointerMove(e: CanvasPointerEvent): void {
-		// 드래그 중 노드 이동 (deltaX, deltaY가 있으면 드래그 중)
-		if (e.nodeId && e.deltaX !== undefined && e.deltaY !== undefined) {
-			const node = useEditorStore.getState().findNode(e.nodeId)
-			if (node) {
-				const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-				const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
-
-				useEditorStore.getState().moveNode(e.nodeId, {
-					x: currentLeft + e.deltaX,
-					y: currentTop + e.deltaY,
-				})
-			}
-		}
+	override onPointerMove(_e: CanvasPointerEvent): void {
+		// 드래그 이동은 dnd-kit이 처리
+		// hover 처리만 필요하면 여기에 추가
 	}
 
 	override onDragEnd(_e: DragEndEvent): void {
-		// 드래그 완료 → 히스토리 재개 (위치는 이미 onPointerMove에서 업데이트됨)
-		useEditorStore.temporal.getState().resume()
+		// 드래그는 dnd-kit이 처리 (onCanvasDndEnd → dropNode)
 	}
 
 	override onKeyDown(e: CanvasKeyEvent): void {
