@@ -1,5 +1,3 @@
-import "./App.css"
-
 import type { CanvasDndEndEvent, CanvasMethods } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"

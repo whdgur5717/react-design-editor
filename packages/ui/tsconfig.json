@@ -1,0 +1,10 @@
+{
+	"extends": "@design-editor/tsconfig/base.json",
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["./src/*"],
+			"styled-system/*": ["./styled-system/*"]
+		}
+	},
+	"include": ["src", "styled-system"]
+}

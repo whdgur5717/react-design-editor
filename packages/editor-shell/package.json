@@ -5,13 +5,16 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "panda codegen && vite build",
 		"lint": "eslint --fix",
-		"type-check": "tsgo --noEmit"
+		"type-check": "tsgo --noEmit",
+		"prebuild": "panda codegen"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.0.0",
 		"@design-editor/core": "workspace:*",
+		"@design-editor/ui": "workspace:*",
+		"@design-editor/theme": "workspace:*",
 		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
@@ -25,9 +28,11 @@
 	"devDependencies": {
 		"@design-editor/eslint-config": "workspace:*",
 		"@design-editor/tsconfig": "workspace:*",
+		"@pandacss/dev": "^1.8.0",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.0",
-		"vite": "^6.0.0"
+		"vite": "^6.0.0",
+		"panda-animation": "^0.1.0"
 	}
 }
