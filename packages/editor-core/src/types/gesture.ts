@@ -1,6 +1,8 @@
 // Gesture Recognizer 패턴 기반 이벤트 시스템
 
-export type GestureType = "click" | "drag" | "resize" | "key"
+import type { JSONContent } from "@tiptap/core"
+
+export type GestureType = "click" | "drag" | "resize" | "key" | "textchange"
 export type GestureState = "began" | "changed" | "ended" | "cancelled"
 
 // 각 타입별 payload
@@ -30,12 +32,17 @@ export interface KeyPayload {
 	altKey: boolean
 }
 
+export interface TextChangePayload {
+	content: JSONContent
+}
+
 // 타입별 payload 매핑
 export interface GesturePayloadMap {
 	click: ClickPayload
 	drag: DragPayload
 	resize: ResizePayload
 	key: KeyPayload
+	textchange: TextChangePayload
 }
 
 // 통합 제스처 인터페이스

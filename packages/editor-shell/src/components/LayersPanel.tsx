@@ -93,7 +93,7 @@ function SortableLayerItem({
 					{hasChildren ? (isCollapsed ? "▶" : "▼") : "─"}
 				</button>
 				<span className="layer-name" {...attributes} {...listeners}>
-					{node.type === "element" ? node.tag : "Instance"}
+					{node.type === "element" ? node.tag : node.type === "text" ? "Text" : "Instance"}
 				</span>
 				<div className="layer-actions">
 					<button

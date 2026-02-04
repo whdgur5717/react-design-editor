@@ -1,20 +1,17 @@
-import { commandRegistry } from "../../commands"
+import { shortcutRegistry } from "../../commands"
 import { keybindingRegistry } from "../../keybindings"
 import { toolRegistry } from "../../tools"
 import { gestureRouter } from "../GestureRouter"
 
-// keydown → keybinding 매칭 또는 Tool에 위임
 gestureRouter.register("key", "began", (gesture) => {
 	const { payload } = gesture
 
-	// 1. Keybinding 매칭 시도
-	const commandId = keybindingRegistry.match(payload)
-	if (commandId) {
-		commandRegistry.execute(commandId)
+	const shortcutId = keybindingRegistry.match(payload)
+	if (shortcutId) {
+		shortcutRegistry.execute(shortcutId)
 		return
 	}
 
-	// 2. Tool에 위임
 	const tool = toolRegistry.getActiveTool()
 	tool?.onKeyDown(payload)
 })

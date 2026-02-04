@@ -26,3 +26,22 @@
 	color: #666;
 	font-size: 14px;
 }
+
+/* Tiptap ProseMirror 래퍼 리셋 */
+.ProseMirror {
+	margin: 0;
+	padding: 0;
+	border: none;
+	outline: none;
+	background: transparent;
+	width: 100%;
+	height: 100%;
+}
+
+.ProseMirror:focus {
+	outline: none;
+}
+
+.ProseMirror p {
+	margin: 0;
+}

@@ -1,5 +1,6 @@
 import type { ClickPayload, KeyPayload } from "@design-editor/core"
 
+import { commandHistory, MoveNodeCommand, receiver } from "../commands"
 import { useEditorStore } from "../store/editor"
 import { BaseTool } from "./types"
 
@@ -12,7 +13,7 @@ export class SelectTool extends BaseTool {
 
 	override onClick(nodeId: string | null, payload: ClickPayload): void {
 		if (nodeId) {
-			// 노드 클릭 → 선택
+			// 노드 클릭 → 선택 (undo 대상 아님)
 			if (payload.shiftKey) {
 				useEditorStore.getState().toggleSelection(nodeId)
 			} else {
@@ -50,18 +51,28 @@ export class SelectTool extends BaseTool {
 				return
 		}
 
-		// 선택된 모든 노드 이동
-		for (const nodeId of selection) {
-			const node = useEditorStore.getState().findNode(nodeId)
-			if (node) {
-				const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-				const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+		// 여러 노드 이동 시 트랜잭션 사용
+		if (selection.length > 1) {
+			commandHistory.beginTransaction()
+		}
 
-				useEditorStore.getState().moveNode(nodeId, {
-					x: currentLeft + dx,
-					y: currentTop + dy,
-				})
-			}
+		// 선택된 모든 노드 이동
+		for (const id of selection) {
+			const node = receiver.findNode(id)
+			if (!node) continue
+
+			const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
+			const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+
+			const from = { x: currentLeft, y: currentTop }
+			const to = { x: currentLeft + dx, y: currentTop + dy }
+
+			const command = new MoveNodeCommand(receiver, id, from, to)
+			commandHistory.execute(command)
+		}
+
+		if (selection.length > 1) {
+			commandHistory.commitTransaction()
 		}
 	}
 }

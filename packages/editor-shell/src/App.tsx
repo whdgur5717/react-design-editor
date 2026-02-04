@@ -4,7 +4,7 @@ import { connectToChild } from "penpal"
 import { useEffect, useRef } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
-import { registerAllCommands } from "./commands"
+import { registerAllShortcuts } from "./commands"
 import { LayersPanel } from "./components/LayersPanel"
 import { PropertiesPanel } from "./components/PropertiesPanel"
 import { Toolbar } from "./components/Toolbar"
@@ -23,8 +23,7 @@ export function App() {
 		toolRegistry.register("frame", new FrameTool())
 		toolRegistry.register("text", new TextTool())
 
-		// Command 등록
-		registerAllCommands()
+		registerAllShortcuts()
 	}, [])
 
 	useEffect(() => {

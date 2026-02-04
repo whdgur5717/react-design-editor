@@ -81,7 +81,7 @@ export interface EditorActions {
 	toggleLocked: (id: string) => void
 
 	/** 노드 복제 */
-	duplicateNode: (id: string) => void
+	duplicateNode: (id: string) => string | null
 
 	/** 선택된 노드를 컴포넌트로 변환 */
 	createComponent: (nodeId: string, name: string) => string | null

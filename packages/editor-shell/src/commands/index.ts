@@ -1,21 +1,35 @@
-export { commandRegistry } from "./CommandRegistry"
-export { registerHistoryCommands } from "./history"
-export { registerNodeCommands } from "./node"
-export { registerSelectionCommands } from "./selection"
-export { registerToolCommands } from "./tool"
-export type { Command, CommandHandler } from "./types"
+// ========== Command Pattern ==========
+export { CommandHistory } from "./CommandHistory"
+export { CompositeCommand } from "./CompositeCommand"
+export { EditorReceiverImpl } from "./EditorReceiverImpl"
+export type { Command, EditorReceiver, InstanceOverrides, NodeLocation } from "./types"
 
-import { registerHistoryCommands } from "./history"
-import { registerNodeCommands } from "./node"
-import { registerSelectionCommands } from "./selection"
-import { registerToolCommands } from "./tool"
+// ========== Node Commands ==========
+export * from "./node"
 
-/**
- * 모든 기본 Command 등록
- */
-export function registerAllCommands(): void {
-	registerHistoryCommands()
-	registerNodeCommands()
-	registerSelectionCommands()
-	registerToolCommands()
+// ========== 싱글톤 인스턴스 (Composition Root) ==========
+import { useEditorStore } from "../store/editor"
+import { CommandHistory } from "./CommandHistory"
+import { EditorReceiverImpl } from "./EditorReceiverImpl"
+
+export const receiver = new EditorReceiverImpl(useEditorStore)
+export const commandHistory = new CommandHistory(50)
+
+// ========== Shortcut Registry ==========
+export { registerHistoryShortcuts } from "./historyShortcuts"
+export { registerNodeShortcuts } from "./nodeShortcuts"
+export { registerSelectionShortcuts } from "./selectionShortcuts"
+export { shortcutRegistry } from "./ShortcutRegistry"
+export { registerToolShortcuts } from "./toolShortcuts"
+
+import { registerHistoryShortcuts } from "./historyShortcuts"
+import { registerNodeShortcuts } from "./nodeShortcuts"
+import { registerSelectionShortcuts } from "./selectionShortcuts"
+import { registerToolShortcuts } from "./toolShortcuts"
+
+export function registerAllShortcuts() {
+	registerHistoryShortcuts()
+	registerNodeShortcuts()
+	registerSelectionShortcuts()
+	registerToolShortcuts()
 }

@@ -24,6 +24,7 @@ import { type CSSProperties, useCallback, useEffect, useRef, useState } from "re
 
 import { ResizeAwareSensor } from "./dnd"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
+import { isTextInputElement } from "./utils/dom"
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
@@ -80,6 +81,11 @@ export function App() {
 	// 키보드 이벤트
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			// 텍스트 입력 요소는 자체적으로 키보드 처리
+			if (isTextInputElement(e.target)) {
+				return
+			}
+
 			sendGesture({
 				type: "key",
 				state: "began",
@@ -96,6 +102,11 @@ export function App() {
 		}
 
 		const handleKeyUp = (e: KeyboardEvent) => {
+			// 텍스트 입력 요소는 자체적으로 키보드 처리
+			if (isTextInputElement(e.target)) {
+				return
+			}
+
 			sendGesture({
 				type: "key",
 				state: "ended",
@@ -260,6 +271,7 @@ export function App() {
 					positionOverrides={positionOverrides}
 					onResizeStart={handleResizeStart}
 					onResizeEnd={handleResizeEnd}
+					sendGesture={sendGesture}
 				/>
 			</div>
 		</DndContext>

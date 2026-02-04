@@ -1,3 +1,4 @@
+import type { JSONContent } from "@tiptap/core"
 import type { CSSProperties } from "react"
 
 /**
@@ -39,7 +40,7 @@ export interface ElementNode extends BaseNode {
 	type: "element"
 	tag: string
 	props?: Record<string, unknown>
-	children?: SceneNode[] | string
+	children?: SceneNode[]
 }
 
 /**
@@ -52,15 +53,23 @@ export interface InstanceNode extends BaseNode {
 		[nodeId: string]: {
 			props?: Record<string, unknown>
 			style?: CSSProperties
-			children?: string
+			content?: JSONContent // TextNode content override
 		}
 	}
 }
 
 /**
+ * 텍스트 노드 - Tiptap 기반 리치 텍스트
+ */
+export interface TextNode extends BaseNode {
+	type: "text"
+	content: JSONContent
+}
+
+/**
  * 페이지 안에 들어가는 모든 노드
  */
-export type SceneNode = ElementNode | InstanceNode
+export type SceneNode = ElementNode | InstanceNode | TextNode
 
 /**
  * 노드 위치 정보
