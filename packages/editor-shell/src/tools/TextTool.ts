@@ -1,53 +1,25 @@
-import type { CanvasPointerEvent } from "../events"
+import type { ClickPayload } from "@design-editor/core"
+
 import { useEditorStore } from "../store/editor"
 import { createTextNode } from "./nodeFactory"
 import { BaseTool } from "./types"
 
 /**
- * Text 도구 - 드래그로 Text 노드 생성
+ * Text 도구 - 클릭으로 Text 노드 생성
+ * TODO: 드래그로 크기 지정하는 기능은 별도 Gesture로 리팩토링 필요
  */
 export class TextTool extends BaseTool {
 	override name = "text"
 	override cursor = "crosshair"
 
-	private startX = 0
-	private startY = 0
-	private createdNodeId: string | null = null
-
-	override onPointerDown(e: CanvasPointerEvent): void {
-		this.startX = e.clientX
-		this.startY = e.clientY
-
-		// 최소 크기로 노드 즉시 생성
-		const node = createTextNode(e.clientX, e.clientY, 100)
+	override onClick(_nodeId: string | null, payload: ClickPayload): void {
+		// 클릭 위치에 기본 크기로 노드 생성
+		const node = createTextNode(payload.x, payload.y, 150)
 		const pageId = useEditorStore.getState().currentPageId
 		useEditorStore.getState().addNode(pageId, node)
 		useEditorStore.getState().setSelection([node.id])
-		this.createdNodeId = node.id
 
-		useEditorStore.temporal.getState().pause()
-	}
-
-	override onPointerMove(e: CanvasPointerEvent): void {
-		if (!this.createdNodeId) return
-
-		const left = Math.min(this.startX, e.clientX)
-		const top = Math.min(this.startY, e.clientY)
-		const width = Math.max(Math.abs(e.clientX - this.startX), 50)
-
-		useEditorStore.getState().moveNode(this.createdNodeId, { x: left, y: top })
-		useEditorStore.getState().resizeNode(this.createdNodeId, { width, height: "auto" })
-	}
-
-	override onDragEnd(): void {
-		if (!this.createdNodeId) return
-
-		useEditorStore.temporal.getState().resume()
+		// SelectTool로 전환
 		useEditorStore.getState().setActiveTool("select")
-		this.createdNodeId = null
-	}
-
-	override onDeactivate(): void {
-		this.createdNodeId = null
 	}
 }

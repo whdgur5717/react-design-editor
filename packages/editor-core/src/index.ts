@@ -1,6 +1,6 @@
 // Types
 export * from "./types/editor"
-export * from "./types/event"
+export * from "./types/gesture"
 export * from "./types/node"
 export * from "./types/protocol"
 

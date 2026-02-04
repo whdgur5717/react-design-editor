@@ -3,10 +3,10 @@
 	"type": "module",
 	"packageManager": "pnpm@10.28.0",
 	"scripts": {
-		"dev": "concurrently \"pnpm --filter @design-editor/shell dev\" \"pnpm --filter @design-editor/canvas dev\"",
+		"dev": "pnpm --filter @design-editor/shell --filter @design-editor/canvas --parallel run dev",
 		"format": "prettier --write .",
-		"lint": "pnpm -r run lint -- .",
-		"type-check": "pnpm -r run type-check",
+		"lint": "pnpm -r --parallel run lint -- .",
+		"type-check": "pnpm -r --parallel run type-check",
 		"prepare": "husky",
 		"test:e2e": "playwright test"
 	},
