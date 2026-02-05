@@ -38,8 +38,6 @@ node_modules/
 .vscode
 # OS specific
 
-.claude/*
-!.claude/settings.json
 tsconfig.tsbuildinfo
 
 # Playwright
