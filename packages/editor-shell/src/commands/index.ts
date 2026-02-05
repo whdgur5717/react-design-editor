@@ -20,16 +20,15 @@ export { registerHistoryShortcuts } from "./historyShortcuts"
 export { registerNodeShortcuts } from "./nodeShortcuts"
 export { registerSelectionShortcuts } from "./selectionShortcuts"
 export { shortcutRegistry } from "./ShortcutRegistry"
-export { registerToolShortcuts } from "./toolShortcuts"
+// registerToolShortcuts는 순환 참조 방지를 위해 App.tsx에서 직접 import
 
 import { registerHistoryShortcuts } from "./historyShortcuts"
 import { registerNodeShortcuts } from "./nodeShortcuts"
 import { registerSelectionShortcuts } from "./selectionShortcuts"
-import { registerToolShortcuts } from "./toolShortcuts"
 
 export function registerAllShortcuts() {
 	registerHistoryShortcuts()
 	registerNodeShortcuts()
 	registerSelectionShortcuts()
-	registerToolShortcuts()
+	// registerToolShortcuts는 App.tsx에서 별도 호출
 }

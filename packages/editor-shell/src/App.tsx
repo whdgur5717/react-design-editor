@@ -5,26 +5,21 @@ import { useEffect, useRef } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 import { registerAllShortcuts } from "./commands"
+import { registerToolShortcuts } from "./commands/toolShortcuts"
 import { LayersPanel } from "./components/LayersPanel"
 import { PropertiesPanel } from "./components/PropertiesPanel"
 import { Toolbar } from "./components/Toolbar"
 import { gestureRouter } from "./gestures"
 import { useEditorStore } from "./store/editor"
-import { FrameTool, SelectTool, TextTool, toolRegistry } from "./tools"
+import { toolRegistry } from "./tools"
+
+// 모듈 레벨에서 단축키 등록
+registerAllShortcuts()
+registerToolShortcuts()
 
 export function App() {
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canvasRef = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
-
-	// 초기화 (한 번만)
-	useEffect(() => {
-		// Tool 등록
-		toolRegistry.register("select", new SelectTool())
-		toolRegistry.register("frame", new FrameTool())
-		toolRegistry.register("text", new TextTool())
-
-		registerAllShortcuts()
-	}, [])
 
 	useEffect(() => {
 		if (!iframeRef.current) return
