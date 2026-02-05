@@ -5,7 +5,7 @@ type GestureHandler<T extends GestureType> = (gesture: CanvasGesture<T>) => void
 class GestureRouterImpl {
 	private handlers = new Map<string, GestureHandler<GestureType>>()
 
-	private key(type: GestureType, state: GestureState): string {
+	private key(type: GestureType, state: GestureState) {
 		return `${type}:${state}`
 	}
 

@@ -132,7 +132,7 @@ function getCurrentPage(document: DocumentNode, currentPageId: string) {
 	return document.children.find((page) => page.id === currentPageId) ?? null
 }
 
-function isAncestorOf(page: PageNode, sourceId: string, targetId: string): boolean {
+function isAncestorOf(page: PageNode, sourceId: string, targetId: string) {
 	const sourceNode = findNodeInPage(page, sourceId)
 	if (!sourceNode) return false
 	return hasDescendant(sourceNode, targetId)
