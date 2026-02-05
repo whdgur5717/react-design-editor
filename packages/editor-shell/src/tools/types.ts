@@ -1,6 +1,8 @@
 import type { ClickPayload, DragPayload, KeyPayload } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
+import type { ToolService } from "./ToolService"
+
 /**
  * Tool 인터페이스 - Strategy 패턴
  */
@@ -28,9 +30,11 @@ export interface Tool {
 }
 
 /**
- * Tool 기본 구현 (빈 메서드)
+ * Tool 기본 구현 - ToolService 의존성 주입
  */
 export abstract class BaseTool implements Tool {
+	constructor(protected service: ToolService) {}
+
 	abstract name: string
 	cursor: CSSProperties["cursor"] = "default"
 
