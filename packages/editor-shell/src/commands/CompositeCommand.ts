@@ -50,7 +50,7 @@ export class CompositeCommand implements Command {
 			try {
 				this.executed[i].undo()
 			} catch {
-				// 롤백 중 에러는 무시 (최선의 노력)
+				// TODO: 롤백 실패 시 사용자에게 알림 필요
 				console.error("Error during rollback")
 			}
 		}
