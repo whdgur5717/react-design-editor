@@ -38,8 +38,6 @@ node_modules/
 .vscode
 # OS specific
 
-.claude/*
-!.claude/settings.json
 tsconfig.tsbuildinfo
 
 # Playwright
@@ -61,4 +59,4 @@ packages/theme/patterns/
 packages/theme/types/
 packages/theme/jsx/
 packages/theme/helpers.mjs
-packages/theme/styles.css
+packages/theme/styles.css.worktrees

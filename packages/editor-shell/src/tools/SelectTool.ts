@@ -1,48 +1,60 @@
-import type { CanvasKeyEvent, CanvasPointerEvent } from "../events"
-import { useEditorStore } from "../store/editor"
-import { BaseTool, type DragEndEvent } from "./types"
+import type { ClickPayload, DragPayload, KeyPayload } from "@design-editor/core"
+
+import { MoveNodeCommand, ReparentNodeCommand } from "../commands"
+import { BaseTool } from "./types"
 
 /**
- * 선택 도구 - 노드 선택 (드래그 이동은 dnd-kit이 처리)
+ * 선택 도구 - 노드 선택, 이동, 키보드 미세 조정
  */
 export class SelectTool extends BaseTool {
 	override name = "select"
 	override cursor = "default"
 
-	override onPointerDown(e: CanvasPointerEvent): void {
-		if (e.targetNodeId) {
-			// 노드 클릭 → 선택
-			if (e.shiftKey) {
-				useEditorStore.getState().toggleSelection(e.targetNodeId)
+	override onClick(nodeId: string | null, payload: ClickPayload): void {
+		if (nodeId) {
+			if (payload.shiftKey) {
+				this.service.toggleSelection(nodeId)
 			} else {
-				useEditorStore.getState().setSelection([e.targetNodeId])
+				this.service.setSelection([nodeId])
 			}
-			// 드래그는 dnd-kit이 처리하므로 히스토리 pause 불필요
 		} else {
-			// 빈 공간 클릭 → 선택 해제
-			useEditorStore.getState().setSelection([])
+			this.service.setSelection([])
 		}
 	}
 
-	override onPointerMove(_e: CanvasPointerEvent): void {
-		// 드래그 이동은 dnd-kit이 처리
-		// hover 처리만 필요하면 여기에 추가
+	override onDragEnd(nodeId: string | null, payload: DragPayload): void {
+		if (!nodeId || !payload.delta) return
+
+		const node = this.service.findNode(nodeId)
+		if (!node) return
+
+		const location = this.service.findNodeLocation(nodeId)
+		if (!location) return
+
+		const receiver = this.service.getReceiver()
+
+		if (payload.overNodeId && payload.overNodeId !== location.parentId) {
+			const command = new ReparentNodeCommand(receiver, nodeId, payload.overNodeId)
+			this.service.executeCommand(command)
+		} else {
+			const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
+			const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+			const from = { x: currentLeft, y: currentTop }
+			const to = { x: currentLeft + payload.delta.x, y: currentTop + payload.delta.y }
+			const command = new MoveNodeCommand(receiver, nodeId, from, to)
+			this.service.executeCommand(command)
+		}
 	}
 
-	override onDragEnd(_e: DragEndEvent): void {
-		// 드래그는 dnd-kit이 처리 (onCanvasDndEnd → dropNode)
-	}
-
-	override onKeyDown(e: CanvasKeyEvent): void {
-		// 방향키로 미세 이동 (선택된 노드가 있을 때)
-		const selection = useEditorStore.getState().selection
+	override onKeyDown(payload: KeyPayload): void {
+		const selection = this.service.getSelection()
 		if (selection.length === 0) return
 
-		const delta = e.shiftKey ? 10 : 1
+		const delta = payload.shiftKey ? 10 : 1
 		let dx = 0
 		let dy = 0
 
-		switch (e.key) {
+		switch (payload.key) {
 			case "ArrowUp":
 				dy = -delta
 				break
@@ -59,18 +71,27 @@ export class SelectTool extends BaseTool {
 				return
 		}
 
-		// 선택된 모든 노드 이동
-		for (const nodeId of selection) {
-			const node = useEditorStore.getState().findNode(nodeId)
-			if (node) {
-				const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-				const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+		const receiver = this.service.getReceiver()
 
-				useEditorStore.getState().moveNode(nodeId, {
-					x: currentLeft + dx,
-					y: currentTop + dy,
-				})
-			}
+		if (selection.length > 1) {
+			this.service.beginTransaction()
+		}
+
+		for (const id of selection) {
+			const node = this.service.findNode(id)
+			if (!node) continue
+
+			const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
+			const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+			const from = { x: currentLeft, y: currentTop }
+			const to = { x: currentLeft + dx, y: currentTop + dy }
+
+			const command = new MoveNodeCommand(receiver, id, from, to)
+			this.service.executeCommand(command)
+		}
+
+		if (selection.length > 1) {
+			this.service.commitTransaction()
 		}
 	}
 }

@@ -1,18 +1,31 @@
 @layer reset, base, tokens, recipes, utilities;
-/* 
-.app {
-	display: flex;
-	flex-direction: column;
+
+:root,
+body,
+#root {
 	width: 100%;
 	height: 100%;
-	background-color: #1e1e1e;
+	margin: 0;
+	background: #111111;
 	color: #ffffff;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+* {
+	box-sizing: border-box;
+}
+
+.app {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	width: 100%;
+}
+
 .main-content {
 	flex: 1;
-	overflow: hidden;
+	min-height: 0;
+	height: 100%;
 }
 
 .resize-handle {
@@ -36,4 +49,5 @@
 	width: 100%;
 	height: 100%;
 	border: none;
-} */
+	display: block;
+}
