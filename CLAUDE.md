@@ -121,8 +121,3 @@ Zustand store in `editor-shell/src/store/editor.ts` manages:
 - **re-resizable**: Node resize handles in Canvas
 - **@dnd-kit**: Drag-and-drop for canvas and layer panel sorting
 - **Playwright**: E2E testing with cross-origin iframe support
-
-## Task Master AI Instructions
-
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
