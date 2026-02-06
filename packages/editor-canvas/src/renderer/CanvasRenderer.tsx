@@ -1,8 +1,17 @@
 import { getComponent } from "@design-editor/components"
-import type { ComponentDefinition, ElementNode, InstanceNode, PageNode, SceneNode } from "@design-editor/core"
+import type {
+	CanvasGesture,
+	ComponentDefinition,
+	ElementNode,
+	GestureType,
+	InstanceNode,
+	PageNode,
+	SceneNode,
+} from "@design-editor/core"
 import React from "react"
 
 import { NodeWrapper } from "./NodeWrapper"
+import { TextNodeRenderer } from "./TextNodeRenderer"
 
 interface CanvasRendererProps {
 	page: PageNode
@@ -11,6 +20,7 @@ interface CanvasRendererProps {
 	positionOverrides: Map<string, { x: number; y: number }>
 	onResizeStart: () => void
 	onResizeEnd: (nodeId: string, width: number, height: number) => void
+	sendGesture: <T extends GestureType>(gesture: CanvasGesture<T>) => void
 }
 
 // 노드에 위치 오버라이드 적용
@@ -30,6 +40,7 @@ export function CanvasRenderer({
 	positionOverrides,
 	onResizeStart,
 	onResizeEnd,
+	sendGesture,
 }: CanvasRendererProps) {
 	return (
 		<>
@@ -45,7 +56,7 @@ export function CanvasRenderer({
 							onResizeStart={onResizeStart}
 							onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
 						>
-							{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
+							{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture)}
 						</NodeWrapper>
 					)
 				})}
@@ -63,6 +74,7 @@ function renderInstance(
 	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
+	sendGesture: <T extends GestureType>(gesture: CanvasGesture<T>) => void,
 ): React.ReactNode {
 	const component = components.find((c) => c.id === instance.componentId)
 	if (!component) {
@@ -79,7 +91,15 @@ function renderInstance(
 	// 오버라이드 적용
 	const rootWithOverrides = applyOverrides(mergedRoot, instance.overrides)
 
-	return renderNode(rootWithOverrides, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)
+	return renderNode(
+		rootWithOverrides,
+		components,
+		selectedIds,
+		positionOverrides,
+		onResizeStart,
+		onResizeEnd,
+		sendGesture,
+	)
 }
 
 /**
@@ -96,7 +116,6 @@ function applyOverrides(node: ElementNode, overrides?: InstanceNode["overrides"]
 			...node,
 			props: { ...node.props, ...nodeOverride.props },
 			style: { ...node.style, ...nodeOverride.style },
-			children: nodeOverride.children !== undefined ? nodeOverride.children : node.children,
 		}
 	}
 
@@ -106,6 +125,14 @@ function applyOverrides(node: ElementNode, overrides?: InstanceNode["overrides"]
 			...result,
 			children: result.children.map((child) => {
 				if (child.type === "instance") return child
+				if (child.type === "text") {
+					// TextNode의 content 오버라이드 적용
+					const textOverride = overrides[child.id]
+					if (textOverride?.content) {
+						return { ...child, content: textOverride.content }
+					}
+					return child
+				}
 				return applyOverrides(child, overrides)
 			}),
 		}
@@ -121,10 +148,28 @@ function renderNode(
 	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
+	sendGesture: <T extends GestureType>(gesture: CanvasGesture<T>) => void,
 ): React.ReactNode {
+	// 텍스트 노드
+	if (node.type === "text") {
+		return (
+			<TextNodeRenderer
+				node={node}
+				onContentChange={(content) => {
+					sendGesture({
+						type: "textchange",
+						state: "ended",
+						nodeId: node.id,
+						payload: { content },
+					})
+				}}
+			/>
+		)
+	}
+
 	// 인스턴스인 경우 컴포넌트 참조하여 렌더링
 	if (node.type === "instance") {
-		return renderInstance(node, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)
+		return renderInstance(node, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture)
 	}
 
 	const Component = getComponent(node.tag)
@@ -140,13 +185,13 @@ function renderNode(
 		return React.createElement(
 			node.tag,
 			{ style: contentStyle, ...node.props },
-			renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd),
+			renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture),
 		)
 	}
 
 	return (
 		<Component style={contentStyle} {...node.props}>
-			{renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
+			{renderChildren(node.children, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture)}
 		</Component>
 	)
 }
@@ -158,12 +203,9 @@ function renderChildren(
 	positionOverrides: Map<string, { x: number; y: number }>,
 	onResizeStart: () => void,
 	onResizeEnd: (nodeId: string, width: number, height: number) => void,
+	sendGesture: <T extends GestureType>(gesture: CanvasGesture<T>) => void,
 ): React.ReactNode {
 	if (!children) return null
-
-	if (typeof children === "string") {
-		return children
-	}
 
 	return children
 		.filter((child) => child.visible !== false)
@@ -177,7 +219,7 @@ function renderChildren(
 					onResizeStart={onResizeStart}
 					onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
 				>
-					{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd)}
+					{renderNode(child, components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture)}
 				</NodeWrapper>
 			)
 		})

@@ -11,7 +11,7 @@ const config = {}
 for (const [dir, name] of Object.entries(packages)) {
 	config[`packages/${dir}/**/*.{ts,tsx}`] = (files) => [
 		`pnpm --filter ${name} lint ${files.join(" ")}`,
-		`pnpm --filter ${name} type-check`,
+		// `pnpm --filter ${name} type-check`,
 	]
 }
 

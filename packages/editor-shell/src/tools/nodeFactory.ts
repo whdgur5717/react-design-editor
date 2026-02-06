@@ -1,4 +1,4 @@
-import type { ElementNode } from "@design-editor/core"
+import type { ElementNode, TextNode } from "@design-editor/core"
 
 function generateId(prefix: string): string {
 	return `${prefix}-${crypto.randomUUID()}`
@@ -22,19 +22,24 @@ export function createFrameNode(left: number, top: number, width: number, height
 	}
 }
 
-export function createTextNode(left: number, top: number, width: number): ElementNode {
+export function createTextNode(left: number, top: number, width: number): TextNode {
 	return {
 		id: generateId("text"),
-		type: "element",
-		tag: "p",
+		type: "text",
+		content: {
+			type: "doc",
+			content: [
+				{
+					type: "paragraph",
+					content: [{ type: "text", text: "Text" }],
+				},
+			],
+		},
 		style: {
 			position: "absolute",
 			left,
 			top,
 			width,
-			fontSize: 16,
-			color: "#000000",
 		},
-		children: "Text",
 	}
 }

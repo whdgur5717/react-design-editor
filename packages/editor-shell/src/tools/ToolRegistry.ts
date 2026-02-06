@@ -1,10 +1,22 @@
-import type { EditorTool } from "@design-editor/core"
+import type { ClickPayload, DragPayload, EditorTool, KeyPayload } from "@design-editor/core"
 
-import { useEditorStore } from "../store/editor"
+import type { ToolService } from "./ToolService"
 import type { Tool } from "./types"
 
+/**
+ * ToolRegistry - Strategy Pattern의 Context
+ * 모든 이벤트를 받아서 현재 활성화된 Tool에 위임
+ */
 class ToolRegistryImpl {
 	private tools = new Map<EditorTool, Tool>()
+	private service!: ToolService
+
+	/**
+	 * ToolService 초기화
+	 */
+	init(service: ToolService): void {
+		this.service = service
+	}
 
 	/**
 	 * Tool 등록
@@ -24,7 +36,7 @@ class ToolRegistryImpl {
 	 * 현재 활성화된 Tool 가져오기
 	 */
 	getActiveTool(): Tool | undefined {
-		const activeTool = useEditorStore.getState().activeTool
+		const activeTool = this.service.getActiveTool()
 		return this.tools.get(activeTool)
 	}
 
@@ -35,15 +47,9 @@ class ToolRegistryImpl {
 		const currentTool = this.getActiveTool()
 		const newTool = this.tools.get(toolType)
 
-		if (currentTool) {
-			currentTool.onDeactivate()
-		}
-
-		useEditorStore.getState().setActiveTool(toolType)
-
-		if (newTool) {
-			newTool.onActivate()
-		}
+		currentTool?.onDeactivate()
+		this.service.setActiveTool(toolType)
+		newTool?.onActivate()
 	}
 
 	/**
@@ -51,6 +57,27 @@ class ToolRegistryImpl {
 	 */
 	getRegisteredTools(): EditorTool[] {
 		return Array.from(this.tools.keys())
+	}
+
+	/**
+	 * 클릭 이벤트 위임
+	 */
+	handleClick(nodeId: string | null, payload: ClickPayload): void {
+		this.getActiveTool()?.onClick(nodeId, payload)
+	}
+
+	/**
+	 * 드래그 종료 이벤트 위임
+	 */
+	handleDragEnd(nodeId: string | null, payload: DragPayload): void {
+		this.getActiveTool()?.onDragEnd(nodeId, payload)
+	}
+
+	/**
+	 * 키보드 이벤트 위임
+	 */
+	handleKeyDown(payload: KeyPayload): void {
+		this.getActiveTool()?.onKeyDown(payload)
 	}
 }
 

@@ -1,45 +1,25 @@
-import type { CanvasDndEndEvent, CanvasMethods } from "@design-editor/core"
+import type { CanvasGesture, CanvasMethods } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
 import { useEffect, useRef } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
-import { registerAllCommands } from "./commands"
+import { registerAllShortcuts } from "./commands"
+import { registerToolShortcuts } from "./commands/toolShortcuts"
 import { LayersPanel } from "./components/LayersPanel"
 import { PropertiesPanel } from "./components/PropertiesPanel"
 import { Toolbar } from "./components/Toolbar"
-import {
-	type CanvasKeyEvent,
-	type CanvasPointerEvent,
-	eventBus,
-	eventRouter,
-	type EventType,
-	EventTypes,
-} from "./events"
+import { gestureRouter } from "./gestures"
 import { useEditorStore } from "./store/editor"
-import { FrameTool, SelectTool, TextTool, toolRegistry } from "./tools"
+import { toolRegistry } from "./tools"
+
+// 모듈 레벨에서 단축키 등록
+registerAllShortcuts()
+registerToolShortcuts()
 
 export function App() {
 	const iframeRef = useRef<HTMLIFrameElement>(null)
 	const canvasRef = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
-
-	// 이벤트 시스템 초기화 (한 번만)
-	useEffect(() => {
-		// Tool 등록
-		toolRegistry.register("select", new SelectTool())
-		toolRegistry.register("frame", new FrameTool())
-		toolRegistry.register("text", new TextTool())
-
-		// Command 등록
-		registerAllCommands()
-
-		// EventRouter 초기화
-		eventRouter.init()
-
-		return () => {
-			eventRouter.destroy()
-		}
-	}, [])
 
 	useEffect(() => {
 		if (!iframeRef.current) return
@@ -47,35 +27,9 @@ export function App() {
 		const canvasConnection = connectToChild<CanvasMethods>({
 			iframe: iframeRef.current,
 			methods: {
-				// 새로운 이벤트 시스템
-				onCanvasPointerEvent(event: CanvasPointerEvent) {
-					// 리사이즈 이벤트 처리
-					if (event.isResizeStart) {
-						useEditorStore.temporal.getState().pause()
-						return
-					}
-					if (event.isResizeEnd) {
-						const nodeId = event.targetNodeId
-						if (nodeId && event.width !== undefined && event.height !== undefined) {
-							useEditorStore.getState().resizeNode(nodeId, {
-								width: event.width,
-								height: event.height,
-							})
-						}
-						useEditorStore.temporal.getState().resume()
-						return
-					}
-
-					// 일반 포인터 이벤트
-					const eventType = event.type === "dragend" ? EventTypes.CANVAS_DRAG_END : (`canvas:${event.type}` as EventType)
-					eventBus.dispatch(eventType, event)
-				},
-				onCanvasKeyEvent(event: CanvasKeyEvent) {
-					eventBus.dispatch(`canvas:${event.type}` as EventType, event)
-				},
-				onCanvasDndEnd(event: CanvasDndEndEvent) {
-					const { activeNodeId, overNodeId, delta } = event
-					useEditorStore.getState().dropNode(activeNodeId, overNodeId, delta)
+				// 통합 Gesture 핸들러
+				onGesture(gesture: CanvasGesture) {
+					gestureRouter.handle(gesture)
 				},
 			},
 		})
@@ -113,28 +67,36 @@ export function App() {
 			// iframe 내부에서 발생한 이벤트는 무시 (Canvas에서 별도 처리)
 			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
 
-			eventBus.dispatch(EventTypes.SHELL_KEY_DOWN, {
-				type: "keydown" as const,
-				key: e.key,
-				code: e.code,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
+			gestureRouter.handle({
+				type: "key",
+				state: "began",
+				nodeId: null,
+				payload: {
+					key: e.key,
+					code: e.code,
+					shiftKey: e.shiftKey,
+					ctrlKey: e.ctrlKey,
+					metaKey: e.metaKey,
+					altKey: e.altKey,
+				},
 			})
 		}
 
 		const handleKeyUp = (e: KeyboardEvent) => {
 			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
 
-			eventBus.dispatch(EventTypes.SHELL_KEY_UP, {
-				type: "keyup" as const,
-				key: e.key,
-				code: e.code,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
+			gestureRouter.handle({
+				type: "key",
+				state: "ended",
+				nodeId: null,
+				payload: {
+					key: e.key,
+					code: e.code,
+					shiftKey: e.shiftKey,
+					ctrlKey: e.ctrlKey,
+					metaKey: e.metaKey,
+					altKey: e.altKey,
+				},
 			})
 		}
 

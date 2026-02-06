@@ -294,6 +294,15 @@ function CodeTab({ node }: { node: SceneNode }) {
 		)
 	}
 
+	// TextNode는 코드 생성 미지원 (추후 구현)
+	if (node.type === "text") {
+		return (
+			<div className="code-tab">
+				<div className="empty-state">Text node code generation coming soon</div>
+			</div>
+		)
+	}
+
 	const code = showFull ? serializeDocument(node, "Component") : serializeNode(node)
 
 	const handleCopy = async () => {
