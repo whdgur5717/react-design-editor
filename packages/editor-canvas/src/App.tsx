@@ -8,6 +8,9 @@ import { type CSSProperties, useCallback, useEffect, useRef, useState } from "re
 
 import { ResizeAwareSensor } from "./dnd"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
+import { getTargetNodeId, isResizeHandle } from "./utils/dom"
+import { toCanvasKeyEvent } from "./utils/events"
+import { adjustDeltaForZoom } from "./utils/math"
 
 interface CreationDragState {
 	startX: number
@@ -65,27 +68,11 @@ export function App() {
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			parentMethodsRef.current?.onCanvasKeyEvent({
-				type: "keydown",
-				key: e.key,
-				code: e.code,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
-			})
+			parentMethodsRef.current?.onCanvasKeyEvent(toCanvasKeyEvent(e, "keydown"))
 		}
 
 		const handleKeyUp = (e: KeyboardEvent) => {
-			parentMethodsRef.current?.onCanvasKeyEvent({
-				type: "keyup",
-				key: e.key,
-				code: e.code,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
-			})
+			parentMethodsRef.current?.onCanvasKeyEvent(toCanvasKeyEvent(e, "keyup"))
 		}
 
 		window.addEventListener("keydown", handleKeyDown, { capture: true })
@@ -97,22 +84,6 @@ export function App() {
 		}
 	}, [])
 
-	const getTargetNodeId = useCallback((target: EventTarget) => {
-		let el = target as HTMLElement
-		while (el && el !== document.body) {
-			if (el.dataset.nodeId) {
-				return el.dataset.nodeId
-			}
-			el = el.parentElement as HTMLElement
-		}
-		return null
-	}, [])
-
-	const isResizeHandle = useCallback((target: EventTarget) => {
-		const el = target as HTMLElement
-		return el.classList.contains("resize-handle") || el.closest(".resize-handle") !== null
-	}, [])
-
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
 			const { active, over, delta } = event
@@ -122,11 +93,7 @@ export function App() {
 			const activeNodeId = String(active.id)
 			const overNodeId = over ? String(over.id) : currentPage.id
 
-			// zoom 보정
-			const adjustedDelta = {
-				x: delta.x / zoom,
-				y: delta.y / zoom,
-			}
+			const adjustedDelta = adjustDeltaForZoom(delta, zoom)
 
 			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
 			const { left = 0, top = 0 } = (active.data.current ?? {}) as { left?: number; top?: number }
@@ -151,11 +118,12 @@ export function App() {
 
 	const handleCanvasMouseDown = useCallback(
 		(e: React.MouseEvent) => {
-			if (isResizeHandle(e.target)) {
+			const target = e.target as HTMLElement
+			if (isResizeHandle(target)) {
 				return
 			}
 
-			const targetNodeId = getTargetNodeId(e.target)
+			const targetNodeId = getTargetNodeId(target)
 
 			if (activeTool === "select") {
 				parentMethodsRef.current?.onCanvasPointerEvent({
@@ -192,7 +160,7 @@ export function App() {
 				})
 			}
 		},
-		[getTargetNodeId, activeTool, isResizeHandle],
+		[activeTool],
 	)
 
 	const handleCanvasMouseMove = useCallback(
@@ -220,14 +188,13 @@ export function App() {
 					startY: e.clientY,
 				})
 			} else {
-				const targetNodeId = getTargetNodeId(e.target)
 				parentMethodsRef.current?.onCanvasPointerEvent({
 					type: "mousemove",
 					x: e.clientX,
 					y: e.clientY,
 					clientX: e.clientX,
 					clientY: e.clientY,
-					targetNodeId,
+					targetNodeId: getTargetNodeId(e.target as HTMLElement),
 					shiftKey: e.shiftKey,
 					ctrlKey: e.ctrlKey,
 					metaKey: e.metaKey,
@@ -235,7 +202,7 @@ export function App() {
 				})
 			}
 		},
-		[creationDragState, getTargetNodeId],
+		[creationDragState],
 	)
 
 	const handleCanvasMouseUp = useCallback(
@@ -262,7 +229,7 @@ export function App() {
 					y: e.clientY,
 					clientX: e.clientX,
 					clientY: e.clientY,
-					targetNodeId: getTargetNodeId(e.target),
+					targetNodeId: getTargetNodeId(e.target as HTMLElement),
 					shiftKey: e.shiftKey,
 					ctrlKey: e.ctrlKey,
 					metaKey: e.metaKey,
@@ -270,7 +237,7 @@ export function App() {
 				})
 			}
 		},
-		[creationDragState, getTargetNodeId],
+		[creationDragState],
 	)
 
 	const handleResizeStart = useCallback(() => {
