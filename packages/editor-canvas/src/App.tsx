@@ -16,7 +16,7 @@ interface CreationDragState {
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
-	const [components, setComponents] = useState<ComponentDefinition[]>([])
+	const [_components, setComponents] = useState<ComponentDefinition[]>([])
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [zoom, setZoom] = useState(1)
 	const [activeTool, setActiveTool] = useState<EditorTool>("select")
@@ -97,7 +97,7 @@ export function App() {
 		}
 	}, [])
 
-	const getTargetNodeId = useCallback((target: EventTarget): string | null => {
+	const getTargetNodeId = useCallback((target: EventTarget) => {
 		let el = target as HTMLElement
 		while (el && el !== document.body) {
 			if (el.dataset.nodeId) {
@@ -108,7 +108,7 @@ export function App() {
 		return null
 	}, [])
 
-	const isResizeHandle = useCallback((target: EventTarget): boolean => {
+	const isResizeHandle = useCallback((target: EventTarget) => {
 		const el = target as HTMLElement
 		return el.classList.contains("resize-handle") || el.closest(".resize-handle") !== null
 	}, [])
@@ -323,7 +323,6 @@ export function App() {
 			>
 				<CanvasRenderer
 					page={currentPage}
-					components={components}
 					selectedIds={selectedIds}
 					positionOverrides={positionOverrides}
 					onResizeStart={handleResizeStart}
