@@ -24,6 +24,7 @@ gh issue view {number} --json title,number,body,labels,milestone,assignees
 ```
 
 이슈의 전체 컨텍스트를 파악:
+
 - **title**: 작업 제목
 - **body**: 구현 요구사항, 상세 설명
 - **labels**: 타입(feat/fix/refactor), 우선순위, 영역 등

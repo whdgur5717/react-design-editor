@@ -18,12 +18,15 @@ TaskMaster 태스크를 GitHub Issue로 등록합니다. **구현 디테일은 �
 
 ```markdown
 ## 목표
+
 {description에서 핵심만 추출}
 
 ## Acceptance Criteria
+
 {testStrategy를 체크리스트로 변환}
 
 ---
+
 **Priority**: {priority}
 **Dependencies**: {dependencies}
 **TaskMaster ID**: {id}
