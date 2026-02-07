@@ -20,6 +20,9 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 	const height = style.height ?? "auto"
 	const isLocked = node.locked === true
 
+	const baseLeft = typeof style.left === "number" ? style.left : 0
+	const baseTop = typeof style.top === "number" ? style.top : 0
+
 	const {
 		attributes,
 		listeners,
@@ -30,8 +33,8 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 		id: node.id,
 		disabled: isLocked,
 		data: {
-			left: node.style?.left,
-			top: node.style?.top,
+			left: baseLeft,
+			top: baseTop,
 		},
 	})
 

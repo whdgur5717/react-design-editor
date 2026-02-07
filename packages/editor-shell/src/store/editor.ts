@@ -165,6 +165,9 @@ const initialDocument: DocumentNode = {
 					type: "element",
 					tag: "div",
 					style: {
+						position: "absolute",
+						left: 0,
+						top: 0,
 						width: 400,
 						height: 300,
 						backgroundColor: "#ffffff",
@@ -184,6 +187,9 @@ const initialDocument: DocumentNode = {
 								],
 							},
 							style: {
+								position: "absolute",
+								left: 16,
+								top: 16,
 								fontSize: 24,
 								fontWeight: "bold",
 								color: "#1a1a1a",
