@@ -29,7 +29,7 @@ function applyPositionOverride(node: SceneNode, positionOverrides: Map<string, {
 	if (!override) return node
 	return {
 		...node,
-		style: { ...node.style, left: override.x, top: override.y },
+		style: { ...node.style, position: "absolute" as const, left: override.x, top: override.y },
 	}
 }
 
