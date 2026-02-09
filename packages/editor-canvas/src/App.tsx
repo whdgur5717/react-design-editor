@@ -150,13 +150,16 @@ export function App() {
 			// zoom 보정
 			const adjustedDelta = adjustDeltaForZoom(delta, zoom)
 
-			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
+			// NodeWrapper에서 캡처한 실제 위치
 			const { left = 0, top = 0 } = (active.data.current ?? {}) as { left?: number; top?: number }
+			const initialPosition = { x: left, y: top }
+
+			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
 			setPositionOverrides((prev) => {
 				const next = new Map(prev)
 				next.set(activeNodeId, {
-					x: left + adjustedDelta.x,
-					y: top + adjustedDelta.y,
+					x: initialPosition.x + adjustedDelta.x,
+					y: initialPosition.y + adjustedDelta.y,
 				})
 				return next
 			})
@@ -167,6 +170,7 @@ export function App() {
 				nodeId: activeNodeId,
 				payload: {
 					delta: adjustedDelta,
+					initialPosition,
 					overNodeId,
 				},
 			})

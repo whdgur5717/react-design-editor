@@ -2,7 +2,6 @@ import "./NodeWrapper.css"
 
 import type { SceneNode } from "@design-editor/core"
 import { useDraggable, useDroppable } from "@dnd-kit/core"
-import { CSS } from "@dnd-kit/utilities"
 import { Resizable } from "re-resizable"
 import type { ReactNode } from "react"
 
@@ -20,6 +19,9 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 	const height = style.height ?? "auto"
 	const isLocked = node.locked === true
 
+	const baseLeft = typeof style.left === "number" ? style.left : 0
+	const baseTop = typeof style.top === "number" ? style.top : 0
+
 	const {
 		attributes,
 		listeners,
@@ -30,8 +32,8 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 		id: node.id,
 		disabled: isLocked,
 		data: {
-			left: node.style?.left,
-			top: node.style?.top,
+			left: baseLeft,
+			top: baseTop,
 		},
 	})
 
@@ -45,16 +47,13 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 		setDropRef(el)
 	}
 
+	const tx = baseLeft + (transform?.x ?? 0)
+	const ty = baseTop + (transform?.y ?? 0)
+
 	const wrapperStyle: React.CSSProperties = {
-		position: style.position,
-		left: style.left,
-		top: style.top,
-		right: style.right,
-		bottom: style.bottom,
 		width,
 		height,
-		// dnd-kit transform 적용 (드래그 중 시각적 이동)
-		transform: CSS.Translate.toString(transform),
+		transform: `translate(${tx}px, ${ty}px)`,
 		opacity: isDragging ? 0.5 : 1,
 	}
 

@@ -1,5 +1,5 @@
 .node-wrapper {
-	position: relative;
+	position: absolute;
 	cursor: pointer;
 }
 
