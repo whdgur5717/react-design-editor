@@ -1,37 +1,12 @@
 import "./PropertiesPanel.css"
 
-import type { DocumentNode, PageNode, SceneNode } from "@design-editor/core"
+import type { SceneNode } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
 import { useEditorStore } from "../store/editor"
 
 type Tab = "design" | "prototype" | "code"
-
-function findNodeInPage(page: PageNode, id: string): SceneNode | null {
-	for (const node of page.children) {
-		const found = findNodeInTree(node, id)
-		if (found) return found
-	}
-	return null
-}
-
-function findNodeInTree(node: SceneNode, id: string): SceneNode | null {
-	if (node.id === id) return node
-	if ("children" in node && Array.isArray(node.children)) {
-		for (const child of node.children) {
-			const found = findNodeInTree(child, id)
-			if (found) return found
-		}
-	}
-	return null
-}
-
-function findNode(document: DocumentNode, currentPageId: string, id: string): SceneNode | null {
-	const page = document.children.find((p) => p.id === currentPageId)
-	if (!page) return null
-	return findNodeInPage(page, id)
-}
 
 function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
@@ -335,11 +310,10 @@ function CodeTab({ node }: { node: SceneNode }) {
 
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
-	const document = useEditorStore((state) => state.document)
-	const currentPageId = useEditorStore((state) => state.currentPageId)
 	const selection = useEditorStore((state) => state.selection)
+	const storeFindNode = useEditorStore((state) => state.findNode)
 
-	const selectedNode = selection.length === 1 ? findNode(document, currentPageId, selection[0]) : null
+	const selectedNode = selection.length === 1 ? storeFindNode(selection[0]) : null
 
 	return (
 		<div className="properties-panel">
