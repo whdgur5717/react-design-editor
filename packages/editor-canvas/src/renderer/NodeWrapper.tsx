@@ -62,6 +62,7 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 		<div
 			ref={setRefs}
 			data-node-id={node.id}
+			data-role="nodewrapper"
 			className={`node-wrapper ${isSelected ? "selected" : ""} ${isLocked ? "locked" : ""} ${isDragging ? "dragging" : ""} ${isOver ? "drop-target" : ""}`}
 			style={wrapperStyle}
 			{...attributes}
