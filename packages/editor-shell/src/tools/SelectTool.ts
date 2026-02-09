@@ -37,8 +37,9 @@ export class SelectTool extends BaseTool {
 			const command = new ReparentNodeCommand(receiver, nodeId, payload.overNodeId)
 			this.service.executeCommand(command)
 		} else {
-			const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-			const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+			// Canvas에서 보내준 실제 시작 위치 우선 사용
+			const currentLeft = payload.initialPosition?.x ?? (typeof node.style?.left === "number" ? node.style.left : 0)
+			const currentTop = payload.initialPosition?.y ?? (typeof node.style?.top === "number" ? node.style.top : 0)
 			const from = { x: currentLeft, y: currentTop }
 			const to = { x: currentLeft + payload.delta.x, y: currentTop + payload.delta.y }
 			const command = new MoveNodeCommand(receiver, nodeId, from, to)

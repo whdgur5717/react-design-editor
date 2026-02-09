@@ -15,6 +15,7 @@ export interface ClickPayload {
 
 export interface DragPayload {
 	delta: { x: number; y: number }
+	initialPosition?: { x: number; y: number }
 	overNodeId?: string
 }
 
