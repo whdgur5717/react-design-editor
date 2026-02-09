@@ -10,21 +10,14 @@ import type {
 	ShellMethods,
 	SyncStatePayload,
 } from "@design-editor/core"
-import {
-	DndContext,
-	type DragEndEvent,
-	type DragStartEvent,
-	pointerWithin,
-	useDroppable,
-	useSensor,
-	useSensors,
-} from "@dnd-kit/core"
+import { DndContext, type DragEndEvent, type DragStartEvent, useDroppable, useSensor, useSensors } from "@dnd-kit/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
 
-import { ResizeAwareSensor } from "./dnd"
+import { closestParentDroppable, ResizeAwareSensor } from "./dnd"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
-import { isTextInputElement } from "./utils/dom"
+import { getTargetNodeId, isResizeHandle, isTextInputElement } from "./utils/dom"
+import { adjustDeltaForZoom } from "./utils/math"
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
@@ -131,22 +124,6 @@ export function App() {
 		}
 	}, [sendGesture])
 
-	const getTargetNodeId = useCallback((target: EventTarget): string | null => {
-		let el = target as HTMLElement
-		while (el && el !== document.body) {
-			if (el.dataset.nodeId) {
-				return el.dataset.nodeId
-			}
-			el = el.parentElement as HTMLElement
-		}
-		return null
-	}, [])
-
-	const isResizeHandle = useCallback((target: EventTarget): boolean => {
-		const el = target as HTMLElement
-		return el.classList.contains("resize-handle") || el.closest(".resize-handle") !== null
-	}, [])
-
 	// dnd-kit 드래그 시작
 	const handleDragStart = useCallback(
 		(_event: DragStartEvent) => {
@@ -171,10 +148,7 @@ export function App() {
 			const overNodeId = over ? String(over.id) : currentPage.id
 
 			// zoom 보정
-			const adjustedDelta = {
-				x: delta.x / zoom,
-				y: delta.y / zoom,
-			}
+			const adjustedDelta = adjustDeltaForZoom(delta, zoom)
 
 			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
 			const { left = 0, top = 0 } = (active.data.current ?? {}) as { left?: number; top?: number }
@@ -203,11 +177,11 @@ export function App() {
 	// 클릭 이벤트
 	const handleCanvasMouseDown = useCallback(
 		(e: React.MouseEvent) => {
-			if (isResizeHandle(e.target)) {
+			if (isResizeHandle(e.target as HTMLElement)) {
 				return
 			}
 
-			const targetNodeId = getTargetNodeId(e.target)
+			const targetNodeId = getTargetNodeId(e.target as HTMLElement)
 
 			sendGesture({
 				type: "click",
@@ -221,7 +195,7 @@ export function App() {
 				},
 			})
 		},
-		[getTargetNodeId, isResizeHandle, sendGesture],
+		[sendGesture],
 	)
 
 	// 리사이즈 시작
@@ -254,7 +228,7 @@ export function App() {
 	return (
 		<DndContext
 			sensors={sensors}
-			collisionDetection={pointerWithin}
+			collisionDetection={closestParentDroppable}
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
 		>
