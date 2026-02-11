@@ -304,18 +304,6 @@ export const useEditorStore = create<EditorStore>()(
 
 				// snapshot before mutation (current() returns frozen object)
 				const snapshot = current(sourceNode)
-				const reparentedNode =
-					newParentId === page.id
-						? snapshot
-						: {
-								...snapshot,
-								style: {
-									...snapshot.style,
-									position: undefined,
-									left: undefined,
-									top: undefined,
-								},
-							}
 
 				// remove from old parent
 				const oldParent = findParent(page, sourceId)
@@ -329,8 +317,7 @@ export const useEditorStore = create<EditorStore>()(
 				const newParent = newParentId === page.id ? page : findNode(page, newParentId)
 				const newChildren = newParent ? getChildrenOf(newParent) : null
 				if (!newChildren) return
-
-				newChildren.push(reparentedNode)
+				newChildren.push(snapshot)
 
 				state.selection = [sourceId]
 			})

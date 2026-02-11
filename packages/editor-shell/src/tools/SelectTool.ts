@@ -1,7 +1,28 @@
 import type { ClickPayload, DragPayload, KeyPayload } from "@design-editor/core"
+import { isNumber } from "es-toolkit/compat"
 
 import { MoveNodeCommand, ReparentNodeCommand } from "../commands"
+import type { ToolService } from "./ToolService"
 import { BaseTool } from "./types"
+
+function getAbsolutePosition(service: ToolService, nodeId: string): { x: number; y: number } {
+	let x = 0
+	let y = 0
+	let currentId = nodeId
+	const pageId = service.getCurrentPageId()
+
+	while (currentId !== pageId) {
+		const node = service.findNode(currentId)
+		if (!node) break
+		x += isNumber(node.style?.left) ? node.style.left : 0
+		y += isNumber(node.style?.top) ? node.style.top : 0
+		const location = service.findNodeLocation(currentId)
+		if (!location) break
+		currentId = location.parentId
+	}
+
+	return { x, y }
+}
 
 /**
  * 선택 도구 - 노드 선택, 이동, 키보드 미세 조정
@@ -33,13 +54,26 @@ export class SelectTool extends BaseTool {
 
 		const receiver = this.service.getReceiver()
 
-		if (payload.overNodeId && payload.overNodeId !== location.parentId) {
-			const command = new ReparentNodeCommand(receiver, nodeId, payload.overNodeId)
-			this.service.executeCommand(command)
+		const currentLeft = payload.initialPosition?.x ?? (typeof node.style?.left === "number" ? node.style.left : 0)
+		const currentTop = payload.initialPosition?.y ?? (typeof node.style?.top === "number" ? node.style.top : 0)
+		const newParentId = payload.overNodeId
+		const isReparent = newParentId && newParentId !== location.parentId
+
+		if (isReparent) {
+			const oldParentAbs = getAbsolutePosition(this.service, location.parentId)
+			const newParentAbs = getAbsolutePosition(this.service, newParentId)
+
+			const from = { x: currentLeft, y: currentTop }
+			const to = {
+				x: oldParentAbs.x + currentLeft + payload.delta.x - newParentAbs.x,
+				y: oldParentAbs.y + currentTop + payload.delta.y - newParentAbs.y,
+			}
+
+			this.service.beginTransaction()
+			this.service.executeCommand(new ReparentNodeCommand(receiver, nodeId, newParentId))
+			this.service.executeCommand(new MoveNodeCommand(receiver, nodeId, from, to))
+			this.service.commitTransaction()
 		} else {
-			// Canvas에서 보내준 실제 시작 위치 우선 사용
-			const currentLeft = payload.initialPosition?.x ?? (typeof node.style?.left === "number" ? node.style.left : 0)
-			const currentTop = payload.initialPosition?.y ?? (typeof node.style?.top === "number" ? node.style.top : 0)
 			const from = { x: currentLeft, y: currentTop }
 			const to = { x: currentLeft + payload.delta.x, y: currentTop + payload.delta.y }
 			const command = new MoveNodeCommand(receiver, nodeId, from, to)

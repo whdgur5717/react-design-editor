@@ -53,6 +53,8 @@ export function NodeWrapper({ node, isSelected, onResizeStart, onResizeEnd, chil
 	const wrapperStyle: React.CSSProperties = {
 		width,
 		height,
+		left: 0,
+		top: 0,
 		transform: `translate(${tx}px, ${ty}px)`,
 		opacity: isDragging ? 0.5 : 1,
 	}
