@@ -2,6 +2,7 @@ import type { CanvasMethods, NodeRect, TextChangePayload } from "@design-editor/
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
 import { useEffect, useRef, useState } from "react"
+import { shallow } from "zustand/shallow"
 
 import { UpdateNodeCommand } from "./commands"
 import { LayersPanel } from "./components/LayersPanel"
@@ -52,6 +53,7 @@ export function App() {
 		const unsubscribe = editor.store.subscribe(
 			(s) => [s.document, s.currentPageId, s.components, s.zoom, s.selection, s.activeTool] as const,
 			() => editor.syncToCanvas(),
+			{ equalityFn: shallow },
 		)
 
 		// 포인터 이벤트
