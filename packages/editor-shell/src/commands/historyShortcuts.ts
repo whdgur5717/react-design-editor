@@ -1,12 +1,11 @@
-import { commandHistory } from "./index"
-import { shortcutRegistry } from "./ShortcutRegistry"
+import type { EditorService } from "../services/EditorService"
 
-export function registerHistoryShortcuts() {
-	shortcutRegistry.register("history:undo", () => {
-		commandHistory.undo()
+export function registerHistoryShortcuts(editor: EditorService) {
+	editor.shortcutRegistry.register("history:undo", () => {
+		editor.commandHistory.undo()
 	})
 
-	shortcutRegistry.register("history:redo", () => {
-		commandHistory.redo()
+	editor.shortcutRegistry.register("history:redo", () => {
+		editor.commandHistory.redo()
 	})
 }

@@ -1,64 +1,59 @@
 import type { EditorTool, SceneNode } from "@design-editor/core"
 
-import type { Command, CommandHistory, EditorReceiver } from "../commands"
-import type { useEditorStore } from "../store/editor"
+import type { EditorService } from "../services/EditorService"
 import type { ToolService } from "./ToolService"
 
 /**
- * ToolServiceImpl - ToolService 구현체
+ * ToolServiceImpl - EditorService를 래핑하여 ToolService 인터페이스 제공
  */
 export class ToolServiceImpl implements ToolService {
-	constructor(
-		private store: typeof useEditorStore,
-		private commandHistory: CommandHistory,
-		private receiver: EditorReceiver,
-	) {}
+	constructor(private readonly editorService: EditorService) {}
 
-	getSelection(): string[] {
-		return this.store.getState().selection
+	getSelection() {
+		return this.editorService.getSelection()
 	}
 
-	setSelection(ids: string[]): void {
-		this.store.getState().setSelection(ids)
+	setSelection(ids: string[]) {
+		this.editorService.setSelection(ids)
 	}
 
-	toggleSelection(id: string): void {
-		this.store.getState().toggleSelection(id)
+	toggleSelection(id: string) {
+		this.editorService.toggleSelection(id)
 	}
 
-	executeCommand(command: Command): void {
-		this.commandHistory.execute(command)
+	executeCommand(command: Parameters<EditorService["executeCommand"]>[0]) {
+		this.editorService.executeCommand(command)
 	}
 
-	beginTransaction(): void {
-		this.commandHistory.beginTransaction()
+	beginTransaction() {
+		this.editorService.beginTransaction()
 	}
 
-	commitTransaction(): void {
-		this.commandHistory.commitTransaction()
+	commitTransaction() {
+		this.editorService.commitTransaction()
 	}
 
 	findNode(id: string): SceneNode | null {
-		return this.receiver.findNode(id)
+		return this.editorService.findNode(id)
 	}
 
-	findNodeLocation(id: string): { parentId: string; index: number } | null {
-		return this.receiver.findNodeLocation(id)
+	findNodeLocation(id: string) {
+		return this.editorService.findNodeLocation(id)
 	}
 
-	getCurrentPageId(): string {
-		return this.receiver.getCurrentPageId()
+	getCurrentPageId() {
+		return this.editorService.getCurrentPageId()
 	}
 
 	getActiveTool(): EditorTool {
-		return this.store.getState().activeTool
+		return this.editorService.getActiveTool()
 	}
 
-	setActiveTool(tool: EditorTool): void {
-		this.store.getState().setActiveTool(tool)
+	setActiveTool(tool: EditorTool) {
+		this.editorService.setActiveTool(tool)
 	}
 
-	getReceiver(): EditorReceiver {
-		return this.receiver
+	getReceiver() {
+		return this.editorService.getReceiver()
 	}
 }

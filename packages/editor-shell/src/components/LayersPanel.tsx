@@ -19,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { useState } from "react"
 
-import { useEditorStore } from "../store/editor"
+import { useEditorStore } from "../services/EditorContext"
 
 interface SortableLayerItemProps {
 	node: SceneNode

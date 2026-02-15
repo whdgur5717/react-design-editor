@@ -1,4 +1,5 @@
 import type { ComponentDefinition, DocumentNode, ElementNode, Position, SceneNode, Size } from "./node"
+import type { NodeRect } from "./protocol"
 
 /**
  * 에디터 도구 타입
@@ -29,6 +30,12 @@ export interface EditorState {
 
 	/** 줌 레벨 (1 = 100%) */
 	zoom: number
+
+	/** 드래그 프리뷰 (Shell 오버레이에서 렌더링) */
+	dragPreview: { nodeId: string; dx: number; dy: number } | null
+
+	/** Canvas에서 push된 노드 렌더링 rect 캐시 */
+	nodeRectsCache: Record<string, NodeRect>
 }
 
 /**
@@ -119,6 +126,12 @@ export interface EditorActions {
 
 	/** 노드 찾기 */
 	findNode: (id: string) => SceneNode | null
+
+	/** 드래그 프리뷰 설정 */
+	setDragPreview: (preview: { nodeId: string; dx: number; dy: number } | null) => void
+
+	/** 노드 렌더링 rect 캐시 설정 */
+	setNodeRectsCache: (rects: Record<string, NodeRect>) => void
 }
 
 /**

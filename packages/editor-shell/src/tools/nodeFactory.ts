@@ -9,10 +9,9 @@ export function createFrameNode(left: number, top: number, width: number, height
 		id: generateId("frame"),
 		type: "element",
 		tag: "div",
+		x: left,
+		y: top,
 		style: {
-			position: "absolute",
-			left,
-			top,
 			width,
 			height,
 			backgroundColor: "#ffffff",
@@ -35,10 +34,9 @@ export function createTextNode(left: number, top: number, width: number): TextNo
 				},
 			],
 		},
+		x: left,
+		y: top,
 		style: {
-			position: "absolute",
-			left,
-			top,
 			width,
 		},
 	}

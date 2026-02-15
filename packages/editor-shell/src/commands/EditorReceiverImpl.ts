@@ -1,6 +1,6 @@
 import type { ElementNode, Position, SceneNode, Size } from "@design-editor/core"
 
-import type { useEditorStore } from "../store/editor"
+import type { EditorStoreApi } from "../store/editor"
 import type { EditorReceiver, InstanceOverrides } from "./types"
 
 /**
@@ -8,7 +8,7 @@ import type { EditorReceiver, InstanceOverrides } from "./types"
  * Store 메서드를 래핑하여 Command에 제공
  */
 export class EditorReceiverImpl implements EditorReceiver {
-	constructor(private readonly store: typeof useEditorStore) {}
+	constructor(private readonly store: EditorStoreApi) {}
 
 	// ========== 노드 액션 ==========
 

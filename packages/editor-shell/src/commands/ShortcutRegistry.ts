@@ -1,6 +1,6 @@
 export type ShortcutHandler = () => void
 
-class ShortcutRegistryImpl {
+export class ShortcutRegistryImpl {
 	private handlers = new Map<string, ShortcutHandler>()
 
 	register(id: string, handler: ShortcutHandler) {
@@ -29,5 +29,3 @@ class ShortcutRegistryImpl {
 		return Array.from(this.handlers.keys())
 	}
 }
-
-export const shortcutRegistry = new ShortcutRegistryImpl()

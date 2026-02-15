@@ -20,7 +20,9 @@
 		"penpal": "^6.2.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"react-grab": "^0.1.14",
 		"react-resizable-panels": "^2.1.0",
+		"xstate": "^5.27.0",
 		"zundo": "^2.3.0",
 		"zustand": "^5.0.0"
 	},

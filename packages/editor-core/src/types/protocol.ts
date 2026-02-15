@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react"
 
 import type { EditorTool } from "./editor"
-import type { CanvasGesture } from "./gesture"
 import type { ComponentDefinition, DocumentNode } from "./node"
 
 /**
@@ -17,16 +16,27 @@ export interface SyncStatePayload {
 	cursor: CSSProperties["cursor"]
 }
 
+export interface NodeRect {
+	x: number
+	y: number
+	width: number
+	height: number
+}
+
 /**
  * Shell에서 Canvas로 호출 가능한 메서드
  */
 export interface CanvasMethods {
 	syncState: (state: SyncStatePayload) => void
+	hitTest: (x: number, y: number) => string | null
+	getNodeRect: (nodeId: string) => NodeRect | null
+	getNodeRects: () => Record<string, NodeRect>
 }
 
 /**
  * Canvas에서 Shell로 호출 가능한 메서드
  */
 export interface ShellMethods {
-	onGesture: (gesture: CanvasGesture) => void
+	onTextChange: (nodeId: string, content: unknown) => void
+	onNodeRectsUpdated: (rects: Record<string, NodeRect>) => void
 }

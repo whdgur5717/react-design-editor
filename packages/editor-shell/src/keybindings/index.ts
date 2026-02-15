@@ -1,3 +1,3 @@
 export { defaultKeybindings } from "./defaults"
-export { keybindingRegistry } from "./KeybindingRegistry"
+export { KeybindingRegistryImpl } from "./KeybindingRegistry"
 export type { Keybinding, KeyEventLike } from "./types"

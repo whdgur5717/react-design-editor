@@ -6,6 +6,8 @@ import type { CSSProperties } from "react"
  */
 export interface BaseNode {
 	id: string
+	x?: number
+	y?: number
 	style?: CSSProperties
 	visible?: boolean
 	locked?: boolean

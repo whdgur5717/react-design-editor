@@ -1,28 +1,8 @@
 import type { ClickPayload, DragPayload, KeyPayload } from "@design-editor/core"
-import { isNumber } from "es-toolkit/compat"
 
 import { MoveNodeCommand, ReparentNodeCommand } from "../commands"
-import type { ToolService } from "./ToolService"
+import { getAbsolutePosition, isRootNode } from "../utils/nodePosition"
 import { BaseTool } from "./types"
-
-function getAbsolutePosition(service: ToolService, nodeId: string): { x: number; y: number } {
-	let x = 0
-	let y = 0
-	let currentId = nodeId
-	const pageId = service.getCurrentPageId()
-
-	while (currentId !== pageId) {
-		const node = service.findNode(currentId)
-		if (!node) break
-		x += isNumber(node.style?.left) ? node.style.left : 0
-		y += isNumber(node.style?.top) ? node.style.top : 0
-		const location = service.findNodeLocation(currentId)
-		if (!location) break
-		currentId = location.parentId
-	}
-
-	return { x, y }
-}
 
 /**
  * 선택 도구 - 노드 선택, 이동, 키보드 미세 조정
@@ -53,15 +33,26 @@ export class SelectTool extends BaseTool {
 		if (!location) return
 
 		const receiver = this.service.getReceiver()
+		const page = receiver.getCurrentPage()
+		if (!page) return
 
-		const currentLeft = payload.initialPosition?.x ?? (typeof node.style?.left === "number" ? node.style.left : 0)
-		const currentTop = payload.initialPosition?.y ?? (typeof node.style?.top === "number" ? node.style.top : 0)
+		// 레이아웃 자식은 이동 불가 (snap back)
+		if (!isRootNode(nodeId, page)) return
+
+		const currentLeft = payload.initialPosition?.x ?? node.x ?? 0
+		const currentTop = payload.initialPosition?.y ?? node.y ?? 0
 		const newParentId = payload.overNodeId
 		const isReparent = newParentId && newParentId !== location.parentId
 
 		if (isReparent) {
-			const oldParentAbs = getAbsolutePosition(this.service, location.parentId)
-			const newParentAbs = getAbsolutePosition(this.service, newParentId)
+			// reparent 가드
+			if (newParentId === nodeId) return
+			const targetNode = this.service.findNode(newParentId)
+			if (!targetNode) return
+			if (targetNode.type === "text") return
+
+			const oldParentAbs = getAbsolutePosition(location.parentId, page)
+			const newParentAbs = getAbsolutePosition(newParentId, page)
 
 			const from = { x: currentLeft, y: currentTop }
 			const to = {
@@ -107,17 +98,23 @@ export class SelectTool extends BaseTool {
 		}
 
 		const receiver = this.service.getReceiver()
+		const page = receiver.getCurrentPage()
+		if (!page) return
 
-		if (selection.length > 1) {
+		// 루트 노드만 nudge 가능
+		const rootSelection = selection.filter((id) => isRootNode(id, page))
+		if (rootSelection.length === 0) return
+
+		if (rootSelection.length > 1) {
 			this.service.beginTransaction()
 		}
 
-		for (const id of selection) {
+		for (const id of rootSelection) {
 			const node = this.service.findNode(id)
 			if (!node) continue
 
-			const currentLeft = typeof node.style?.left === "number" ? node.style.left : 0
-			const currentTop = typeof node.style?.top === "number" ? node.style.top : 0
+			const currentLeft = node.x ?? 0
+			const currentTop = node.y ?? 0
 			const from = { x: currentLeft, y: currentTop }
 			const to = { x: currentLeft + dx, y: currentTop + dy }
 
@@ -125,7 +122,7 @@ export class SelectTool extends BaseTool {
 			this.service.executeCommand(command)
 		}
 
-		if (selection.length > 1) {
+		if (rootSelection.length > 1) {
 			this.service.commitTransaction()
 		}
 	}

@@ -1,134 +1,138 @@
-import type { CanvasGesture, CanvasMethods } from "@design-editor/core"
+import type { CanvasMethods, NodeRect, TextChangePayload } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
-import { useEffect, useRef } from "react"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { useEffect, useRef, useState } from "react"
 
-import { registerAllShortcuts } from "./commands"
-import { registerToolShortcuts } from "./commands/toolShortcuts"
+import { UpdateNodeCommand } from "./commands"
 import { LayersPanel } from "./components/LayersPanel"
+import { ToolManagerOverlay } from "./components/overlay"
 import { PropertiesPanel } from "./components/PropertiesPanel"
 import { Toolbar } from "./components/Toolbar"
-import { gestureRouter } from "./gestures"
-import { useEditorStore } from "./store/editor"
-import { toolRegistry } from "./tools"
-
-// 모듈 레벨에서 단축키 등록
-registerAllShortcuts()
-registerToolShortcuts()
+import { EditorProvider } from "./services/EditorContext"
+import { EditorService } from "./services/EditorService"
 
 export function App() {
-	const iframeRef = useRef<HTMLIFrameElement>(null)
-	const canvasRef = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
+	const [editor] = useState(() => new EditorService())
+	const canvasRefLatest = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
 
 	useEffect(() => {
-		if (!iframeRef.current) return
+		editor.start()
+		return () => editor.dispose()
+	}, [editor])
+
+	useEffect(() => {
+		const iframe = document.getElementById("canvas-iframe") as HTMLIFrameElement | null
+		if (!iframe) return
 
 		const canvasConnection = connectToChild<CanvasMethods>({
-			iframe: iframeRef.current,
+			iframe,
 			methods: {
-				// 통합 Gesture 핸들러
-				onGesture(gesture: CanvasGesture) {
-					gestureRouter.handle(gesture)
+				onTextChange(nodeId: string, content: unknown) {
+					const currentNode = editor.receiver.findNode(nodeId)
+					if (currentNode?.type === "text") {
+						const command = new UpdateNodeCommand(editor.receiver, nodeId, {
+							content: content as TextChangePayload["content"],
+						})
+						editor.commandHistory.execute(command)
+					}
+				},
+				onNodeRectsUpdated(rects: Record<string, NodeRect>) {
+					editor.store.getState().setNodeRectsCache(rects)
 				},
 			},
 		})
 
 		canvasConnection.promise.then((child) => {
-			canvasRef.current = child
-			// 초기 상태 동기화
-			const state = useEditorStore.getState()
-			child.syncState({
-				document: state.document,
-				currentPageId: state.currentPageId,
-				components: state.components,
-				zoom: state.zoom,
-				selection: state.selection,
-				activeTool: state.activeTool,
-				cursor: toolRegistry.getActiveTool()?.cursor ?? "default",
-			})
+			canvasRefLatest.current = child
+			editor.setCanvas(child)
+			editor.syncToCanvas()
 		})
 
-		// store 변경 시 Canvas에 동기화
-		const unsubscribe = useEditorStore.subscribe((state) => {
-			canvasRef.current?.syncState({
-				document: state.document,
-				currentPageId: state.currentPageId,
-				components: state.components,
-				zoom: state.zoom,
-				selection: state.selection,
-				activeTool: state.activeTool,
-				cursor: toolRegistry.getActiveTool()?.cursor ?? "default",
-			})
-		})
+		// store 변경 시 Canvas에 동기화 (nodeRectsCache 변경은 무시)
+		const unsubscribe = editor.store.subscribe(
+			(s) => [s.document, s.currentPageId, s.components, s.zoom, s.selection, s.activeTool] as const,
+			() => editor.syncToCanvas(),
+		)
 
-		// Shell 키보드 이벤트 캡처
-		const handleKeyDown = (e: KeyboardEvent) => {
-			// iframe 내부에서 발생한 이벤트는 무시 (Canvas에서 별도 처리)
-			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
+		// 포인터 이벤트
+		const eventTarget = document.getElementById("canvas-event-target")
+		if (!eventTarget) return
 
-			gestureRouter.handle({
-				type: "key",
-				state: "began",
-				nodeId: null,
-				payload: {
-					key: e.key,
-					code: e.code,
-					shiftKey: e.shiftKey,
-					ctrlKey: e.ctrlKey,
-					metaKey: e.metaKey,
-					altKey: e.altKey,
-				},
+		const onPointerDown = (e: PointerEvent) => {
+			e.preventDefault()
+			editor.sendPointerDown({
+				clientX: e.clientX,
+				clientY: e.clientY,
+				pointerId: e.pointerId,
+				shiftKey: e.shiftKey,
+				metaKey: e.metaKey,
+				target: e.target as HTMLElement,
 			})
 		}
 
-		const handleKeyUp = (e: KeyboardEvent) => {
-			if ((e.target as HTMLElement)?.tagName === "IFRAME") return
-
-			gestureRouter.handle({
-				type: "key",
-				state: "ended",
-				nodeId: null,
-				payload: {
-					key: e.key,
-					code: e.code,
-					shiftKey: e.shiftKey,
-					ctrlKey: e.ctrlKey,
-					metaKey: e.metaKey,
-					altKey: e.altKey,
-				},
+		const onPointerMove = (e: PointerEvent) => {
+			editor.sendPointerMove({
+				clientX: e.clientX,
+				clientY: e.clientY,
 			})
 		}
 
-		window.addEventListener("keydown", handleKeyDown, { capture: true })
-		window.addEventListener("keyup", handleKeyUp, { capture: true })
+		const onPointerUp = (e: PointerEvent) => {
+			editor.sendPointerUp({
+				clientX: e.clientX,
+				clientY: e.clientY,
+				shiftKey: e.shiftKey,
+				metaKey: e.metaKey,
+			})
+		}
+
+		eventTarget.addEventListener("pointerdown", onPointerDown)
+		eventTarget.addEventListener("pointermove", onPointerMove)
+		eventTarget.addEventListener("pointerup", onPointerUp)
+
+		// 키보드 이벤트
+		const onKeyDown = (e: KeyboardEvent) => {
+			editor.sendKeyDown({
+				key: e.key,
+				code: e.code,
+				shiftKey: e.shiftKey,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+				altKey: e.altKey,
+				target: e.target as HTMLElement,
+			})
+		}
+		window.addEventListener("keydown", onKeyDown, { capture: true })
 
 		return () => {
 			unsubscribe()
 			canvasConnection.destroy()
-			window.removeEventListener("keydown", handleKeyDown, { capture: true })
-			window.removeEventListener("keyup", handleKeyUp, { capture: true })
+			editor.setCanvas(null)
+			eventTarget.removeEventListener("pointerdown", onPointerDown)
+			eventTarget.removeEventListener("pointermove", onPointerMove)
+			eventTarget.removeEventListener("pointerup", onPointerUp)
+			window.removeEventListener("keydown", onKeyDown, { capture: true })
 		}
-	}, [])
+	}, [editor])
 
 	return (
-		<div className="app">
-			<Toolbar />
-			<PanelGroup direction="horizontal" className="main-content">
-				<Panel defaultSize={15} minSize={10} maxSize={25}>
-					<LayersPanel />
-				</Panel>
-				<PanelResizeHandle className="resize-handle" />
-				<Panel defaultSize={60} minSize={30}>
-					<div className="canvas-container">
-						<iframe ref={iframeRef} src="http://localhost:3001" title="Canvas" className="canvas-iframe" />
+		<EditorProvider value={editor}>
+			<div className="app">
+				{/* 1. Canvas 레이어: 이벤트 타겟 + 오버레이 */}
+				<div>
+					<div id="canvas-event-target" className="canvas-event-target">
+						<div className="canvas-area" />
+						<ToolManagerOverlay />
 					</div>
-				</Panel>
-				<PanelResizeHandle className="resize-handle" />
-				<Panel defaultSize={25} minSize={15} maxSize={35}>
+				</div>
+
+				{/* 2. UI 패널들 */}
+				<div>
+					<Toolbar />
+					<LayersPanel />
 					<PropertiesPanel />
-				</Panel>
-			</PanelGroup>
-		</div>
+				</div>
+			</div>
+		</EditorProvider>
 	)
 }

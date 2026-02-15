@@ -1,12 +1,21 @@
 @layer reset, base, tokens, recipes, utilities;
 
+:root {
+	--editor-toolbar-height: 48px;
+	--editor-left-panel-width: 260px;
+	--editor-right-panel-width: 260px;
+}
+
+body {
+	background: #111111;
+}
+
 :root,
 body,
 #root {
 	width: 100%;
 	height: 100%;
 	margin: 0;
-	background: #111111;
 	color: #ffffff;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -16,38 +25,24 @@ body,
 }
 
 .app {
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
-	width: 100%;
-}
-
-.main-content {
-	flex: 1;
-	min-height: 0;
-	height: 100%;
-}
-
-.resize-handle {
-	width: 4px;
-	background-color: #2d2d2d;
-	transition: background-color 0.15s;
-}
-
-.resize-handle:hover {
-	background-color: #0d99ff;
-}
-
-.canvas-container {
-	width: 100%;
-	height: 100%;
-	background-color: #2d2d2d;
+	position: relative;
+	width: 100vw;
+	height: 100vh;
 	overflow: hidden;
 }
 
-.canvas-iframe {
-	width: 100%;
-	height: 100%;
-	border: none;
-	display: block;
+.canvas-event-target {
+	position: absolute;
+	inset: 0;
+	background: transparent;
+	overflow: hidden;
+	touch-action: none;
+}
+
+.canvas-area {
+	position: absolute;
+	top: var(--editor-toolbar-height);
+	left: var(--editor-left-panel-width);
+	right: var(--editor-right-panel-width);
+	bottom: 0;
 }

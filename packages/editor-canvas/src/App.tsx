@@ -2,51 +2,46 @@ import "./App.css"
 import "@design-editor/components"
 
 import type {
-	CanvasGesture,
 	ComponentDefinition,
 	EditorTool,
-	GestureType,
+	NodeRect,
 	PageNode,
 	ShellMethods,
 	SyncStatePayload,
 } from "@design-editor/core"
-import { DndContext, type DragEndEvent, type DragStartEvent, useDroppable, useSensor, useSensors } from "@dnd-kit/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
-import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-import { closestParentDroppable, ResizeAwareSensor } from "./dnd"
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
-import { getTargetNodeId, isResizeHandle, isTextInputElement } from "./utils/dom"
-import { adjustDeltaForZoom } from "./utils/math"
+
+function getTargetNodeId(el: Element | null): string | null {
+	while (el && el !== document.body) {
+		if (el instanceof HTMLElement && el.dataset.nodeId) return el.dataset.nodeId
+		el = el.parentElement
+	}
+	return null
+}
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
 	const [components, setComponents] = useState<ComponentDefinition[]>([])
-	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [zoom, setZoom] = useState(1)
 	const [, setActiveTool] = useState<EditorTool>("select")
-	const [cursor, setCursor] = useState<CSSProperties["cursor"]>("default")
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
 
-	// Shell 응답 전 깜빡임 방지용 로컬 위치 오버라이드
-	const [positionOverrides, setPositionOverrides] = useState<Map<string, { x: number; y: number }>>(new Map())
-
-	const sensors = useSensors(
-		useSensor(ResizeAwareSensor, {
-			activationConstraint: { distance: 8 },
-		}),
-	)
-
-	const { setNodeRef: setCanvasDropRef } = useDroppable({
-		id: currentPage?.id ?? "canvas",
-	})
-
-	// 통합 Gesture 전송 함수
-	const sendGesture = useCallback(<T extends GestureType>(gesture: CanvasGesture<T>) => {
-		parentMethodsRef.current?.onGesture(gesture)
-	}, [])
-
 	useEffect(() => {
+		function collectNodeRects(): Record<string, NodeRect> {
+			const rects: Record<string, NodeRect> = {}
+			const elements = document.querySelectorAll("[data-node-id]")
+			for (const el of elements) {
+				const nodeId = (el as HTMLElement).dataset.nodeId
+				if (!nodeId) continue
+				const rect = el.getBoundingClientRect()
+				rects[nodeId] = { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+			}
+			return rects
+		}
+
 		const connection = connectToParent<ShellMethods>({
 			methods: {
 				syncState(state: SyncStatePayload) {
@@ -54,10 +49,28 @@ export function App() {
 					setCurrentPage(page ?? null)
 					setComponents(state.components)
 					setZoom(state.zoom)
-					setSelectedIds(state.selection)
 					setActiveTool(state.activeTool)
-					setCursor(state.cursor)
-					setPositionOverrides(new Map())
+
+					requestAnimationFrame(() => {
+						const rects = collectNodeRects()
+						parentMethodsRef.current?.onNodeRectsUpdated(rects)
+					})
+				},
+
+				hitTest(x: number, y: number): string | null {
+					const el = document.elementFromPoint(x, y)
+					return getTargetNodeId(el)
+				},
+
+				getNodeRect(nodeId: string) {
+					const el = document.querySelector(`[data-node-id="${nodeId}"]`)
+					if (!el) return null
+					const rect = el.getBoundingClientRect()
+					return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+				},
+
+				getNodeRects() {
+					return collectNodeRects()
 				},
 			},
 		})
@@ -71,187 +84,29 @@ export function App() {
 		}
 	}, [])
 
-	// 키보드 이벤트
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			// 텍스트 입력 요소는 자체적으로 키보드 처리
-			if (isTextInputElement(e.target)) {
-				return
-			}
-
-			sendGesture({
-				type: "key",
-				state: "began",
-				nodeId: null,
-				payload: {
-					key: e.key,
-					code: e.code,
-					shiftKey: e.shiftKey,
-					ctrlKey: e.ctrlKey,
-					metaKey: e.metaKey,
-					altKey: e.altKey,
-				},
-			})
-		}
-
-		const handleKeyUp = (e: KeyboardEvent) => {
-			// 텍스트 입력 요소는 자체적으로 키보드 처리
-			if (isTextInputElement(e.target)) {
-				return
-			}
-
-			sendGesture({
-				type: "key",
-				state: "ended",
-				nodeId: null,
-				payload: {
-					key: e.key,
-					code: e.code,
-					shiftKey: e.shiftKey,
-					ctrlKey: e.ctrlKey,
-					metaKey: e.metaKey,
-					altKey: e.altKey,
-				},
-			})
-		}
-
-		window.addEventListener("keydown", handleKeyDown, { capture: true })
-		window.addEventListener("keyup", handleKeyUp, { capture: true })
-
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown, { capture: true })
-			window.removeEventListener("keyup", handleKeyUp, { capture: true })
-		}
-	}, [sendGesture])
-
-	// dnd-kit 드래그 시작
-	const handleDragStart = useCallback(
-		(_event: DragStartEvent) => {
-			sendGesture({
-				type: "drag",
-				state: "began",
-				nodeId: null,
-				payload: { delta: { x: 0, y: 0 } },
-			})
-		},
-		[sendGesture],
-	)
-
-	// dnd-kit 드래그 종료
-	const handleDragEnd = useCallback(
-		(event: DragEndEvent) => {
-			const { active, over, delta } = event
-
-			if (!active || !currentPage) return
-
-			const activeNodeId = String(active.id)
-			const overNodeId = over ? String(over.id) : currentPage.id
-
-			// zoom 보정
-			const adjustedDelta = adjustDeltaForZoom(delta, zoom)
-
-			// NodeWrapper에서 캡처한 실제 위치
-			const { left = 0, top = 0 } = (active.data.current ?? {}) as { left?: number; top?: number }
-			const initialPosition = { x: left, y: top }
-
-			// 깜빡임 방지: Shell 응답 전에 로컬에서 즉시 새 위치 적용
-			setPositionOverrides((prev) => {
-				const next = new Map(prev)
-				next.set(activeNodeId, {
-					x: initialPosition.x + adjustedDelta.x,
-					y: initialPosition.y + adjustedDelta.y,
-				})
-				return next
-			})
-
-			sendGesture({
-				type: "drag",
-				state: "ended",
-				nodeId: activeNodeId,
-				payload: {
-					delta: adjustedDelta,
-					initialPosition,
-					overNodeId,
-				},
-			})
-		},
-		[currentPage, zoom, sendGesture],
-	)
-
-	// 클릭 이벤트
-	const handleCanvasMouseDown = useCallback(
-		(e: React.MouseEvent) => {
-			if (isResizeHandle(e.target as HTMLElement)) {
-				return
-			}
-
-			const targetNodeId = getTargetNodeId(e.target as HTMLElement)
-
-			sendGesture({
-				type: "click",
-				state: "ended",
-				nodeId: targetNodeId,
-				payload: {
-					x: e.clientX,
-					y: e.clientY,
-					shiftKey: e.shiftKey,
-					metaKey: e.metaKey,
-				},
-			})
-		},
-		[sendGesture],
-	)
-
-	// 리사이즈 시작
-	const handleResizeStart = useCallback(() => {
-		sendGesture({
-			type: "resize",
-			state: "began",
-			nodeId: null,
-			payload: { width: 0, height: 0 },
-		})
-	}, [sendGesture])
-
-	// 리사이즈 종료
-	const handleResizeEnd = useCallback(
-		(nodeId: string, width: number, height: number) => {
-			sendGesture({
-				type: "resize",
-				state: "ended",
-				nodeId,
-				payload: { width, height },
-			})
-		},
-		[sendGesture],
-	)
+	const handleTextChange = useCallback((nodeId: string, content: unknown) => {
+		parentMethodsRef.current?.onTextChange(nodeId, content)
+	}, [])
 
 	if (!currentPage) {
 		return <div className="loading">Loading...</div>
 	}
 
 	return (
-		<DndContext
-			sensors={sensors}
-			collisionDetection={closestParentDroppable}
-			onDragStart={handleDragStart}
-			onDragEnd={handleDragEnd}
+		<div
+			id="canvas-container"
+			style={{
+				position: "fixed",
+				top: 0,
+				left: 0,
+				width: 0,
+				height: 0,
+				willChange: "transform",
+				isolation: "isolate",
+			}}
 		>
-			<div
-				ref={setCanvasDropRef}
-				className="canvas-app"
-				style={{ transform: `scale(${zoom})`, cursor }}
-				onMouseDown={handleCanvasMouseDown}
-			>
-				<CanvasRenderer
-					page={currentPage}
-					components={components}
-					selectedIds={selectedIds}
-					positionOverrides={positionOverrides}
-					onResizeStart={handleResizeStart}
-					onResizeEnd={handleResizeEnd}
-					sendGesture={sendGesture}
-				/>
-			</div>
-		</DndContext>
+			<style>{`#canvas-container { transform: scale(${zoom}) translateX(0px) translateY(0px); }`}</style>
+			<CanvasRenderer page={currentPage} components={components} onTextChange={handleTextChange} />
+		</div>
 	)
 }

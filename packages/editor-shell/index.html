@@ -7,6 +7,22 @@
 	</head>
 	<body>
 		<div id="root"></div>
+		<iframe
+			id="canvas-iframe"
+			src="http://localhost:3001"
+			tabindex="-1"
+			style="
+				display: block;
+				height: 100%;
+				width: 100%;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				border: none;
+				z-index: -1;
+				pointer-events: none;
+			"
+		></iframe>
 		<script type="module" src="/src/main.tsx"></script>
 	</body>
 </html>

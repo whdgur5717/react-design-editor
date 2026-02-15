@@ -1,45 +1,42 @@
-import type { CanvasGesture, ComponentDefinition, GestureType, PageNode } from "@design-editor/core"
+import type { ComponentDefinition, PageNode } from "@design-editor/core"
 
-import { NodeWrapper } from "./NodeWrapper"
-import { renderNode } from "./renderNode"
-import { applyPositionOverride } from "./utils"
+import { renderNodeChildren } from "./renderNode"
 
 interface CanvasRendererProps {
 	page: PageNode
 	components: ComponentDefinition[]
-	selectedIds: string[]
-	positionOverrides: Map<string, { x: number; y: number }>
-	onResizeStart: () => void
-	onResizeEnd: (nodeId: string, width: number, height: number) => void
-	sendGesture: <T extends GestureType>(gesture: CanvasGesture<T>) => void
+	onTextChange: (nodeId: string, content: unknown) => void
 }
 
-export function CanvasRenderer({
-	page,
-	components,
-	selectedIds,
-	positionOverrides,
-	onResizeStart,
-	onResizeEnd,
-	sendGesture,
-}: CanvasRendererProps) {
-	const ctx = { components, selectedIds, positionOverrides, onResizeStart, onResizeEnd, sendGesture }
+export function CanvasRenderer({ page, components, onTextChange }: CanvasRendererProps) {
+	const ctx = { components, onTextChange }
 	return (
 		<>
 			{page.children
 				.filter((child) => child.visible !== false)
 				.map((child) => {
-					const effectiveNode = applyPositionOverride(child, positionOverrides)
+					const x = child.x ?? 0
+					const y = child.y ?? 0
+					const { width, height, ...contentStyle } = child.style ?? {}
+
 					return (
-						<NodeWrapper
+						<div
 							key={child.id}
-							node={effectiveNode}
-							isSelected={selectedIds.includes(child.id)}
-							onResizeStart={onResizeStart}
-							onResizeEnd={(width, height) => onResizeEnd(child.id, width, height)}
+							data-node-id={child.id}
+							style={{
+								position: "fixed",
+								transform: `translateX(${x}px) translateY(${y}px)`,
+								width,
+								height,
+								willChange: "transform",
+								contain: "layout style",
+								isolation: "isolate",
+							}}
 						>
-							{renderNode(child, ctx)}
-						</NodeWrapper>
+							<div style={{ ...contentStyle, width: "100%", height: "100%", position: "relative" }}>
+								{renderNodeChildren(child, ctx)}
+							</div>
+						</div>
 					)
 				})}
 		</>

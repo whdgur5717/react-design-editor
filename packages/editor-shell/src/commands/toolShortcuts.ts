@@ -1,20 +1,19 @@
-import { toolRegistry } from "../tools"
-import { shortcutRegistry } from "./ShortcutRegistry"
+import type { EditorService } from "../services/EditorService"
 
-export function registerToolShortcuts() {
-	shortcutRegistry.register("tool:select", () => {
-		toolRegistry.setActiveTool("select")
+export function registerToolShortcuts(editor: EditorService) {
+	editor.shortcutRegistry.register("tool:select", () => {
+		editor.toolRegistry.setActiveTool("select")
 	})
 
-	shortcutRegistry.register("tool:frame", () => {
-		toolRegistry.setActiveTool("frame")
+	editor.shortcutRegistry.register("tool:frame", () => {
+		editor.toolRegistry.setActiveTool("frame")
 	})
 
-	shortcutRegistry.register("tool:text", () => {
-		toolRegistry.setActiveTool("text")
+	editor.shortcutRegistry.register("tool:text", () => {
+		editor.toolRegistry.setActiveTool("text")
 	})
 
-	shortcutRegistry.register("tool:shape", () => {
-		toolRegistry.setActiveTool("shape")
+	editor.shortcutRegistry.register("tool:shape", () => {
+		editor.toolRegistry.setActiveTool("shape")
 	})
 }

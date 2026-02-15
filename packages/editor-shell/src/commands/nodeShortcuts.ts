@@ -1,6 +1,5 @@
-import { commandHistory, receiver } from "./index"
+import type { EditorService } from "../services/EditorService"
 import { DuplicateNodeCommand, RemoveNodeCommand } from "./node"
-import { shortcutRegistry } from "./ShortcutRegistry"
 import type { EditorReceiver } from "./types"
 
 /**
@@ -17,44 +16,44 @@ function filterToTopLevel(selection: string[], recv: EditorReceiver) {
 	})
 }
 
-export function registerNodeShortcuts() {
-	shortcutRegistry.register("node:delete", () => {
-		const selection = receiver.getSelection()
+export function registerNodeShortcuts(editor: EditorService) {
+	editor.shortcutRegistry.register("node:delete", () => {
+		const selection = editor.receiver.getSelection()
 		if (selection.length === 0) return
 
-		const topLevelIds = filterToTopLevel(selection, receiver)
+		const topLevelIds = filterToTopLevel(selection, editor.receiver)
 
 		if (topLevelIds.length > 1) {
-			commandHistory.beginTransaction()
+			editor.commandHistory.beginTransaction()
 		}
 
 		for (const id of topLevelIds) {
-			const command = new RemoveNodeCommand(receiver, id)
-			commandHistory.execute(command)
+			const command = new RemoveNodeCommand(editor.receiver, id)
+			editor.commandHistory.execute(command)
 		}
 
 		if (topLevelIds.length > 1) {
-			commandHistory.commitTransaction()
+			editor.commandHistory.commitTransaction()
 		}
 
-		receiver.setSelection([])
+		editor.receiver.setSelection([])
 	})
 
-	shortcutRegistry.register("node:duplicate", () => {
-		const selection = receiver.getSelection()
+	editor.shortcutRegistry.register("node:duplicate", () => {
+		const selection = editor.receiver.getSelection()
 		if (selection.length === 0) return
 
 		if (selection.length > 1) {
-			commandHistory.beginTransaction()
+			editor.commandHistory.beginTransaction()
 		}
 
 		for (const id of selection) {
-			const command = new DuplicateNodeCommand(receiver, id)
-			commandHistory.execute(command)
+			const command = new DuplicateNodeCommand(editor.receiver, id)
+			editor.commandHistory.execute(command)
 		}
 
 		if (selection.length > 1) {
-			commandHistory.commitTransaction()
+			editor.commandHistory.commitTransaction()
 		}
 	})
 }

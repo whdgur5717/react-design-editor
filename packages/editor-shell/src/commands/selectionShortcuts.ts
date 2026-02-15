@@ -1,7 +1,6 @@
 import type { SceneNode } from "@design-editor/core"
 
-import { receiver } from "./index"
-import { shortcutRegistry } from "./ShortcutRegistry"
+import type { EditorService } from "../services/EditorService"
 
 function collectAllNodeIds(nodes: SceneNode[]) {
 	const ids: string[] = []
@@ -14,16 +13,16 @@ function collectAllNodeIds(nodes: SceneNode[]) {
 	return ids
 }
 
-export function registerSelectionShortcuts() {
-	shortcutRegistry.register("selection:clear", () => {
-		receiver.setSelection([])
+export function registerSelectionShortcuts(editor: EditorService) {
+	editor.shortcutRegistry.register("selection:clear", () => {
+		editor.receiver.setSelection([])
 	})
 
-	shortcutRegistry.register("selection:all", () => {
-		const page = receiver.getCurrentPage()
+	editor.shortcutRegistry.register("selection:all", () => {
+		const page = editor.receiver.getCurrentPage()
 		if (!page) return
 
 		const allIds = collectAllNodeIds(page.children)
-		receiver.setSelection(allIds)
+		editor.receiver.setSelection(allIds)
 	})
 }

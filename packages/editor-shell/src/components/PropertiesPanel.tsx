@@ -4,12 +4,13 @@ import type { SceneNode } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
-import { useEditorStore } from "../store/editor"
+import { useEditorStore } from "../services/EditorContext"
 
 type Tab = "design" | "prototype" | "code"
 
 function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
+	const moveNode = useEditorStore((state) => state.moveNode)
 	const style = node.style ?? {}
 
 	const handleStyleChange = (key: string, value: string | number | undefined) => {
@@ -28,13 +29,17 @@ function DesignTab({ node }: { node: SceneNode }) {
 						<span>X</span>
 						<input
 							type="number"
-							value={style.left ?? 0}
-							onChange={(e) => handleStyleChange("left", Number(e.target.value))}
+							value={node.x ?? 0}
+							onChange={(e) => moveNode(node.id, { x: Number(e.target.value), y: node.y ?? 0 })}
 						/>
 					</label>
 					<label>
 						<span>Y</span>
-						<input type="number" value={style.top ?? 0} onChange={(e) => handleStyleChange("top", Number(e.target.value))} />
+						<input
+							type="number"
+							value={node.y ?? 0}
+							onChange={(e) => moveNode(node.id, { x: node.x ?? 0, y: Number(e.target.value) })}
+						/>
 					</label>
 				</div>
 			</section>

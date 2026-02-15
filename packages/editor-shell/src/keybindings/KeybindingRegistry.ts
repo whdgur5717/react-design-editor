@@ -1,9 +1,11 @@
-import { useEditorStore } from "../store/editor"
+import type { EditorStoreApi } from "../store/editor"
 import { defaultKeybindings } from "./defaults"
 import type { Keybinding, KeyEventLike } from "./types"
 
-class KeybindingRegistryImpl {
+export class KeybindingRegistryImpl {
 	private bindings: Keybinding[] = [...defaultKeybindings]
+
+	constructor(private readonly store: EditorStoreApi) {}
 
 	/**
 	 * Keybinding 추가
@@ -40,7 +42,7 @@ class KeybindingRegistryImpl {
 	private checkCondition(when?: string): boolean {
 		if (!when) return true
 
-		const state = useEditorStore.getState()
+		const state = this.store.getState()
 		switch (when) {
 			case "hasSelection":
 				return state.selection.length > 0
@@ -56,6 +58,3 @@ class KeybindingRegistryImpl {
 		return [...this.bindings]
 	}
 }
-
-// 싱글톤 인스턴스
-export const keybindingRegistry = new KeybindingRegistryImpl()
