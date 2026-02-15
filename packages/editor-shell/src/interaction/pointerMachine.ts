@@ -287,7 +287,6 @@ export function createPointerMachine(editorService: EditorService) {
 								const nodeId = editorService.getSelection()[0] ?? null
 								const node = nodeId ? editorService.findNode(nodeId) : null
 
-								// style.width/height が auto の場合、nodeRectsCache のレンダリングサイズをフォールバックとして使用
 								let width = typeof node?.style?.width === "number" ? node.style.width : 0
 								let height = typeof node?.style?.height === "number" ? node.style.height : 0
 								if (nodeId && (width === 0 || height === 0)) {
@@ -371,6 +370,7 @@ export function createPointerMachine(editorService: EditorService) {
 							],
 							POINTER_UP: {
 								target: "#pointer.clicking",
+								actions: "singleClick",
 							},
 						},
 					},
@@ -420,7 +420,6 @@ export function createPointerMachine(editorService: EditorService) {
 						after: {
 							DOUBLE_CLICK_TIMEOUT: {
 								target: "#pointer.idle",
-								actions: "singleClick",
 							},
 						},
 						on: {
