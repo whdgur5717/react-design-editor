@@ -1,4 +1,5 @@
 import type { ComponentDefinition, PageNode } from "@design-editor/core"
+import type React from "react"
 
 import { renderNodeChildren } from "./renderNode"
 
@@ -23,15 +24,19 @@ export function CanvasRenderer({ page, components, onTextChange }: CanvasRendere
 						<div
 							key={child.id}
 							data-node-id={child.id}
-							style={{
-								position: "fixed",
-								transform: `translateX(${x}px) translateY(${y}px)`,
-								width,
-								height,
-								willChange: "transform",
-								contain: "layout style",
-								isolation: "isolate",
-							}}
+							style={
+								{
+									position: "fixed",
+									transform: `translateX(${x}px) translateY(${y}px)`,
+									width,
+									height,
+									willChange: "transform",
+									contain: "layout style",
+									isolation: "isolate",
+									"--editor-fixed-position": "absolute",
+									"--editor-viewport-height": `${typeof height === "number" ? height : 0}px`,
+								} as React.CSSProperties
+							}
 						>
 							<div style={{ ...contentStyle, width: "100%", height: "100%", position: "relative" }}>
 								{renderNodeChildren(child, ctx)}
