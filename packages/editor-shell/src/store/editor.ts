@@ -19,7 +19,7 @@ import { immer } from "zustand/middleware/immer"
 
 // ── Read-only 트리 헬퍼 ──
 
-function findNode(parent: PageNode | SceneNode, id: string): SceneNode | null {
+export function findNode(parent: PageNode | SceneNode, id: string): SceneNode | null {
 	if ("children" in parent && Array.isArray(parent.children)) {
 		for (const child of parent.children) {
 			if (child.id === id) return child

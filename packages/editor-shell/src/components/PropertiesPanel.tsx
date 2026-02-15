@@ -5,6 +5,7 @@ import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
 import { useEditorStore } from "../services/EditorContext"
+import { findNode } from "../store/editor"
 
 type Tab = "design" | "prototype" | "code"
 
@@ -129,6 +130,76 @@ function DesignTab({ node }: { node: SceneNode }) {
 						</div>
 					</>
 				)}
+			</section>
+
+			{/* CSS Position */}
+			<section className="property-section">
+				<h3 className="section-title">CSS Position</h3>
+				<div className="property-row">
+					<select
+						value={style.position ?? "static"}
+						onChange={(e) => handleStyleChange("position", e.target.value === "static" ? undefined : e.target.value)}
+					>
+						<option value="static">Static</option>
+						<option value="relative">Relative</option>
+						<option value="absolute">Absolute</option>
+						<option value="fixed">Fixed</option>
+						<option value="sticky">Sticky</option>
+					</select>
+				</div>
+				{style.position && style.position !== "static" && style.position !== "relative" && (
+					<div className="property-grid" style={{ marginTop: 8 }}>
+						<label>
+							<span>Top</span>
+							<input
+								type="number"
+								value={style.top ?? ""}
+								onChange={(e) => handleStyleChange("top", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>Left</span>
+							<input
+								type="number"
+								value={style.left ?? ""}
+								onChange={(e) => handleStyleChange("left", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>Bottom</span>
+							<input
+								type="number"
+								value={style.bottom ?? ""}
+								onChange={(e) => handleStyleChange("bottom", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>Right</span>
+							<input
+								type="number"
+								value={style.right ?? ""}
+								onChange={(e) => handleStyleChange("right", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+					</div>
+				)}
+			</section>
+
+			{/* Overflow */}
+			<section className="property-section">
+				<h3 className="section-title">Overflow</h3>
+				<div className="property-row">
+					<select
+						value={style.overflow ?? "visible"}
+						onChange={(e) => handleStyleChange("overflow", e.target.value === "visible" ? undefined : e.target.value)}
+					>
+						<option value="visible">Visible</option>
+						<option value="hidden">Hidden</option>
+						<option value="scroll">Scroll</option>
+						<option value="auto">Auto</option>
+						<option value="clip">Clip</option>
+					</select>
+				</div>
 			</section>
 
 			{/* Spacing */}
@@ -315,10 +386,11 @@ function CodeTab({ node }: { node: SceneNode }) {
 
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
-	const selection = useEditorStore((state) => state.selection)
-	const storeFindNode = useEditorStore((state) => state.findNode)
-
-	const selectedNode = selection.length === 1 ? storeFindNode(selection[0]) : null
+	const selectedNode = useEditorStore((state) => {
+		if (state.selection.length !== 1) return null
+		const page = state.document.children.find((p) => p.id === state.currentPageId)
+		return page ? findNode(page, state.selection[0]) : null
+	})
 
 	return (
 		<div className="properties-panel">
