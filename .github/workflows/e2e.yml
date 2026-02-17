@@ -29,7 +29,8 @@ jobs:
 
    - name: Run E2E tests
      id: e2e
-     run: pnpm test:e2e
+     shell: bash
+     run: set -o pipefail; pnpm test:e2e 2>&1 | tee e2e-output.log
      continue-on-error: true
 
    - name: Analyze E2E failure with Claude
@@ -45,12 +46,13 @@ jobs:
        당신은 작업자가 테스트 실패의 원인을 빠르게 파악할 수 있도록 컨텍스트를 정리하는 조사관입니다.
 
        ## 분석 절차
-       1. `test-results/` 폴더에서 `error-context.md` 파일들을 모두 찾아 읽으세요
-       2. 실패한 테스트의 소스코드(`e2e/tests/*.spec.ts`)와 POM(`e2e/pom/`)을 확인하세요
-       3. 관련 애플리케이션 코드 영역을 탐색하세요
+       1. `e2e-output.log`에서 테스트 실패 로그를 읽으세요
+       2. `test-results/` 폴더에서 `error-context.md` 파일들을 모두 찾아 읽으세요
+       3. 실패한 테스트의 소스코드(`e2e/tests/*.spec.ts`)와 POM(`e2e/pom/`)을 확인하세요
+       4. 관련 애플리케이션 코드 영역을 탐색하세요
 
        ## 원칙
-       - 수정 제안이나 코드 픽스를 하지 마세요. 컨텍스트 전달만 하세요.
+       - 수정 제안이나 코드 픽스를 하지 마세요.
        - 작업자가 디버깅을 시작할 수 있는 진입점(파일, 함수, 라인)을 명확히 안내하세요.
        - 파일 경로는 GitHub 링크 형태로 제공하세요.
 
