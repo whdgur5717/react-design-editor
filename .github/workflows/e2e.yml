@@ -72,6 +72,7 @@ jobs:
        ---
        *🤖 이 분석은 AI가 자동 생성한 초기 조사 결과입니다.*
        *⚠️ 위 내용은 추측에 기반하므로, 실제 수정 전 직접 검증이 필요합니다.*
+      show_full_output: true
       claude_args: |
        --allowedTools "Read,Glob,Grep,Bash(gh pr comment:*)"
 
