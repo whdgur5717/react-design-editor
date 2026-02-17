@@ -95,6 +95,7 @@ export function App() {
 	return (
 		<div
 			id="canvas-container"
+			data-ready="true"
 			style={{
 				position: "fixed",
 				top: 0,

@@ -45,3 +45,21 @@ config/
 ```
 
 For detailed architecture, see `packages/spec.md`.
+
+## Testing Conventions
+
+- **파일 네이밍**: E2E 테스트는 `*.spec.ts`, 그 외 단위/통합 테스트는 `*.test.ts`
+- **테스트 설명은 한글로 작성**: 개발자가 아닌 이해관계자도 이해할 수 있도록, 무엇을 검증하는지를 서술한다. 구현 디테일(함수명, 내부 로직 등)은 포함하지 않는다.
+
+```ts
+// Good
+describe("노드 선택", () => {
+  it("캔버스에서 노드를 클릭하면 선택 상태가 된다", () => { ... })
+  it("선택된 노드 바깥을 클릭하면 선택이 해제된다", () => { ... })
+})
+
+// Bad
+describe("handleNodeClick", () => {
+  it("sets selectedNodeId in zustand store", () => { ... })
+})
+```

@@ -1,0 +1,80 @@
+name: E2E Tests
+
+on:
+ pull_request:
+  types: [opened, synchronize]
+
+jobs:
+ e2e:
+  runs-on: ubuntu-latest
+  permissions:
+   contents: read
+   pull-requests: write
+   issues: write
+   id-token: write
+  steps:
+   - uses: actions/checkout@v4
+
+   - uses: pnpm/action-setup@v4
+
+   - uses: actions/setup-node@v4
+     with:
+      node-version: 22
+      cache: "pnpm"
+
+   - run: pnpm install
+
+   - name: Setup Playwright
+     uses: ./.github/actions/setup-playwright
+
+   - name: Run E2E tests
+     id: e2e
+     run: pnpm test:e2e
+     continue-on-error: true
+
+   - name: Analyze E2E failure with Claude
+     if: steps.e2e.outcome == 'failure'
+     uses: anthropics/claude-code-action@v1
+     with:
+      claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      prompt: |
+       REPO: ${{ github.repository }}
+       PR NUMBER: ${{ github.event.pull_request.number }}
+
+       ## 역할
+       당신은 작업자가 테스트 실패의 원인을 빠르게 파악할 수 있도록 컨텍스트를 정리하는 조사관입니다.
+
+       ## 분석 절차
+       1. `test-results/` 폴더에서 `error-context.md` 파일들을 모두 찾아 읽으세요
+       2. 실패한 테스트의 소스코드(`e2e/tests/*.spec.ts`)와 POM(`e2e/pom/`)을 확인하세요
+       3. 관련 애플리케이션 코드 영역을 탐색하세요
+
+       ## 원칙
+       - 수정 제안이나 코드 픽스를 하지 마세요. 컨텍스트 전달만 하세요.
+       - 작업자가 디버깅을 시작할 수 있는 진입점(파일, 함수, 라인)을 명확히 안내하세요.
+       - 파일 경로는 GitHub 링크 형태로 제공하세요.
+
+       분석 결과를 `gh pr comment`로 PR에 코멘트로 남겨주세요.
+
+       ## 응답 형식
+       ### 🔴 E2E 테스트 실패 분석
+
+       **실패한 테스트**: [테스트 이름과 파일 경로]
+
+       **에러 요약**: [무엇이 실패했는지]
+
+       **관련 코드**:
+       - [파일명](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/파일경로#L라인번호) - 관련성 설명
+
+       **디버깅 시작점**:
+       - [파일명](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/파일경로#L라인번호) - 확인 방법
+
+       ---
+       *🤖 이 분석은 AI가 자동 생성한 초기 조사 결과입니다.*
+       *⚠️ 위 내용은 추측에 기반하므로, 실제 수정 전 직접 검증이 필요합니다.*
+      claude_args: |
+       --allowedTools "Read,Glob,Grep,Bash(gh pr comment:*)"
+
+   - name: Fail if E2E tests failed
+     if: steps.e2e.outcome == 'failure'
+     run: exit 1
