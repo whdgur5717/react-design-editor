@@ -8,14 +8,17 @@
 		"lint": "pnpm -r --parallel run lint -- .",
 		"type-check": "pnpm -r --parallel run type-check",
 		"prepare": "husky",
+		"test": "vitest",
+		"test:unit": "vitest run",
 		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@actions/core": "^1.11.1",
 		"@actions/github": "^6.0.0",
-		"@playwright/test": "^1.50.1",
+		"@playwright/test": "^1.51",
 		"@types/node": "^25.0.10",
 		"@typescript/native-preview": "^7.0.0-dev.20260124.1",
+		"@vitest/browser-playwright": "^4.0.18",
 		"concurrently": "^9.2.1",
 		"eslint": "^9.39.2",
 		"husky": "^9.1.7",
@@ -23,6 +26,6 @@
 		"minimatch": "^10.0.1",
 		"prettier": "latest",
 		"typescript": "~5.6.2",
-		"vitest": "^4.0.0"
+		"vitest": "^4.0.18"
 	}
 }
