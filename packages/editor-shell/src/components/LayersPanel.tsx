@@ -84,6 +84,7 @@ function SortableLayerItem({
 		<div ref={setNodeRef} style={style} className="layer-item">
 			<div
 				className={`layer-row ${isSelected ? "selected" : ""} ${isHovered ? "hovered" : ""} ${!isVisible ? "hidden-layer" : ""}`}
+				data-node-id={node.id}
 				style={{ paddingLeft: depth * 16 + 8 }}
 				onClick={handleRowClick}
 				onMouseEnter={() => setHoveredId(node.id)}

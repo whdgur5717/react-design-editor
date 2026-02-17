@@ -21,14 +21,15 @@ function DesignTab({ node }: { node: SceneNode }) {
 	}
 
 	return (
-		<div className="design-tab">
+		<div className="design-tab" data-testid="design-tab">
 			{/* Position */}
 			<section className="property-section">
-				<h3 className="section-title">Position</h3>
+				<h3 className="section-title">Canvas Position</h3>
 				<div className="property-grid">
 					<label>
 						<span>X</span>
 						<input
+							data-testid="prop-x"
 							type="number"
 							value={node.x ?? 0}
 							onChange={(e) => moveNode(node.id, { x: Number(e.target.value), y: node.y ?? 0 })}
@@ -37,6 +38,7 @@ function DesignTab({ node }: { node: SceneNode }) {
 					<label>
 						<span>Y</span>
 						<input
+							data-testid="prop-y"
 							type="number"
 							value={node.y ?? 0}
 							onChange={(e) => moveNode(node.id, { x: node.x ?? 0, y: Number(e.target.value) })}
@@ -52,6 +54,7 @@ function DesignTab({ node }: { node: SceneNode }) {
 					<label>
 						<span>W</span>
 						<input
+							data-testid="prop-w"
 							type="number"
 							value={style.width ?? ""}
 							onChange={(e) => handleStyleChange("width", e.target.value ? Number(e.target.value) : undefined)}
@@ -60,6 +63,7 @@ function DesignTab({ node }: { node: SceneNode }) {
 					<label>
 						<span>H</span>
 						<input
+							data-testid="prop-h"
 							type="number"
 							value={style.height ?? ""}
 							onChange={(e) => handleStyleChange("height", e.target.value ? Number(e.target.value) : undefined)}
@@ -237,6 +241,7 @@ function DesignTab({ node }: { node: SceneNode }) {
 						onChange={(e) => handleStyleChange("backgroundColor", e.target.value)}
 					/>
 					<input
+						data-testid="prop-fill"
 						type="text"
 						value={style.backgroundColor ?? ""}
 						placeholder="#ffffff"
@@ -417,7 +422,9 @@ export function PropertiesPanel() {
 						{activeTab === "code" && <CodeTab node={selectedNode} />}
 					</>
 				) : (
-					<div className="empty-state">Select a layer to see its properties</div>
+					<div className="empty-state" data-testid="properties-empty">
+						Select a layer to see its properties
+					</div>
 				)}
 			</div>
 		</div>
