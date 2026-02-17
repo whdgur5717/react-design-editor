@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test"
 
+const SHELL_URL = process.env.SHELL_URL ?? "http://localhost:3000"
+const CANVAS_URL = process.env.CANVAS_URL ?? "http://localhost:3001"
+
 export default defineConfig({
 	testDir: "./e2e/tests",
 	fullyParallel: true,
@@ -8,8 +11,11 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: "html",
 	use: {
-		baseURL: "http://localhost:3000",
+		baseURL: SHELL_URL,
 		trace: "on-first-retry",
+	},
+	expect: {
+		timeout: 10_000,
 	},
 	projects: [
 		{
@@ -20,12 +26,12 @@ export default defineConfig({
 	webServer: [
 		{
 			command: "pnpm --filter @design-editor/canvas dev",
-			url: "http://localhost:3001",
+			url: CANVAS_URL,
 			reuseExistingServer: !process.env.CI,
 		},
 		{
 			command: "pnpm --filter @design-editor/shell dev",
-			url: "http://localhost:3000",
+			url: SHELL_URL,
 			reuseExistingServer: !process.env.CI,
 		},
 	],
