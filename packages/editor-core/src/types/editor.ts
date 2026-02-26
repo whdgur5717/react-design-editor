@@ -31,6 +31,12 @@ export interface EditorState {
 	/** 줌 레벨 (1 = 100%) */
 	zoom: number
 
+	/** 뷰포트 pan 오프셋 X (screen 좌표) */
+	panX: number
+
+	/** 뷰포트 pan 오프셋 Y (screen 좌표) */
+	panY: number
+
 	/** 드래그 프리뷰 (Shell 오버레이에서 렌더링) */
 	dragPreview: { nodeId: string; dx: number; dy: number } | null
 
@@ -80,6 +86,9 @@ export interface EditorActions {
 
 	/** 줌 변경 */
 	setZoom: (zoom: number) => void
+
+	/** 뷰포트 pan 변경 */
+	setPan: (panX: number, panY: number) => void
 
 	/** 가시성 토글 */
 	toggleVisibility: (id: string) => void

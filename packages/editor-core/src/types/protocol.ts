@@ -11,6 +11,8 @@ export interface SyncStatePayload {
 	currentPageId: string
 	components: ComponentDefinition[]
 	zoom: number
+	panX: number
+	panY: number
 	selection: string[]
 	activeTool: EditorTool
 	cursor: CSSProperties["cursor"]
