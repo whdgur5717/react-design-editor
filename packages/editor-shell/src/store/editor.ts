@@ -145,6 +145,8 @@ export function createEditorStore() {
 				hoveredId: null,
 				activeTool: "select",
 				zoom: 1,
+				panX: 0,
+				panY: 0,
 				dragPreview: null,
 				nodeRectsCache: {},
 
@@ -254,6 +256,10 @@ export function createEditorStore() {
 
 				setZoom(zoom: number) {
 					set({ zoom: Math.max(0.1, Math.min(4, zoom)) })
+				},
+
+				setPan(panX: number, panY: number) {
+					set({ panX, panY })
 				},
 
 				reorderNode(parentId: string, fromIndex: number, toIndex: number) {

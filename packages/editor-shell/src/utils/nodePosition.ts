@@ -32,9 +32,9 @@ export function getAbsolutePosition(nodeId: string, page: PageNode): { x: number
 
 /**
  * 노드의 스크린 좌표 rect
- * 순수 함수: zoom, page를 인자로 받는다.
+ * 순수 함수: zoom, pan, page를 인자로 받는다.
  */
-export function getNodeScreenRect(nodeId: string, zoom: number, page: PageNode): Rect | null {
+export function getNodeScreenRect(nodeId: string, zoom: number, page: PageNode, panX = 0, panY = 0): Rect | null {
 	const node = findNodeInPage(page, nodeId)
 	if (!node) return null
 
@@ -43,10 +43,20 @@ export function getNodeScreenRect(nodeId: string, zoom: number, page: PageNode):
 	const height = isNumber(node.style?.height) ? node.style.height : 0
 
 	return {
-		x: abs.x * zoom,
-		y: abs.y * zoom,
+		x: abs.x * zoom + panX,
+		y: abs.y * zoom + panY,
 		width: width * zoom,
 		height: height * zoom,
+	}
+}
+
+/**
+ * screen 좌표 → data 좌표 변환
+ */
+export function screenToData(screenX: number, screenY: number, zoom: number, panX: number, panY: number) {
+	return {
+		x: (screenX - panX) / zoom,
+		y: (screenY - panY) / zoom,
 	}
 }
 
@@ -67,9 +77,11 @@ export function getNodeScreenRectHybrid(
 	zoom: number,
 	page: PageNode,
 	cache: Record<string, NodeRect>,
+	panX = 0,
+	panY = 0,
 ): Rect | null {
 	if (isRootNode(nodeId, page)) {
-		return getNodeScreenRect(nodeId, zoom, page)
+		return getNodeScreenRect(nodeId, zoom, page, panX, panY)
 	}
 
 	const cached = cache[nodeId]

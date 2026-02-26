@@ -53,7 +53,7 @@ export function App() {
 
 		// store 변경 시 Canvas에 동기화 (nodeRectsCache 변경은 무시)
 		const unsubscribe = editor.store.subscribe(
-			(s) => [s.document, s.currentPageId, s.components, s.zoom, s.selection, s.activeTool] as const,
+			(s) => [s.document, s.currentPageId, s.components, s.zoom, s.panX, s.panY, s.selection, s.activeTool] as const,
 			() => editor.syncToCanvas(),
 			{ equalityFn: shallow },
 		)
@@ -90,9 +90,22 @@ export function App() {
 			})
 		}
 
+		const onWheel = (e: WheelEvent) => {
+			e.preventDefault()
+			editor.handleWheel({
+				deltaX: e.deltaX,
+				deltaY: e.deltaY,
+				clientX: e.clientX,
+				clientY: e.clientY,
+				ctrlKey: e.ctrlKey,
+				metaKey: e.metaKey,
+			})
+		}
+
 		eventTarget.addEventListener("pointerdown", onPointerDown)
 		eventTarget.addEventListener("pointermove", onPointerMove)
 		eventTarget.addEventListener("pointerup", onPointerUp)
+		eventTarget.addEventListener("wheel", onWheel, { passive: false })
 
 		// 키보드 이벤트
 		const onKeyDown = (e: KeyboardEvent) => {
@@ -116,6 +129,7 @@ export function App() {
 			eventTarget.removeEventListener("pointerdown", onPointerDown)
 			eventTarget.removeEventListener("pointermove", onPointerMove)
 			eventTarget.removeEventListener("pointerup", onPointerUp)
+			eventTarget.removeEventListener("wheel", onWheel)
 			window.removeEventListener("keydown", onKeyDown, { capture: true })
 		}
 	}, [editor])
