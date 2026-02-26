@@ -26,6 +26,8 @@ export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
 	const [components, setComponents] = useState<ComponentDefinition[]>([])
 	const [zoom, setZoom] = useState(1)
+	const [panX, setPanX] = useState(0)
+	const [panY, setPanY] = useState(0)
 	const [, setActiveTool] = useState<EditorTool>("select")
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
 
@@ -49,6 +51,8 @@ export function App() {
 					setCurrentPage(page ?? null)
 					setComponents(state.components)
 					setZoom(state.zoom)
+					setPanX(state.panX)
+					setPanY(state.panY)
 					setActiveTool(state.activeTool)
 
 					requestAnimationFrame(() => {
@@ -105,7 +109,7 @@ export function App() {
 				isolation: "isolate",
 			}}
 		>
-			<style>{`#canvas-container { transform: scale(${zoom}) translateX(0px) translateY(0px); }`}</style>
+			<style>{`#canvas-container { transform-origin: 0 0; transform: translate(${panX}px, ${panY}px) scale(${zoom}); }`}</style>
 			<CanvasRenderer page={currentPage} components={components} onTextChange={handleTextChange} />
 		</div>
 	)

@@ -7,12 +7,14 @@ interface DragPreviewProps {
 	dx: number
 	dy: number
 	zoom: number
+	panX: number
+	panY: number
 	page: PageNode
 	nodeRectsCache: Record<string, NodeRect>
 }
 
-export function DragPreview({ nodeId, dx, dy, zoom, page, nodeRectsCache }: DragPreviewProps) {
-	const rect = getNodeScreenRectHybrid(nodeId, zoom, page, nodeRectsCache)
+export function DragPreview({ nodeId, dx, dy, zoom, panX, panY, page, nodeRectsCache }: DragPreviewProps) {
+	const rect = getNodeScreenRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
 	if (!rect) return null
 
 	return (
