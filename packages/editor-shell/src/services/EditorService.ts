@@ -1,4 +1,5 @@
 import type { CanvasMethods, EditorTool, NodeRect, PageNode, SceneNode } from "@design-editor/core"
+import { clamp } from "es-toolkit"
 import type { AsyncMethodReturns } from "penpal"
 import { type AnyActor, createActor } from "xstate"
 
@@ -146,6 +147,8 @@ export class EditorService {
 			currentPageId: state.currentPageId,
 			components: state.components,
 			zoom: state.zoom,
+			panX: state.panX,
+			panY: state.panY,
 			selection: state.selection,
 			activeTool: state.activeTool,
 			cursor: this.toolRegistry.getActiveTool()?.cursor ?? "default",
@@ -172,6 +175,11 @@ export class EditorService {
 
 	getZoom() {
 		return this.store.getState().zoom
+	}
+
+	getPan() {
+		const { panX, panY } = this.store.getState()
+		return { x: panX, y: panY }
 	}
 
 	getSelection() {
@@ -206,6 +214,36 @@ export class EditorService {
 
 	setDragPreview(preview: { nodeId: string; dx: number; dy: number } | null) {
 		this.store.getState().setDragPreview(preview)
+	}
+
+	setPan(x: number, y: number) {
+		this.store.getState().setPan(x, y)
+	}
+
+	// ── Wheel 이벤트 (pan / zoom) ──
+
+	handleWheel(e: {
+		deltaX: number
+		deltaY: number
+		clientX: number
+		clientY: number
+		ctrlKey: boolean
+		metaKey: boolean
+	}) {
+		const { zoom, panX, panY } = this.store.getState()
+
+		if (e.ctrlKey || e.metaKey) {
+			// 줌: 마우스 포인터 기준
+			const newZoom = clamp(zoom * (1 - e.deltaY * 0.01), 0.1, 4)
+			const ratio = newZoom / zoom
+			const newPanX = e.clientX - (e.clientX - panX) * ratio
+			const newPanY = e.clientY - (e.clientY - panY) * ratio
+			this.store.getState().setZoom(newZoom)
+			this.store.getState().setPan(newPanX, newPanY)
+		} else {
+			// 팬
+			this.store.getState().setPan(panX - e.deltaX, panY - e.deltaY)
+		}
 	}
 
 	// ── Command 실행 ──

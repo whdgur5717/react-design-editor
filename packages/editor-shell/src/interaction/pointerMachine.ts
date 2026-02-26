@@ -2,6 +2,7 @@ import { assign, setup } from "xstate"
 
 import { ResizeNodeCommand } from "../commands"
 import type { EditorService } from "../services/EditorService"
+import { screenToData } from "../utils/nodePosition"
 
 // ── Event types ──
 
@@ -182,18 +183,24 @@ export function createPointerMachine(editorService: EditorService) {
 			},
 
 			singleClick: ({ context }) => {
+				const zoom = editorService.getZoom()
+				const { x: panX, y: panY } = editorService.getPan()
+				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
 				toolRegistry.handleClick(context.nodeId, {
-					x: context.startX,
-					y: context.startY,
+					x: data.x,
+					y: data.y,
 					shiftKey: context.shiftKey,
 					metaKey: context.metaKey,
 				})
 			},
 
 			doubleClick: ({ context }) => {
+				const zoom = editorService.getZoom()
+				const { x: panX, y: panY } = editorService.getPan()
+				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
 				toolRegistry.handleClick(context.nodeId, {
-					x: context.startX,
-					y: context.startY,
+					x: data.x,
+					y: data.y,
 					shiftKey: context.shiftKey,
 					metaKey: context.metaKey,
 				})
