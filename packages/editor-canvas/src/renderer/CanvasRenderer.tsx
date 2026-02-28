@@ -1,16 +1,17 @@
-import type { ComponentDefinition, PageNode } from "@design-editor/core"
+import type { PageNode } from "@design-editor/core"
+import type { ComponentType } from "react"
 import type React from "react"
 
-import { renderNodeChildren } from "./renderNode"
+import { type RenderContext, renderNodeChildren } from "./renderNode"
 
 interface CanvasRendererProps {
 	page: PageNode
-	components: ComponentDefinition[]
+	codeComponents: Record<string, ComponentType<Record<string, unknown>>>
 	onTextChange: (nodeId: string, content: unknown) => void
 }
 
-export function CanvasRenderer({ page, components, onTextChange }: CanvasRendererProps) {
-	const ctx = { components, onTextChange }
+export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRendererProps) {
+	const ctx: RenderContext = { codeComponents, onTextChange }
 	return (
 		<>
 			{page.children

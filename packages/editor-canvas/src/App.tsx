@@ -1,16 +1,9 @@
 import "./App.css"
 import "@design-editor/components"
 
-import type {
-	ComponentDefinition,
-	EditorTool,
-	NodeRect,
-	PageNode,
-	ShellMethods,
-	SyncStatePayload,
-} from "@design-editor/core"
+import type { EditorTool, NodeRect, PageNode, ShellMethods, SyncStatePayload } from "@design-editor/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { type ComponentType, useCallback, useEffect, useRef, useState } from "react"
 
 import { CanvasRenderer } from "./renderer/CanvasRenderer"
 
@@ -24,12 +17,54 @@ function getTargetNodeId(el: Element | null): string | null {
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
-	const [components, setComponents] = useState<ComponentDefinition[]>([])
 	const [zoom, setZoom] = useState(1)
 	const [panX, setPanX] = useState(0)
 	const [panY, setPanY] = useState(0)
 	const [, setActiveTool] = useState<EditorTool>("select")
+	const [codeComponentMap, setCodeComponentMap] = useState<Record<string, ComponentType<Record<string, unknown>>>>({})
+	const loadedSourcesRef = useRef<Record<string, string>>({})
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
+	const loadCodeComponents = useCallback(async (sources: Record<string, string>) => {
+		const newMap: Record<string, ComponentType<Record<string, unknown>>> = {}
+		let changed = false
+
+		for (const [id, compiledCode] of Object.entries(sources)) {
+			if (loadedSourcesRef.current[id] === compiledCode) {
+				// Reuse previously loaded component
+				setCodeComponentMap((prev) => {
+					if (prev[id]) newMap[id] = prev[id]
+					return prev
+				})
+				continue
+			}
+
+			try {
+				const blob = new Blob([compiledCode], { type: "text/javascript" })
+				const url = URL.createObjectURL(blob)
+				const mod: { default?: ComponentType<Record<string, unknown>> } = await import(/* @vite-ignore */ url)
+				URL.revokeObjectURL(url)
+				if (mod.default) {
+					newMap[id] = mod.default
+					loadedSourcesRef.current[id] = compiledCode
+					changed = true
+				}
+			} catch (e) {
+				console.error(`Failed to load code component ${id}:`, e)
+			}
+		}
+
+		// Remove deleted components
+		for (const id of Object.keys(loadedSourcesRef.current)) {
+			if (!sources[id]) {
+				delete loadedSourcesRef.current[id]
+				changed = true
+			}
+		}
+
+		if (changed) {
+			setCodeComponentMap((prev) => ({ ...prev, ...newMap }))
+		}
+	}, [])
 
 	useEffect(() => {
 		function collectNodeRects(): Record<string, NodeRect> {
@@ -49,11 +84,14 @@ export function App() {
 				syncState(state: SyncStatePayload) {
 					const page = state.document.children.find((p) => p.id === state.currentPageId)
 					setCurrentPage(page ?? null)
-					setComponents(state.components)
 					setZoom(state.zoom)
 					setPanX(state.panX)
 					setPanY(state.panY)
 					setActiveTool(state.activeTool)
+
+					if (state.codeComponentSources && Object.keys(state.codeComponentSources).length > 0) {
+						loadCodeComponents(state.codeComponentSources)
+					}
 
 					requestAnimationFrame(() => {
 						const rects = collectNodeRects()
@@ -111,7 +149,7 @@ export function App() {
 			}}
 		>
 			<style>{`#canvas-container { transform-origin: 0 0; transform: translate(${panX}px, ${panY}px) scale(${zoom}); }`}</style>
-			<CanvasRenderer page={currentPage} components={components} onTextChange={handleTextChange} />
+			<CanvasRenderer page={currentPage} codeComponents={codeComponentMap} onTextChange={handleTextChange} />
 		</div>
 	)
 }
