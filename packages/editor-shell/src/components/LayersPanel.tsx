@@ -116,7 +116,7 @@ function SortableLayerItem({
 			</div>
 			{hasChildren && !isCollapsed && "children" in node && Array.isArray(node.children) && (
 				<LayerChildren
-					children={node.children}
+					nodes={node.children}
 					depth={depth + 1}
 					parentId={node.id}
 					collapsedIds={collapsedIds}
@@ -128,14 +128,14 @@ function SortableLayerItem({
 }
 
 interface LayerChildrenProps {
-	children: SceneNode[]
+	nodes: SceneNode[]
 	depth: number
 	parentId: string
 	collapsedIds: Set<string>
 	onToggleCollapse: (id: string) => void
 }
 
-function LayerChildren({ children, depth, parentId, collapsedIds, onToggleCollapse }: LayerChildrenProps) {
+function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCollapse }: LayerChildrenProps) {
 	const reorderNode = useEditorStore((state) => state.reorderNode)
 
 	const sensors = useSensors(
@@ -153,8 +153,8 @@ function LayerChildren({ children, depth, parentId, collapsedIds, onToggleCollap
 		const { active, over } = event
 		if (!over || active.id === over.id) return
 
-		const oldIndex = children.findIndex((c) => c.id === active.id)
-		const newIndex = children.findIndex((c) => c.id === over.id)
+		const oldIndex = nodes.findIndex((c) => c.id === active.id)
+		const newIndex = nodes.findIndex((c) => c.id === over.id)
 
 		if (oldIndex !== -1 && newIndex !== -1) {
 			reorderNode(parentId, oldIndex, newIndex)
@@ -164,8 +164,8 @@ function LayerChildren({ children, depth, parentId, collapsedIds, onToggleCollap
 	return (
 		<div className="layer-children">
 			<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-				<SortableContext items={children.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-					{children.map((child, index) => (
+				<SortableContext items={nodes.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+					{nodes.map((child, index) => (
 						<SortableLayerItem
 							key={child.id}
 							node={child}
@@ -221,7 +221,7 @@ function LayersPanelContent() {
 				</div>
 				{hasChildren && !isCollapsed && (
 					<LayerChildren
-						children={currentPage.children}
+						nodes={currentPage.children}
 						depth={1}
 						parentId={currentPage.id}
 						collapsedIds={collapsedIds}
