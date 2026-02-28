@@ -16,6 +16,8 @@ export interface SyncStatePayload {
 	selection: string[]
 	activeTool: EditorTool
 	cursor: CSSProperties["cursor"]
+	/** 코드 컴포넌트 소스 (id → compiledCode) */
+	codeComponentSources: Record<string, string>
 }
 
 export interface NodeRect {

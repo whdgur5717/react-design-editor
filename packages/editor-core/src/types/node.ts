@@ -58,6 +58,8 @@ export interface InstanceNode extends BaseNode {
 			content?: JSONContent // TextNode content override
 		}
 	}
+	/** 코드 컴포넌트 인스턴스의 prop 값 */
+	propValues?: Record<string, unknown>
 }
 
 /**
@@ -99,4 +101,36 @@ export interface ComponentDefinition {
 	name: string
 	root: ElementNode
 	createdAt: string
+}
+
+/**
+ * Property Control 타입
+ */
+export type PropertyControlType = "string" | "number" | "boolean" | "color" | "enum"
+
+/**
+ * 개별 Property Control 정의
+ */
+export interface PropertyControl {
+	title?: string
+	type: PropertyControlType
+	defaultValue?: unknown
+	options?: string[] // "enum" 타입 전용
+}
+
+/**
+ * Property Controls 맵 (prop 이름 → 컨트롤 정의)
+ */
+export type PropertyControls = Record<string, PropertyControl>
+
+/**
+ * 코드 컴포넌트 정의
+ */
+export interface CodeComponentDefinition {
+	id: string
+	name: string
+	source: string
+	compiledCode: string | null
+	propertyControls: PropertyControls
+	compilationError: string | null
 }
