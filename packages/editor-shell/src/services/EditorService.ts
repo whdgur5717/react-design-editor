@@ -142,6 +142,14 @@ export class EditorService {
 
 	syncToCanvas() {
 		const state = this.store.getState()
+
+		const codeComponentSources: Record<string, string> = {}
+		for (const cc of state.codeComponents) {
+			if (cc.compiledCode) {
+				codeComponentSources[cc.id] = cc.compiledCode
+			}
+		}
+
 		this.canvasRef?.syncState({
 			document: state.document,
 			currentPageId: state.currentPageId,
@@ -152,6 +160,7 @@ export class EditorService {
 			selection: state.selection,
 			activeTool: state.activeTool,
 			cursor: this.toolRegistry.getActiveTool()?.cursor ?? "default",
+			codeComponentSources,
 		})
 	}
 

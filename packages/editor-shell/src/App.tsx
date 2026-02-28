@@ -5,17 +5,13 @@ import { useEffect, useRef, useState } from "react"
 import { shallow } from "zustand/shallow"
 
 import { UpdateNodeCommand } from "./commands"
-import { LayersPanel } from "./components/LayersPanel"
-import { ToolManagerOverlay } from "./components/overlay"
-import { PropertiesPanel } from "./components/PropertiesPanel"
-import { Toolbar } from "./components/Toolbar"
+import { CanvasView } from "./components/CanvasView"
 import { EditorProvider } from "./services/EditorContext"
 import { EditorService } from "./services/EditorService"
 
 export function App() {
 	const [editor] = useState(() => new EditorService())
 	const canvasRefLatest = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
-
 	useEffect(() => {
 		editor.start()
 		return () => editor.dispose()
@@ -53,105 +49,33 @@ export function App() {
 
 		// store 변경 시 Canvas에 동기화 (nodeRectsCache 변경은 무시)
 		const unsubscribe = editor.store.subscribe(
-			(s) => [s.document, s.currentPageId, s.components, s.zoom, s.panX, s.panY, s.selection, s.activeTool] as const,
+			(s) =>
+				[
+					s.document,
+					s.currentPageId,
+					s.components,
+					s.codeComponents,
+					s.zoom,
+					s.panX,
+					s.panY,
+					s.selection,
+					s.activeTool,
+				] as const,
 			() => editor.syncToCanvas(),
 			{ equalityFn: shallow },
 		)
-
-		// 포인터 이벤트
-		const eventTarget = document.getElementById("canvas-event-target")
-		if (!eventTarget) return
-
-		const onPointerDown = (e: PointerEvent) => {
-			e.preventDefault()
-			editor.sendPointerDown({
-				clientX: e.clientX,
-				clientY: e.clientY,
-				pointerId: e.pointerId,
-				shiftKey: e.shiftKey,
-				metaKey: e.metaKey,
-				target: e.target as HTMLElement,
-			})
-		}
-
-		const onPointerMove = (e: PointerEvent) => {
-			editor.sendPointerMove({
-				clientX: e.clientX,
-				clientY: e.clientY,
-			})
-		}
-
-		const onPointerUp = (e: PointerEvent) => {
-			editor.sendPointerUp({
-				clientX: e.clientX,
-				clientY: e.clientY,
-				shiftKey: e.shiftKey,
-				metaKey: e.metaKey,
-			})
-		}
-
-		const onWheel = (e: WheelEvent) => {
-			e.preventDefault()
-			editor.handleWheel({
-				deltaX: e.deltaX,
-				deltaY: e.deltaY,
-				clientX: e.clientX,
-				clientY: e.clientY,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-			})
-		}
-
-		eventTarget.addEventListener("pointerdown", onPointerDown)
-		eventTarget.addEventListener("pointermove", onPointerMove)
-		eventTarget.addEventListener("pointerup", onPointerUp)
-		eventTarget.addEventListener("wheel", onWheel, { passive: false })
-
-		// 키보드 이벤트
-		const onKeyDown = (e: KeyboardEvent) => {
-			editor.sendKeyDown({
-				key: e.key,
-				code: e.code,
-				shiftKey: e.shiftKey,
-				ctrlKey: e.ctrlKey,
-				metaKey: e.metaKey,
-				altKey: e.altKey,
-				target: e.target as HTMLElement,
-			})
-		}
-		window.addEventListener("keydown", onKeyDown, { capture: true })
 
 		return () => {
 			iframe.src = "about:blank"
 			unsubscribe()
 			canvasConnection.destroy()
 			editor.setCanvas(null)
-			eventTarget.removeEventListener("pointerdown", onPointerDown)
-			eventTarget.removeEventListener("pointermove", onPointerMove)
-			eventTarget.removeEventListener("pointerup", onPointerUp)
-			eventTarget.removeEventListener("wheel", onWheel)
-			window.removeEventListener("keydown", onKeyDown, { capture: true })
 		}
 	}, [editor])
 
 	return (
 		<EditorProvider value={editor}>
-			<div className="app">
-				{/* 1. Canvas 레이어: 이벤트 타겟 + 오버레이 */}
-				<div>
-					<div id="canvas-event-target" className="canvas-event-target">
-						<div className="canvas-area" />
-						<ToolManagerOverlay />
-					</div>
-				</div>
-
-				{/* 2. UI 패널들 */}
-				<div>
-					<Toolbar />
-					<LayersPanel />
-					<PropertiesPanel />
-				</div>
-			</div>
+			<CanvasView />
 		</EditorProvider>
 	)
 }

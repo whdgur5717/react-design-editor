@@ -1,11 +1,11 @@
 import { getComponent } from "@design-editor/components"
-import type { ComponentDefinition, ElementNode, InstanceNode, SceneNode } from "@design-editor/core"
-import React from "react"
+import type { InstanceNode, SceneNode } from "@design-editor/core"
+import React, { type ComponentType } from "react"
 
 import { TextNodeRenderer } from "./TextNodeRenderer"
 
 export interface RenderContext {
-	components: ComponentDefinition[]
+	codeComponents: Record<string, ComponentType<Record<string, unknown>>>
 	onTextChange: (nodeId: string, content: unknown) => void
 }
 
@@ -59,60 +59,47 @@ export function renderNode(node: SceneNode, ctx: RenderContext): React.ReactNode
 	}
 }
 
+class CodeComponentErrorBoundary extends React.Component<
+	{ children: React.ReactNode; nodeId: string },
+	{ error: string | null }
+> {
+	override state: { error: string | null } = { error: null }
+
+	static getDerivedStateFromError(error: Error) {
+		return { error: error.message }
+	}
+
+	override render() {
+		if (this.state.error) {
+			return (
+				<div data-node-id={this.props.nodeId} style={{ color: "red", padding: 8, fontSize: 12 }}>
+					Error: {this.state.error}
+				</div>
+			)
+		}
+		return this.props.children
+	}
+}
+
 function renderInstance(instance: InstanceNode, ctx: RenderContext): React.ReactNode {
-	const component = ctx.components.find((c) => c.id === instance.componentId)
-	if (!component) {
+	const CodeComponent = ctx.codeComponents[instance.componentId]
+	if (CodeComponent) {
 		return (
-			<div
-				key={instance.id}
-				data-node-id={instance.id}
-				style={{ ...instance.style, background: "#ff000033", border: "1px dashed red" }}
-			>
-				Missing Component
-			</div>
+			<CodeComponentErrorBoundary key={instance.id} nodeId={instance.id}>
+				<div data-node-id={instance.id} style={instance.style}>
+					<CodeComponent {...(instance.propValues ?? {})} />
+				</div>
+			</CodeComponentErrorBoundary>
 		)
 	}
 
-	const mergedRoot: ElementNode = {
-		...component.root,
-		id: instance.id,
-		style: { ...component.root.style, ...instance.style },
-	}
-
-	const applyOverrides = (node: ElementNode): ElementNode => {
-		const overrides = instance.overrides
-		if (!overrides) return node
-
-		const nodeOverride = overrides[node.id]
-		let result = node
-
-		if (nodeOverride) {
-			result = {
-				...node,
-				props: { ...node.props, ...nodeOverride.props },
-				style: { ...node.style, ...nodeOverride.style },
-			}
-		}
-
-		if (Array.isArray(result.children)) {
-			result = {
-				...result,
-				children: result.children.map((child) => {
-					if (child.type === "instance") return child
-					if (child.type === "text") {
-						const textOverride = overrides[child.id]
-						if (textOverride?.content) {
-							return { ...child, content: textOverride.content }
-						}
-						return child
-					}
-					return applyOverrides(child)
-				}),
-			}
-		}
-
-		return result
-	}
-
-	return renderNode(applyOverrides(mergedRoot), ctx)
+	return (
+		<div
+			key={instance.id}
+			data-node-id={instance.id}
+			style={{ ...instance.style, background: "#ff000033", border: "1px dashed red" }}
+		>
+			Missing Component
+		</div>
+	)
 }

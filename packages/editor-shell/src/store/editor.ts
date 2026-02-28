@@ -1,4 +1,5 @@
 import type {
+	CodeComponentDefinition,
 	ComponentDefinition,
 	DocumentNode,
 	EditorStore,
@@ -141,6 +142,7 @@ export function createEditorStore() {
 				document: initialDocument,
 				currentPageId: initialPageId,
 				components: [],
+				codeComponents: [],
 				selection: [],
 				hoveredId: null,
 				activeTool: "select",
@@ -426,7 +428,9 @@ export function createEditorStore() {
 				createInstance(componentId: string, parentId: string) {
 					const state = get()
 					const component = state.components.find((c) => c.id === componentId)
-					if (!component) return null
+					const codeComponent = state.codeComponents.find((c) => c.id === componentId)
+
+					if (!component && !codeComponent) return null
 
 					const instanceId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
@@ -436,7 +440,19 @@ export function createEditorStore() {
 						componentId,
 						x: 100,
 						y: 100,
-						style: component.root.style,
+						style: component?.root.style ?? { width: 200, height: 100 },
+					}
+
+					if (codeComponent) {
+						const defaultProps: Record<string, unknown> = {}
+						for (const [key, control] of Object.entries(codeComponent.propertyControls)) {
+							if (control.defaultValue !== undefined) {
+								defaultProps[key] = control.defaultValue
+							}
+						}
+						if (Object.keys(defaultProps).length > 0) {
+							instance.propValues = defaultProps
+						}
 					}
 
 					state.addNode(parentId, instance)
@@ -533,6 +549,52 @@ export function createEditorStore() {
 					set((state) => {
 						const page = state.document.children.find((p) => p.id === pageId)
 						if (page) page.name = name
+					})
+				},
+
+				// 코드 컴포넌트 액션
+				addCodeComponent(name: string, source: string): string {
+					const id = `code-comp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+					set((state) => {
+						state.codeComponents.push({
+							id,
+							name,
+							source,
+							compiledCode: null,
+							propertyControls: {},
+							compilationError: null,
+						} satisfies CodeComponentDefinition)
+					})
+					return id
+				},
+
+				updateCodeComponent(
+					id: string,
+					updates: Partial<
+						Pick<CodeComponentDefinition, "source" | "compiledCode" | "propertyControls" | "compilationError" | "name">
+					>,
+				) {
+					set((state) => {
+						const comp = state.codeComponents.find((c) => c.id === id)
+						if (!comp) return
+						Object.assign(comp, updates)
+					})
+				},
+
+				removeCodeComponent(id: string) {
+					set((state) => {
+						const idx = state.codeComponents.findIndex((c) => c.id === id)
+						if (idx !== -1) state.codeComponents.splice(idx, 1)
+					})
+				},
+
+				setInstancePropValues(instanceId: string, propValues: Record<string, unknown>) {
+					set((state) => {
+						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						if (!page) return
+						const node = findNode(page, instanceId)
+						if (!node || node.type !== "instance") return
+						node.propValues = propValues
 					})
 				},
 

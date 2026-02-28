@@ -1,4 +1,12 @@
-import type { ComponentDefinition, DocumentNode, ElementNode, Position, SceneNode, Size } from "./node"
+import type {
+	CodeComponentDefinition,
+	ComponentDefinition,
+	DocumentNode,
+	ElementNode,
+	Position,
+	SceneNode,
+	Size,
+} from "./node"
 import type { NodeRect } from "./protocol"
 
 /**
@@ -18,6 +26,9 @@ export interface EditorState {
 
 	/** 컴포넌트 정의 목록 */
 	components: ComponentDefinition[]
+
+	/** 코드 컴포넌트 정의 목록 */
+	codeComponents: CodeComponentDefinition[]
 
 	/** 선택된 노드 ID 목록 */
 	selection: string[]
@@ -141,6 +152,23 @@ export interface EditorActions {
 
 	/** 노드 렌더링 rect 캐시 설정 */
 	setNodeRectsCache: (rects: Record<string, NodeRect>) => void
+
+	/** 코드 컴포넌트 추가 */
+	addCodeComponent: (name: string, source: string) => string
+
+	/** 코드 컴포넌트 업데이트 */
+	updateCodeComponent: (
+		id: string,
+		updates: Partial<
+			Pick<CodeComponentDefinition, "source" | "compiledCode" | "propertyControls" | "compilationError" | "name">
+		>,
+	) => void
+
+	/** 코드 컴포넌트 삭제 */
+	removeCodeComponent: (id: string) => void
+
+	/** 코드 컴포넌트 인스턴스의 prop 값 설정 */
+	setInstancePropValues: (instanceId: string, propValues: Record<string, unknown>) => void
 }
 
 /**
