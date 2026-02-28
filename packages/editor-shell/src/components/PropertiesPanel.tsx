@@ -1,11 +1,12 @@
 import "./PropertiesPanel.css"
 
-import type { SceneNode } from "@design-editor/core"
+import type { CodeComponentDefinition, SceneNode } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
 import { useEditorStore } from "../services/EditorContext"
 import { findNode } from "../store/editor"
+import { PropertyControlInputs } from "./PropertyControlInputs"
 
 type Tab = "design" | "prototype" | "code"
 
@@ -389,12 +390,51 @@ function CodeTab({ node }: { node: SceneNode }) {
 	)
 }
 
+function CodeComponentPropsTab({
+	node,
+	codeComponent,
+}: {
+	node: SceneNode & { type: "instance" }
+	codeComponent: CodeComponentDefinition
+}) {
+	const setInstancePropValues = useEditorStore((state) => state.setInstancePropValues)
+
+	const controls = codeComponent.propertyControls
+	const values = node.propValues ?? {}
+
+	const handleChange = (key: string, value: unknown) => {
+		setInstancePropValues(node.id, { ...values, [key]: value })
+	}
+
+	if (Object.keys(controls).length === 0) {
+		return (
+			<div className="design-tab">
+				<div className="empty-state">No property controls defined</div>
+			</div>
+		)
+	}
+
+	return (
+		<div className="design-tab">
+			<section className="property-section">
+				<h3 className="section-title">Component Props</h3>
+				<PropertyControlInputs controls={controls} values={values} onChange={handleChange} />
+			</section>
+		</div>
+	)
+}
+
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
 	const selectedNode = useEditorStore((state) => {
 		if (state.selection.length !== 1) return null
 		const page = state.document.children.find((p) => p.id === state.currentPageId)
 		return page ? findNode(page, state.selection[0]) : null
+	})
+
+	const codeComponent = useEditorStore((state) => {
+		if (!selectedNode || selectedNode.type !== "instance") return null
+		return state.codeComponents.find((c) => c.id === selectedNode.componentId) ?? null
 	})
 
 	return (
@@ -417,7 +457,14 @@ export function PropertiesPanel() {
 			<div className="panel-content">
 				{selectedNode ? (
 					<>
-						{activeTab === "design" && <DesignTab node={selectedNode} />}
+						{activeTab === "design" && (
+							<>
+								<DesignTab node={selectedNode} />
+								{codeComponent && selectedNode.type === "instance" && (
+									<CodeComponentPropsTab node={selectedNode} codeComponent={codeComponent} />
+								)}
+							</>
+						)}
 						{activeTab === "prototype" && <div className="empty-state">Prototype features coming soon</div>}
 						{activeTab === "code" && <CodeTab node={selectedNode} />}
 					</>

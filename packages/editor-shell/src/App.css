@@ -46,3 +46,11 @@ body,
 	right: var(--editor-right-panel-width);
 	bottom: 0;
 }
+
+.center-view {
+	position: fixed;
+	top: var(--editor-toolbar-height);
+	left: var(--editor-left-panel-width);
+	right: var(--editor-right-panel-width);
+	bottom: 0;
+}
