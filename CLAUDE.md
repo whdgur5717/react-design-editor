@@ -46,6 +46,13 @@ config/
 
 For detailed architecture, see `packages/spec.md`.
 
+## Coding Conventions
+
+- **Utilities**: Use `es-toolkit` for common operations (isEqual, cloneDeep, debounce, etc).
+- **No re-exports**: Don't re-export external libraries. Consumers import from the original package directly.
+- **No barrel files**: Don't create `index.ts` that re-exports everything. Import from specific modules.
+- **TypeScript**: Avoid `as`, `any`, `as unknown as`. Let inference work; annotate only when inference is insufficient. Prefer `satisfies` for compile-time validation without widening. Fix type errors at the type definition level, not with assertions.
+
 ## Testing Conventions
 
 - **파일 네이밍**: E2E 테스트는 `*.spec.ts`, 그 외 단위/통합 테스트는 `*.test.ts`

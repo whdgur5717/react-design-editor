@@ -4,7 +4,7 @@ import type { EditorTool } from "@design-editor/core"
 import { useState, useSyncExternalStore } from "react"
 import { useShallow } from "zustand/react/shallow"
 
-import { useEditor, useEditorStore } from "../services/EditorContext"
+import { useEditor, useEditorStore } from "../../services/EditorContext"
 
 const tools: { id: EditorTool; label: string; icon: string }[] = [
 	{ id: "select", label: "Select", icon: "↖" },
