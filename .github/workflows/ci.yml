@@ -23,8 +23,14 @@ jobs:
    - name: Install dependencies
      run: pnpm install
 
+   - name: Setup Playwright
+     uses: ./.github/actions/setup-playwright
+
    - name: Run ESLint
      run: pnpm lint
 
    - name: Type check
      run: pnpm type-check
+
+   - name: Run unit tests
+     run: pnpm test:unit
