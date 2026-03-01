@@ -1,5 +1,9 @@
 import { CompositeCommand } from "./CompositeCommand"
-import type { Command } from "./types"
+import type { Command, MergableCommand } from "./types"
+
+function isMergableCommand(command: Command): command is MergableCommand {
+	return "mergeKey" in command && "merge" in command
+}
 
 /**
  * CommandHistory - Invoker
@@ -51,6 +55,18 @@ export class CommandHistory {
 			this.transaction.add(command)
 		} else {
 			command.execute()
+
+			if (isMergableCommand(command) && command.mergeKey && this.undoStack.length > 0) {
+				const top = this.undoStack[this.undoStack.length - 1]
+				if (isMergableCommand(top) && top.mergeKey === command.mergeKey) {
+					if (top.merge(command)) {
+						this.redoStack = []
+						this.notify()
+						return
+					}
+				}
+			}
+
 			this.undoStack.push(command)
 			this.redoStack = []
 

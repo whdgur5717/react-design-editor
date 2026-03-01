@@ -9,6 +9,15 @@ export interface Command {
 }
 
 /**
+ * MergableCommand - 연속된 동종 커맨드의 병합을 지원하는 Command
+ * 리사이즈처럼 연속 실행되는 커맨드를 하나의 undo 단위로 합친다.
+ */
+export interface MergableCommand extends Command {
+	readonly mergeKey: string
+	merge(other: Command): boolean
+}
+
+/**
  * 인스턴스 오버라이드 타입
  * Store의 setInstanceOverride와 동일한 타입
  */
