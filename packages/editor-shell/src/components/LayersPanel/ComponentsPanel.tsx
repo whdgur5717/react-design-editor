@@ -1,5 +1,5 @@
-import { useView } from "../hooks/useView"
-import { useEditor, useEditorStore } from "../services/EditorContext"
+import { useView } from "../../hooks/useView"
+import { useEditor, useEditorStore } from "../../services/EditorContext"
 
 const DEFAULT_SOURCE = `import React from "react"
 

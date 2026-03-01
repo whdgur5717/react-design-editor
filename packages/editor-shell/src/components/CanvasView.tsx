@@ -2,9 +2,9 @@ import { useEffect } from "react"
 
 import { useView } from "../hooks/useView"
 import { useEditor } from "../services/EditorContext"
-import { ComponentCodeEditor } from "./component-editor/CodeEditorView"
+import { ComponentCodeEditor } from "./CodeEditor/CodeEditorView"
 import { LayersPanel } from "./LayersPanel"
-import { ToolManagerOverlay } from "./overlay"
+import { ToolManagerOverlay } from "./Overlay"
 import { PropertiesPanel } from "./PropertiesPanel"
 import { Toolbar } from "./Toolbar"
 
