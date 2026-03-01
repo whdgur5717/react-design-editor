@@ -82,6 +82,7 @@ interface PointerContext {
 	startWidth: number
 	startHeight: number
 	resizeHandle: string
+	resizeSessionId: string
 }
 
 const DRAG_THRESHOLD = 8
@@ -160,6 +161,8 @@ export function createPointerMachine(editorService: EditorService) {
 			},
 
 			updateResize: ({ context }, params: { clientX: number; clientY: number }) => {
+				if (!context.nodeId) return
+
 				const zoom = editorService.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
@@ -173,13 +176,14 @@ export function createPointerMachine(editorService: EditorService) {
 				if (handle.includes("s")) height = Math.max(1, context.startHeight + dy)
 				if (handle.includes("n")) height = Math.max(1, context.startHeight - dy)
 
-				const node = editorService.findNode(context.nodeId!)
-				if (node) {
-					const from = { width: node.style?.width, height: node.style?.height }
-					const to = { width, height }
-					const receiver = editorService.getReceiver()
-					editorService.executeCommand(new ResizeNodeCommand(receiver, context.nodeId!, from, to))
-				}
+				const node = editorService.findNode(context.nodeId)
+				if (!node) return
+
+				const from = { width: node.style?.width, height: node.style?.height }
+				const to = { width, height }
+				const receiver = editorService.getReceiver()
+				const mergeKey = `resize:${context.nodeId}:${context.resizeSessionId}`
+				editorService.executeCommand(new ResizeNodeCommand(receiver, context.nodeId, from, to, mergeKey))
 			},
 
 			singleClick: ({ context }) => {
@@ -264,6 +268,7 @@ export function createPointerMachine(editorService: EditorService) {
 			startWidth: 0,
 			startHeight: 0,
 			resizeHandle: "",
+			resizeSessionId: "",
 		},
 
 		on: {
@@ -316,6 +321,7 @@ export function createPointerMachine(editorService: EditorService) {
 									startHeight: height,
 									resizeHandle: resizeHandle?.dataset.resizeHandle ?? "",
 									initialNodePosition: { x: 0, y: 0 },
+									resizeSessionId: crypto.randomUUID(),
 								}
 							}),
 						},
