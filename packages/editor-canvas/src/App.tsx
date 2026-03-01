@@ -5,7 +5,7 @@ import type { EditorTool, NodeRect, PageNode, ShellMethods, SyncStatePayload } f
 import { type AsyncMethodReturns, connectToParent } from "penpal"
 import { type ComponentType, useCallback, useEffect, useRef, useState } from "react"
 
-import { CanvasRenderer } from "./renderer/CanvasRenderer"
+import { CanvasRenderer } from "./Renderer/CanvasRenderer"
 
 function getTargetNodeId(el: Element | null): string | null {
 	while (el && el !== document.body) {
