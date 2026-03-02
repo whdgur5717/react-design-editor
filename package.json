@@ -8,6 +8,9 @@
 		"lint": "pnpm -r --parallel run lint -- .",
 		"type-check": "pnpm -r --parallel run type-check",
 		"prepare": "husky",
+		"build": "pnpm --filter @design-editor/shell --filter @design-editor/canvas build",
+		"build:shell": "pnpm --filter @design-editor/shell build",
+		"build:canvas": "pnpm --filter @design-editor/canvas build",
 		"test": "vitest",
 		"test:unit": "vitest run",
 		"test:e2e": "playwright test"
