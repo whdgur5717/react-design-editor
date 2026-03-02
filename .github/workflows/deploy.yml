@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+ push:
+  branches: [main]
+ pull_request:
+  types: [opened, synchronize]
+
+concurrency:
+ group: deploy-${{ github.ref }}
+ cancel-in-progress: true
+
+jobs:
+ deploy-canvas:
+  runs-on: ubuntu-latest
+  outputs:
+   url: ${{ steps.deploy.outputs.deployment-url }}
+  steps:
+   - uses: actions/checkout@v4
+   - uses: pnpm/action-setup@v4
+   - uses: actions/setup-node@v4
+     with:
+      node-version: 22
+      cache: pnpm
+   - run: pnpm install
+   - run: pnpm --filter @design-editor/canvas build
+   - name: Deploy canvas
+     id: deploy
+     uses: cloudflare/wrangler-action@v3
+     with:
+      apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      command: pages deploy packages/editor-canvas/dist --project-name=${{ vars.CF_CANVAS_PROJECT }} --branch=${{ github.head_ref || github.ref_name }}
+
+ deploy-shell:
+  runs-on: ubuntu-latest
+  needs: deploy-canvas
+  steps:
+   - uses: actions/checkout@v4
+   - uses: pnpm/action-setup@v4
+   - uses: actions/setup-node@v4
+     with:
+      node-version: 22
+      cache: pnpm
+   - run: pnpm install
+   - name: Build shell
+     run: pnpm --filter @design-editor/shell build
+     env:
+      VITE_CANVAS_URL: ${{ github.ref == 'refs/heads/main' && vars.CANVAS_PRODUCTION_URL || needs.deploy-canvas.outputs.url }}
+   - name: Deploy shell
+     uses: cloudflare/wrangler-action@v3
+     with:
+      apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      command: pages deploy packages/editor-shell/dist --project-name=${{ vars.CF_SHELL_PROJECT }} --branch=${{ github.head_ref || github.ref_name }}
