@@ -26,6 +26,19 @@
 - #13: 추가 구현사항 정리용 이슈
 - #5: PropertiesPanel Figma용어 -> CSS용어 리팩토링
 
+## 작업 우선순위
+
+- [상세](./priorities.md)
+
+## 등록 이슈 추적
+
+- [상세](./issues.md) — PM이 등록한 GitHub Issues 목록
+- P0: Phase 1 코드 생성 완성 (인스턴스 + TextNode + 테스트)
+- P1: Phase 2 PropertyControl 타입 확장
+- P2: Phase 3 Export 워크플로우
+- P3: Phase 4-5 심화/생태계
+- 버그(#45, #36): Medium, P0 작업 틈에 수정
+
 ## 결정 사항
 
 - PRD 저장 경로: `docs/prd/<기능명>.md`
