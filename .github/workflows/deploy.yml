@@ -23,6 +23,7 @@ jobs:
       node-version: 22
       cache: pnpm
    - run: pnpm install
+   - run: pnpm add -wD wrangler
    - run: pnpm --filter @design-editor/canvas build
    - name: Deploy canvas
      id: deploy
@@ -43,6 +44,7 @@ jobs:
       node-version: 22
       cache: pnpm
    - run: pnpm install
+   - run: pnpm add -wD wrangler
    - name: Build shell
      run: pnpm --filter @design-editor/shell build
      env:
