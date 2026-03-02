@@ -1,0 +1,5 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Resource-Policy: cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
