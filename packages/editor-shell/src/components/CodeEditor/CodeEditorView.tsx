@@ -17,7 +17,7 @@ export function ComponentCodeEditor({ componentId }: { componentId: string }) {
 				inset: 0,
 				display: "flex",
 				flexDirection: "column",
-				background: "#1e1e1e",
+				background: "#ffffff",
 			}}
 		>
 			<div
@@ -25,7 +25,7 @@ export function ComponentCodeEditor({ componentId }: { componentId: string }) {
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "space-between",
-					borderBottom: "1px solid #333",
+					borderBottom: "1px solid #e0e0e0",
 				}}
 			>
 				<CodeEditorHeader componentId={componentId} componentName={component.name} />
@@ -49,7 +49,7 @@ export function ComponentCodeEditor({ componentId }: { componentId: string }) {
 						onClick={save}
 						disabled={isCompiling}
 						style={{
-							background: "#0e639c",
+							background: "#0d99ff",
 							border: "none",
 							color: "#fff",
 							cursor: isCompiling ? "default" : "pointer",

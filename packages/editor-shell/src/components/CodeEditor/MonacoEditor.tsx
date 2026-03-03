@@ -51,17 +51,17 @@ export function CodeEditor({
 						run: () => onSaveRef.current(),
 					})
 				}}
-				theme="vs-dark"
+				theme="vs"
 				options={EDITOR_OPTIONS}
 			/>
 			{error && (
 				<div
 					style={{
 						padding: "8px 12px",
-						background: "#3c1f1f",
-						color: "#f88",
+						background: "#fef0f0",
+						color: "#d32f2f",
 						fontSize: 12,
-						borderTop: "1px solid #5c2020",
+						borderTop: "1px solid #f5c6c6",
 						maxHeight: 120,
 						overflow: "auto",
 						whiteSpace: "pre-wrap",
