@@ -397,7 +397,6 @@ export function createEditorStore() {
 						componentId,
 						x: 100,
 						y: 100,
-						style: { width: 200, height: 100 },
 					}
 
 					const defaultProps: Record<string, unknown> = {}
