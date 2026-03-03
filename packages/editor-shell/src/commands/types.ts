@@ -1,4 +1,4 @@
-import type { ElementNode, PageNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { PageNode, Position, SceneNode, Size } from "@design-editor/core"
 
 /**
  * Command 인터페이스 - Command Pattern의 핵심
@@ -74,17 +74,8 @@ export interface EditorReceiver {
 
 	// ========== 컴포넌트 액션 (undo 대상) ==========
 
-	/** 컴포넌트 생성 */
-	createComponent(nodeId: string, name: string): string | null
-
 	/** 컴포넌트 인스턴스 생성 */
 	createInstance(componentId: string, parentId: string): string | null
-
-	/** 컴포넌트 정의 업데이트 */
-	updateComponent(componentId: string, updates: Partial<ElementNode>): void
-
-	/** 컴포넌트 삭제 */
-	deleteComponent(componentId: string): void
 
 	/** 인스턴스 오버라이드 설정 */
 	setInstanceOverride(instanceId: string, targetNodeId: string, overrides: InstanceOverrides): void

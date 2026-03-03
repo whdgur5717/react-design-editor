@@ -49,18 +49,7 @@ export function App() {
 
 		// store 변경 시 Canvas에 동기화 (nodeRectsCache 변경은 무시)
 		const unsubscribe = editor.store.subscribe(
-			(s) =>
-				[
-					s.document,
-					s.currentPageId,
-					s.components,
-					s.codeComponents,
-					s.zoom,
-					s.panX,
-					s.panY,
-					s.selection,
-					s.activeTool,
-				] as const,
+			(s) => [s.document, s.currentPageId, s.codeComponents, s.zoom, s.panX, s.panY, s.selection, s.activeTool] as const,
 			() => editor.syncToCanvas(),
 			{ equalityFn: shallow },
 		)

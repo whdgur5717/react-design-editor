@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 
 import type { EditorTool } from "./editor"
-import type { ComponentDefinition, DocumentNode } from "./node"
+import type { DocumentNode } from "./node"
 
 /**
  * Shell → Canvas 상태 동기화 페이로드
@@ -9,7 +9,6 @@ import type { ComponentDefinition, DocumentNode } from "./node"
 export interface SyncStatePayload {
 	document: DocumentNode
 	currentPageId: string
-	components: ComponentDefinition[]
 	zoom: number
 	panX: number
 	panY: number

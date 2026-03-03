@@ -94,16 +94,6 @@ export type Size = Pick<CSSProperties, "width" | "height">
 export interface BoundingBox extends Position, Size {}
 
 /**
- * 컴포넌트 정의 (Master Component)
- */
-export interface ComponentDefinition {
-	id: string
-	name: string
-	root: ElementNode
-	createdAt: string
-}
-
-/**
  * Property Control 타입
  */
 export type PropertyControlType = "string" | "number" | "boolean" | "color" | "enum"

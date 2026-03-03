@@ -1,10 +1,8 @@
 import type {
 	CodeComponentDefinition,
-	ComponentDefinition,
 	DocumentNode,
 	EditorStore,
 	EditorTool,
-	ElementNode,
 	InstanceNode,
 	NodeRect,
 	PageNode,
@@ -141,7 +139,6 @@ export function createEditorStore() {
 				// 초기 상태
 				document: initialDocument,
 				currentPageId: initialPageId,
-				components: [],
 				codeComponents: [],
 				selection: [],
 				hoveredId: null,
@@ -387,93 +384,36 @@ export function createEditorStore() {
 					return cloned.id
 				},
 
-				createComponent(nodeId: string, name: string): string | null {
-					const state = get()
-					const page = state.document.children.find((p) => p.id === state.currentPageId)
-					if (!page) return null
-
-					const node = findNode(page, nodeId)
-					if (!node || node.type === "instance") return null
-
-					const componentId = `comp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-
-					const componentDef: ComponentDefinition = {
-						id: componentId,
-						name,
-						root: cloneNodeWithNewIds(node) as ElementNode,
-						createdAt: new Date().toISOString(),
-					}
-
-					const instance: InstanceNode = {
-						id: node.id,
-						type: "instance",
-						componentId,
-						style: node.style,
-					}
-
-					set((s) => {
-						const p = s.document.children.find((pg) => pg.id === s.currentPageId)
-						if (!p) return
-
-						const target = findNode(p, nodeId)
-						if (!target) return
-
-						Object.assign(target, instance)
-						s.components.push(componentDef)
-					})
-
-					return componentId
-				},
-
 				createInstance(componentId: string, parentId: string) {
 					const state = get()
-					const component = state.components.find((c) => c.id === componentId)
 					const codeComponent = state.codeComponents.find((c) => c.id === componentId)
 
-					if (!component && !codeComponent) return null
+					if (!codeComponent) return null
 
 					const instanceId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-
 					const instance: InstanceNode = {
 						id: instanceId,
 						type: "instance",
 						componentId,
 						x: 100,
 						y: 100,
-						style: component?.root.style ?? { width: 200, height: 100 },
+						style: { width: 200, height: 100 },
 					}
 
-					if (codeComponent) {
-						const defaultProps: Record<string, unknown> = {}
-						for (const [key, control] of Object.entries(codeComponent.propertyControls)) {
-							if (control.defaultValue !== undefined) {
-								defaultProps[key] = control.defaultValue
-							}
+					const defaultProps: Record<string, unknown> = {}
+					for (const [key, control] of Object.entries(codeComponent.propertyControls)) {
+						if (control.defaultValue !== undefined) {
+							defaultProps[key] = control.defaultValue
 						}
-						if (Object.keys(defaultProps).length > 0) {
-							instance.propValues = defaultProps
-						}
+					}
+					if (Object.keys(defaultProps).length > 0) {
+						instance.propValues = defaultProps
 					}
 
 					state.addNode(parentId, instance)
 					state.setSelection([instanceId])
 
 					return instanceId
-				},
-
-				updateComponent(componentId: string, updates: Partial<ElementNode>) {
-					set((state) => {
-						const comp = state.components.find((c) => c.id === componentId)
-						if (!comp) return
-						Object.assign(comp.root, updates)
-					})
-				},
-
-				deleteComponent(componentId: string) {
-					set((state) => {
-						const idx = state.components.findIndex((c) => c.id === componentId)
-						if (idx !== -1) state.components.splice(idx, 1)
-					})
 				},
 
 				setInstanceOverride(
