@@ -11,16 +11,6 @@ export interface RenderContext {
 	onTextChange: (nodeId: string, content: unknown) => void
 }
 
-/**
- * 노드의 자식만 렌더링 (루트 노드의 외부 래퍼는 CanvasRenderer가 생성)
- */
-export function renderNodeChildren(node: SceneNode, ctx: RenderContext): React.ReactNode {
-	if (node.type === "element" && Array.isArray(node.children)) {
-		return node.children.filter((child) => child.visible !== false).map((child) => renderNode(child, ctx))
-	}
-	return null
-}
-
 export function renderNode(node: SceneNode, ctx: RenderContext): React.ReactNode {
 	switch (node.type) {
 		case "text":

@@ -1,13 +1,28 @@
-import type { PageNode } from "@design-editor/core"
+import type { PageNode, SceneNode } from "@design-editor/core"
 import type { ComponentType } from "react"
 import type React from "react"
 
-import { type RenderContext, renderNodeChildren } from "./renderNode"
+import { renderInstanceContent } from "./InstanceNodeRenderer"
+import { type RenderContext, renderNode } from "./renderNode"
+import { TextNodeRenderer } from "./TextNodeRenderer"
 
 interface CanvasRendererProps {
 	page: PageNode
 	codeComponents: Record<string, ComponentType<Record<string, unknown>>>
 	onTextChange: (nodeId: string, content: unknown) => void
+}
+
+function renderRootContent(child: SceneNode, ctx: RenderContext) {
+	switch (child.type) {
+		case "element":
+			return child.children?.filter((c) => c.visible !== false).map((c) => renderNode(c, ctx)) ?? null
+		case "text":
+			return (
+				<TextNodeRenderer key={child.id} node={child} onContentChange={(content) => ctx.onTextChange(child.id, content)} />
+			)
+		case "instance":
+			return renderInstanceContent(child, ctx)
+	}
 }
 
 export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRendererProps) {
@@ -41,7 +56,7 @@ export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRen
 							}
 						>
 							<div style={{ ...contentStyle, width, height, position: "relative" }} data-layout-type="inner">
-								{renderNodeChildren(child, ctx)}
+								{renderRootContent(child, ctx)}
 							</div>
 						</div>
 					)
