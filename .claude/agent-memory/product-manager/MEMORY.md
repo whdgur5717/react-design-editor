@@ -1,51 +1,37 @@
-# Product Manager Memory
+# PM Memory Index
 
-## 제품 개요
+## Files
 
-- DOM/React 기반 디자인 에디터. 에디터에서 보이는 것이 곧 React 코드.
-- 리포: `whdgur5717/react-design-editor`
-- 주요 사용자(개발자): whdgur5717
+| File                         | Purpose                                        |
+| ---------------------------- | ---------------------------------------------- |
+| [product.md](product.md)     | Product definition, vision, user understanding |
+| [roadmap.md](roadmap.md)     | Product roadmap (Phase-level direction)        |
+| [backlog.md](backlog.md)     | Prioritized feature backlog                    |
+| [decisions.md](decisions.md) | Product decision log                           |
 
-## 아키텍처 핵심
+## Routing
 
-- Shell(3000) + Canvas iframe(3001) 분리 구조 (CSS/JS 격리)
-- Zustand + immer 상태관리, XState 포인터 상태머신, Penpal iframe 통신
-- Command 패턴 (Undo/Redo), Strategy 패턴 (도구)
-- 상세: `packages/spec.md`, `packages/CLAUDE.md`
+- **"What should we build next?"** -> Check roadmap.md for current Phase -> backlog.md for priorities
+- **Proposing a feature** -> Check product.md for vision alignment -> Add to backlog.md
+- **Feature shipped** -> Update backlog.md status -> Update product.md -> Check roadmap.md Phase progress
+- **Product direction discussion** -> Read product.md + roadmap.md
+- **Previous decisions** -> Read decisions.md
+- **Re-prioritize** -> Use roadmap.md current Phase as anchor for backlog.md
 
-## 기능 현황 (2026-03-01 기준)
+## Current Phase
 
-- [상세](./feature-status.md)
+Phase 1: Core Editing. P0 narrowed to 2 items (2026-03-05): Per-Side Spacing, Extended Style Properties.
 
-## Open Issues
+## Prioritization Principle (decided 2026-03-05)
 
-- #45: 스크롤 시 selection box 위치 어긋남 (버그)
-- #36: 리사이즈 Undo가 step별로 쌓임 (버그, transaction 미사용)
-- #35: E2E 테스트 인프라 구축 (일부 완료 - CI 설정됨, POM 등 미완)
-- #20: 방향성 메모 (dnd-kit 검토)
-- #13: 추가 구현사항 정리용 이슈
-- #5: PropertiesPanel Figma용어 -> CSS용어 리팩토링
+P0 = capability gap ("cannot do X at all"). P1 = efficiency gap ("can do X but slowly/painfully"). See decisions.md for full reasoning.
 
-## 작업 우선순위
+## Key Facts (verified 2026-03-05)
 
-- [상세](./priorities.md)
-
-## 등록 이슈 추적
-
-- [상세](./issues.md) — PM이 등록한 GitHub Issues 목록
-- P0: Phase 1 코드 생성 완성 (인스턴스 + TextNode + 테스트)
-- P1: Phase 2 PropertyControl 타입 확장
-- P2: Phase 3 Export 워크플로우
-- P3: Phase 4-5 심화/생태계
-- 버그(#45, #36): Medium, P0 작업 틈에 수정
-
-## 결정 사항
-
-- PRD 저장 경로: `docs/prd/<기능명>.md`
-- docs/prd/ 디렉토리 생성됨 (2026-03-01)
-- 코드 컴포넌트 시스템 로드맵 작성됨: `docs/prd/code-component-system-roadmap.md`
-  - Phase 1: 코드 생성 완성 (인스턴스 + TextNode)
-  - Phase 2: PropertyControl 타입 확장 (image, array, object)
-  - Phase 3: Export 워크플로우
-  - Phase 4: 오버라이드 시스템
-  - Phase 5: npm import + 빌트인 라이브러리
+- Shape tool has a shortcut (R) and toolbar button but NO implementation (no ShapeTool class)
+- Code generation handles all three node types (element, text, instance) in serialize.ts
+- Properties panel supports: size, display/flex layout, CSS position, overflow, single-value padding/margin, backgroundColor, border, typography (size/weight/color/align)
+- Missing from properties panel: opacity, box-shadow, per-side spacing, per-corner border-radius, min/max dimensions, line-height, letter-spacing, font-family, flex child props, gradients
+- No copy/paste, no group/ungroup, no alignment/distribution, no context menu, no image element
+- Only click-to-create (fixed size); no drag-to-create
+- Code component system roadmap exists at docs/prd/code-component-system-roadmap.md (separate from Phase 1 core editing)
