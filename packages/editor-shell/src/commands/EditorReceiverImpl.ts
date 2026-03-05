@@ -1,4 +1,4 @@
-import type { ElementNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { Position, SceneNode, Size } from "@design-editor/core"
 
 import type { EditorStoreApi } from "../store/editor"
 import type { EditorReceiver, InstanceOverrides } from "./types"
@@ -54,20 +54,8 @@ export class EditorReceiverImpl implements EditorReceiver {
 
 	// ========== 컴포넌트 액션 ==========
 
-	createComponent(nodeId: string, name: string) {
-		return this.store.getState().createComponent(nodeId, name)
-	}
-
 	createInstance(componentId: string, parentId: string) {
 		return this.store.getState().createInstance(componentId, parentId)
-	}
-
-	updateComponent(componentId: string, updates: Partial<ElementNode>) {
-		this.store.getState().updateComponent(componentId, updates)
-	}
-
-	deleteComponent(componentId: string) {
-		this.store.getState().deleteComponent(componentId)
 	}
 
 	setInstanceOverride(instanceId: string, targetNodeId: string, overrides: InstanceOverrides) {

@@ -25,25 +25,20 @@ class CodeComponentErrorBoundary extends React.Component<
 	}
 }
 
-export function renderInstanceNode(instance: InstanceNode, ctx: RenderContext): React.ReactNode {
+export function renderInstanceContent(instance: InstanceNode, ctx: RenderContext): React.ReactNode {
 	const CodeComponent = ctx.codeComponents[instance.componentId]
-	if (CodeComponent) {
-		return (
-			<CodeComponentErrorBoundary key={instance.id} nodeId={instance.id}>
-				<div data-node-id={instance.id} style={instance.style}>
-					<CodeComponent {...(instance.propValues ?? {})} />
-				</div>
-			</CodeComponentErrorBoundary>
-		)
-	}
-
+	if (!CodeComponent) return <span style={{ color: "red" }}>Missing Component</span>
 	return (
-		<div
-			key={instance.id}
-			data-node-id={instance.id}
-			style={{ ...instance.style, background: "#ff000033", border: "1px dashed red" }}
-		>
-			Missing Component
+		<CodeComponentErrorBoundary nodeId={instance.id}>
+			<CodeComponent {...(instance.propValues ?? {})} />
+		</CodeComponentErrorBoundary>
+	)
+}
+
+export function renderInstanceNode(instance: InstanceNode, ctx: RenderContext): React.ReactNode {
+	return (
+		<div key={instance.id} data-node-id={instance.id} style={instance.style}>
+			{renderInstanceContent(instance, ctx)}
 		</div>
 	)
 }

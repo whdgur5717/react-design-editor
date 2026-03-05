@@ -1,12 +1,4 @@
-import type {
-	CodeComponentDefinition,
-	ComponentDefinition,
-	DocumentNode,
-	ElementNode,
-	Position,
-	SceneNode,
-	Size,
-} from "./node"
+import type { CodeComponentDefinition, DocumentNode, Position, SceneNode, Size } from "./node"
 import type { NodeRect } from "./protocol"
 
 /**
@@ -23,9 +15,6 @@ export interface EditorState {
 
 	/** 현재 페이지 ID */
 	currentPageId: string
-
-	/** 컴포넌트 정의 목록 */
-	components: ComponentDefinition[]
 
 	/** 코드 컴포넌트 정의 목록 */
 	codeComponents: CodeComponentDefinition[]
@@ -110,17 +99,8 @@ export interface EditorActions {
 	/** 노드 복제 */
 	duplicateNode: (id: string) => string | null
 
-	/** 선택된 노드를 컴포넌트로 변환 */
-	createComponent: (nodeId: string, name: string) => string | null
-
 	/** 컴포넌트 인스턴스 생성 */
 	createInstance: (componentId: string, parentId: string) => string | null
-
-	/** 컴포넌트 정의 업데이트 (마스터 변경) */
-	updateComponent: (componentId: string, updates: Partial<ElementNode>) => void
-
-	/** 컴포넌트 삭제 */
-	deleteComponent: (componentId: string) => void
 
 	/** 인스턴스 오버라이드 설정 */
 	setInstanceOverride: (

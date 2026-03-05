@@ -1,5 +1,6 @@
 interface ResizeHandlesProps {
 	rect: { x: number; y: number; width: number; height: number }
+	zoom: number
 }
 
 const HANDLE_SIZE = 8
@@ -15,26 +16,28 @@ const handles = [
 	{ name: "w", cursor: "ew-resize", xOffset: -HANDLE_SIZE / 2, yOffset: 0.5, centered: true },
 ]
 
-function getHandlePosition(handle: (typeof handles)[number], rect: ResizeHandlesProps["rect"]) {
+function getHandlePosition(handle: (typeof handles)[number], rect: ResizeHandlesProps["rect"], size: number) {
 	let x = rect.x
 	let y = rect.y
 
-	if (handle.rightAligned) x += rect.width - HANDLE_SIZE / 2
-	else if ((handle.centered && handle.name === "n") || handle.name === "s") x += rect.width / 2 - HANDLE_SIZE / 2
-	else x += handle.xOffset
+	if (handle.rightAligned) x += rect.width - size / 2
+	else if ((handle.centered && handle.name === "n") || handle.name === "s") x += rect.width / 2 - size / 2
+	else x += (handle.xOffset / (HANDLE_SIZE / 2)) * (size / 2) // scale offset proportionally
 
-	if (handle.bottomAligned) y += rect.height - HANDLE_SIZE / 2
-	else if ((handle.centered && handle.name === "e") || handle.name === "w") y += rect.height / 2 - HANDLE_SIZE / 2
-	else y += handle.yOffset
+	if (handle.bottomAligned) y += rect.height - size / 2
+	else if ((handle.centered && handle.name === "e") || handle.name === "w") y += rect.height / 2 - size / 2
+	else y += (handle.yOffset / (HANDLE_SIZE / 2)) * (size / 2) // scale offset proportionally
 
 	return { x, y }
 }
 
-export function ResizeHandles({ rect }: ResizeHandlesProps) {
+export function ResizeHandles({ rect, zoom }: ResizeHandlesProps) {
+	const size = HANDLE_SIZE / zoom
+
 	return (
 		<>
 			{handles.map((handle) => {
-				const pos = getHandlePosition(handle, rect)
+				const pos = getHandlePosition(handle, rect, size)
 				return (
 					<div
 						key={handle.name}
@@ -43,11 +46,11 @@ export function ResizeHandles({ rect }: ResizeHandlesProps) {
 							position: "absolute",
 							left: 0,
 							top: 0,
-							width: HANDLE_SIZE,
-							height: HANDLE_SIZE,
+							width: size,
+							height: size,
 							transform: `translate(${pos.x}px, ${pos.y}px)`,
 							backgroundColor: "#ffffff",
-							border: "2px solid #0d99ff",
+							border: `${2 / zoom}px solid #0d99ff`,
 							borderRadius: "50%",
 							cursor: handle.cursor,
 							pointerEvents: "auto",

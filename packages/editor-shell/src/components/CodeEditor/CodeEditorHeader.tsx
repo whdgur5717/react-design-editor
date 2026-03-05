@@ -28,8 +28,8 @@ export function CodeEditorHeader({ componentId, componentName }: { componentId: 
 				display: "flex",
 				alignItems: "center",
 				padding: "8px 12px",
-				borderBottom: "1px solid #333",
-				background: "#252526",
+				borderBottom: "1px solid #e0e0e0",
+				background: "#ffffff",
 			}}
 		>
 			<button
@@ -37,7 +37,7 @@ export function CodeEditorHeader({ componentId, componentName }: { componentId: 
 				style={{
 					background: "none",
 					border: "none",
-					color: "#ccc",
+					color: "#666",
 					cursor: "pointer",
 					fontSize: 14,
 					padding: "4px 8px",
@@ -53,16 +53,16 @@ export function CodeEditorHeader({ componentId, componentName }: { componentId: 
 					onKeyDown={(e) => e.key === "Enter" && handleNameCommit()}
 					autoFocus
 					style={{
-						background: "#333",
-						border: "1px solid #555",
-						color: "#fff",
+						background: "#f0f0f0",
+						border: "1px solid #ddd",
+						color: "#1a1a1a",
 						padding: "2px 6px",
 						borderRadius: 3,
 						fontSize: 13,
 					}}
 				/>
 			) : (
-				<span onDoubleClick={startEditing} style={{ color: "#4ec9b0", fontSize: 13, cursor: "pointer" }}>
+				<span onDoubleClick={startEditing} style={{ color: "#0d99ff", fontSize: 13, cursor: "pointer" }}>
 					{componentName}
 				</span>
 			)}

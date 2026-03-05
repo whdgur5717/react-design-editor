@@ -1,4 +1,6 @@
-import type { ElementNode } from "../types/node"
+import type { JSONContent } from "@tiptap/core"
+
+import type { ElementNode, InstanceNode, SceneNode, TextNode } from "../types/node"
 
 /**
  * Codegen 출력 옵션
@@ -48,16 +50,54 @@ function serializeProps(props: Record<string, unknown>): string {
 		.join(" ")
 }
 
+function extractTextContent(content: JSONContent): string {
+	if (content.text) return content.text
+	if (!content.content) return ""
+	return content.content.map(extractTextContent).join("")
+}
+
+function serializeTextNode(node: TextNode, options: Required<SerializeOptions>, depth: number): string {
+	const currentIndent = options.indent.repeat(depth)
+	const text = extractTextContent(node.content)
+	return `${currentIndent}${text}`
+}
+
+function serializeInstanceNode(node: InstanceNode, options: Required<SerializeOptions>, depth: number): string {
+	const currentIndent = options.indent.repeat(depth)
+	const componentName = node.componentId
+
+	if (!node.propValues || Object.keys(node.propValues).length === 0) {
+		return `${currentIndent}<${componentName} />`
+	}
+
+	const propsStr = serializeProps(node.propValues)
+	return `${currentIndent}<${componentName} ${propsStr} />`
+}
+
+function serializeSceneNode(node: SceneNode, options: Required<SerializeOptions>, depth: number): string {
+	switch (node.type) {
+		case "element":
+			return serializeElementNode(node, options, depth)
+		case "text":
+			return serializeTextNode(node, options, depth)
+		case "instance":
+			return serializeInstanceNode(node, options, depth)
+		default: {
+			const _exhaustive: never = node
+			return _exhaustive
+		}
+	}
+}
+
 /**
  * ElementNode를 JSX 코드로 serialize
- * InstanceNode는 resolve된 후에 호출해야 함
  */
 export function serializeNode(node: ElementNode, options: SerializeOptions = {}): string {
 	const opts = { ...DEFAULT_OPTIONS, ...options }
-	return serializeNodeInternal(node, opts, 0)
+	return serializeElementNode(node, opts, 0)
 }
 
-function serializeNodeInternal(node: ElementNode, options: Required<SerializeOptions>, depth: number): string {
+function serializeElementNode(node: ElementNode, options: Required<SerializeOptions>, depth: number): string {
 	const { indent } = options
 	const currentIndent = indent.repeat(depth)
 
@@ -86,10 +126,9 @@ function serializeNodeInternal(node: ElementNode, options: Required<SerializeOpt
 		return `${currentIndent}<${tag}${attrStr}>${children}</${tag}>`
 	}
 
-	// 배열 자식인 경우 - ElementNode만 serialize (InstanceNode는 스킵하거나 resolve 필요)
 	const childrenStr = children
-		.filter((child): child is ElementNode => child.type === "element")
-		.map((child) => serializeNodeInternal(child, options, depth + 1))
+		.filter((child) => child.visible !== false)
+		.map((child) => serializeSceneNode(child, options, depth + 1))
 		.join("\n")
 
 	return `${currentIndent}<${tag}${attrStr}>\n${childrenStr}\n${currentIndent}</${tag}>`

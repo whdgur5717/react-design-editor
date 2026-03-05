@@ -8,10 +8,7 @@ export interface Rect {
 	height: number
 }
 
-/**
- * 노드의 절대 좌표 (페이지 루트 기준, 조상 left/top 합산)
- * 순수 함수: page 데이터를 인자로 받는다.
- */
+/** 조상 노드들의 x/y를 재귀적으로 합산해서 페이지 원점 기준 절대 좌표를 구한다 */
 export function getAbsolutePosition(nodeId: string, page: PageNode): { x: number; y: number } {
 	let x = 0
 	let y = 0
@@ -30,11 +27,8 @@ export function getAbsolutePosition(nodeId: string, page: PageNode): { x: number
 	return { x, y }
 }
 
-/**
- * 노드의 스크린 좌표 rect
- * 순수 함수: zoom, pan, page를 인자로 받는다.
- */
-export function getNodeScreenRect(nodeId: string, zoom: number, page: PageNode, panX = 0, panY = 0): Rect | null {
+/** 노드의 위치(x,y)와 크기(w,h)를 page space로 반환. overlay가 테두리를 그릴 위치를 잡을 때 사용 */
+export function getNodePageRect(nodeId: string, page: PageNode): Rect | null {
 	const node = findNodeInPage(page, nodeId)
 	if (!node) return null
 
@@ -43,10 +37,10 @@ export function getNodeScreenRect(nodeId: string, zoom: number, page: PageNode, 
 	const height = isNumber(node.style?.height) ? node.style.height : 0
 
 	return {
-		x: abs.x * zoom + panX,
-		y: abs.y * zoom + panY,
-		width: width * zoom,
-		height: height * zoom,
+		x: abs.x,
+		y: abs.y,
+		width,
+		height,
 	}
 }
 
@@ -68,11 +62,10 @@ export function isRootNode(nodeId: string, page: PageNode): boolean {
 }
 
 /**
- * 하이브리드 rect 계산:
- * - 루트 노드 → 기존 getNodeScreenRect (데이터 기반)
- * - 자식 노드 → Canvas push 캐시 기반
+ * 노드의 위치와 크기를 page space로 반환.
+ * 루트 노드는 데이터에서 직접 계산, 비루트 노드는 Canvas가 측정한 캐시를 역변환해서 구한다.
  */
-export function getNodeScreenRectHybrid(
+export function getNodePageRectHybrid(
 	nodeId: string,
 	zoom: number,
 	page: PageNode,
@@ -81,14 +74,32 @@ export function getNodeScreenRectHybrid(
 	panY = 0,
 ): Rect | null {
 	if (isRootNode(nodeId, page)) {
-		return getNodeScreenRect(nodeId, zoom, page, panX, panY)
+		const dataRect = getNodePageRect(nodeId, page)
+		if (!dataRect) return null
+
+		if (dataRect.width === 0 || dataRect.height === 0) {
+			const cached = cache[nodeId]
+			if (cached) {
+				// 캐시는 screen space이므로 zoom으로 나눠 page space로 변환
+				if (dataRect.width === 0) dataRect.width = cached.width / zoom
+				if (dataRect.height === 0) dataRect.height = cached.height / zoom
+			}
+		}
+
+		return dataRect
 	}
 
 	const cached = cache[nodeId]
 	if (!cached) return null
 
-	// Canvas의 rect는 이미 zoom이 적용된 스크린 좌표
-	return { x: cached.x, y: cached.y, width: cached.width, height: cached.height }
+	// 캐시는 getBoundingClientRect() 값이라 zoom/pan이 적용돼있음.
+	// page space로 복원: pan 빼고 zoom으로 나눈다.
+	return {
+		x: (cached.x - panX) / zoom,
+		y: (cached.y - panY) / zoom,
+		width: cached.width / zoom,
+		height: cached.height / zoom,
+	}
 }
 
 // ── 로컬 헬퍼 ──

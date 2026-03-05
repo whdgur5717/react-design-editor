@@ -45,17 +45,17 @@ export function ComponentsPanel() {
 	return (
 		<div className="components-panel">
 			<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px" }}>
-				<span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "#888" }}>Code Components</span>
+				<span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "#999" }}>Code Components</span>
 				<button
 					onClick={handleNewComponent}
 					style={{
 						background: "none",
-						border: "1px solid #555",
+						border: "1px solid #ddd",
 						borderRadius: 4,
 						padding: "2px 8px",
 						cursor: "pointer",
 						fontSize: 11,
-						color: "#ccc",
+						color: "#666",
 					}}
 				>
 					+ New
@@ -79,14 +79,14 @@ export function ComponentsPanel() {
 							fontSize: 12,
 						}}
 						onMouseEnter={(e) => {
-							e.currentTarget.style.backgroundColor = "#333"
+							e.currentTarget.style.backgroundColor = "#f0f0f0"
 						}}
 						onMouseLeave={(e) => {
 							e.currentTarget.style.backgroundColor = "transparent"
 						}}
 					>
 						<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-							<span style={{ color: comp.compiledCode ? "#4ec9b0" : "#888" }}>{"<>"}</span>
+							<span style={{ color: comp.compiledCode ? "#0d99ff" : "#bbb" }}>{"<>"}</span>
 							{comp.name}
 							{comp.compilationError && <span style={{ color: "#f44" }}>!</span>}
 						</span>
@@ -100,7 +100,7 @@ export function ComponentsPanel() {
 									cursor: comp.compiledCode ? "pointer" : "default",
 									fontSize: 14,
 									padding: "0 4px",
-									color: comp.compiledCode ? "#ccc" : "#555",
+									color: comp.compiledCode ? "#666" : "#ccc",
 								}}
 								title="Add instance to canvas"
 							>
@@ -114,7 +114,7 @@ export function ComponentsPanel() {
 									cursor: "pointer",
 									fontSize: 14,
 									padding: "0 4px",
-									color: "#888",
+									color: "#999",
 								}}
 								title="Delete component"
 							>
