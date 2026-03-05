@@ -8,5 +8,8 @@
 			"Write",
 			"mcp__github_inline_comment__create_inline_comment"
 		]
+	},
+	"env": {
+		"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
 	}
 }
