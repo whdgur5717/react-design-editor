@@ -1,8 +1,9 @@
 interface SelectionOverlayProps {
 	rects: Map<string, { x: number; y: number; width: number; height: number }>
+	zoom: number
 }
 
-export function SelectionOverlay({ rects }: SelectionOverlayProps) {
+export function SelectionOverlay({ rects, zoom }: SelectionOverlayProps) {
 	return (
 		<>
 			{Array.from(rects.entries()).map(([nodeId, rect]) => (
@@ -16,8 +17,8 @@ export function SelectionOverlay({ rects }: SelectionOverlayProps) {
 						width: rect.width,
 						height: rect.height,
 						transform: `translate(${rect.x}px, ${rect.y}px)`,
-						outline: "2px solid #0d99ff",
-						outlineOffset: -1,
+						outline: `${2 / zoom}px solid #0d99ff`,
+						outlineOffset: `${-1 / zoom}px`,
 						pointerEvents: "none",
 					}}
 				/>

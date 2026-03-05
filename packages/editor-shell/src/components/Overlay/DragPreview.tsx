@@ -1,20 +1,20 @@
 import type { NodeRect, PageNode } from "@design-editor/core"
 
-import { getNodeScreenRectHybrid } from "../../utils/nodePosition"
+import { getNodePageRectHybrid } from "../../utils/nodePosition"
 
 interface DragPreviewProps {
 	nodeId: string
 	dx: number
 	dy: number
 	zoom: number
-	panX: number
-	panY: number
 	page: PageNode
 	nodeRectsCache: Record<string, NodeRect>
+	panX: number
+	panY: number
 }
 
-export function DragPreview({ nodeId, dx, dy, zoom, panX, panY, page, nodeRectsCache }: DragPreviewProps) {
-	const rect = getNodeScreenRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
+export function DragPreview({ nodeId, dx, dy, zoom, page, nodeRectsCache, panX, panY }: DragPreviewProps) {
+	const rect = getNodePageRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
 	if (!rect) return null
 
 	return (
@@ -25,9 +25,9 @@ export function DragPreview({ nodeId, dx, dy, zoom, panX, panY, page, nodeRectsC
 				top: 0,
 				width: rect.width,
 				height: rect.height,
-				transform: `translate(${rect.x + dx * zoom}px, ${rect.y + dy * zoom}px)`,
-				outline: "2px solid #0d99ff",
-				outlineOffset: -1,
+				transform: `translate(${rect.x + dx}px, ${rect.y + dy}px)`,
+				outline: `${2 / zoom}px solid #0d99ff`,
+				outlineOffset: `${-1 / zoom}px`,
 				backgroundColor: "rgba(13, 153, 255, 0.05)",
 				pointerEvents: "none",
 			}}
