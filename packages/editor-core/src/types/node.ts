@@ -11,6 +11,7 @@ export interface BaseNode {
 	style?: CSSProperties
 	visible?: boolean
 	locked?: boolean
+	children?: SceneNode[]
 }
 
 /**
@@ -42,7 +43,6 @@ export interface ElementNode extends BaseNode {
 	type: "element"
 	tag: string
 	props?: Record<string, unknown>
-	children?: SceneNode[]
 }
 
 /**
