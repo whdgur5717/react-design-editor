@@ -24,8 +24,8 @@ function resolveDropParent(
 	const target = service.findNode(overNodeId)
 	if (!target) return page.id
 
-	// 텍스트/인스턴스에는 자식을 넣을 수 없음 → 그 노드의 부모로
-	if (target.type === "text" || target.type === "instance") {
+	// 텍스트에는 자식을 넣을 수 없음 → 그 노드의 부모로
+	if (target.type === "text") {
 		const targetLocation = service.findNodeLocation(overNodeId)
 		return targetLocation?.parentId ?? page.id
 	}

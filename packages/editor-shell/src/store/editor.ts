@@ -46,16 +46,15 @@ function getChildrenOf(node: PageNode | SceneNode): SceneNode[] | null {
 }
 
 function cloneNodeWithNewIds(node: SceneNode): SceneNode {
-	const prefix = node.type === "element" ? node.tag.toLowerCase() : "instance"
+	const prefix = node.type === "element" ? node.tag.toLowerCase() : node.type
 	const newId = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
 	return {
 		...node,
 		id: newId,
-		...(node.type === "element" &&
-			Array.isArray(node.children) && {
-				children: node.children.map(cloneNodeWithNewIds),
-			}),
+		...(Array.isArray(node.children) && {
+			children: node.children.map(cloneNodeWithNewIds),
+		}),
 	}
 }
 
@@ -309,7 +308,7 @@ export function createEditorStore() {
 
 						if (newParentId !== page.id) {
 							const target = findNode(page, newParentId)
-							if (!target || target.type === "instance" || target.type === "text") return
+							if (!target || target.type === "text") return
 						}
 
 						// snapshot before mutation (current() returns frozen object)
