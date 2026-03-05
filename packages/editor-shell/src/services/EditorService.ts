@@ -153,7 +153,6 @@ export class EditorService {
 		this.canvasRef?.syncState({
 			document: state.document,
 			currentPageId: state.currentPageId,
-			components: state.components,
 			zoom: state.zoom,
 			panX: state.panX,
 			panY: state.panY,

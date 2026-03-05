@@ -11,6 +11,7 @@ export interface BaseNode {
 	style?: CSSProperties
 	visible?: boolean
 	locked?: boolean
+	children?: SceneNode[]
 }
 
 /**
@@ -42,7 +43,6 @@ export interface ElementNode extends BaseNode {
 	type: "element"
 	tag: string
 	props?: Record<string, unknown>
-	children?: SceneNode[]
 }
 
 /**
@@ -92,16 +92,6 @@ export type Size = Pick<CSSProperties, "width" | "height">
  * 노드 바운딩 박스
  */
 export interface BoundingBox extends Position, Size {}
-
-/**
- * 컴포넌트 정의 (Master Component)
- */
-export interface ComponentDefinition {
-	id: string
-	name: string
-	root: ElementNode
-	createdAt: string
-}
 
 /**
  * Property Control 타입

@@ -1,8 +1,9 @@
 interface HoverHighlightProps {
 	rect: { x: number; y: number; width: number; height: number } | null
+	zoom: number
 }
 
-export function HoverHighlight({ rect }: HoverHighlightProps) {
+export function HoverHighlight({ rect, zoom }: HoverHighlightProps) {
 	if (!rect) return null
 
 	return (
@@ -15,7 +16,7 @@ export function HoverHighlight({ rect }: HoverHighlightProps) {
 				width: rect.width,
 				height: rect.height,
 				transform: `translate(${rect.x}px, ${rect.y}px)`,
-				outline: "1px solid #0d99ff66",
+				outline: `${1 / zoom}px solid #0d99ff66`,
 				pointerEvents: "none",
 			}}
 		/>
