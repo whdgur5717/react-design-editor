@@ -81,7 +81,18 @@ export function getNodeScreenRectHybrid(
 	panY = 0,
 ): Rect | null {
 	if (isRootNode(nodeId, page)) {
-		return getNodeScreenRect(nodeId, zoom, page, panX, panY)
+		const dataRect = getNodeScreenRect(nodeId, zoom, page, panX, panY)
+		if (!dataRect) return null
+
+		if (dataRect.width === 0 || dataRect.height === 0) {
+			const cached = cache[nodeId]
+			if (cached) {
+				if (dataRect.width === 0) dataRect.width = cached.width
+				if (dataRect.height === 0) dataRect.height = cached.height
+			}
+		}
+
+		return dataRect
 	}
 
 	const cached = cache[nodeId]
