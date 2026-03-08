@@ -282,7 +282,34 @@ export function DesignTab({ node }: { node: SceneNode }) {
 			{/* Typography */}
 			<section className="property-section">
 				<h3 className="section-title">Typography</h3>
-				<div className="property-grid">
+
+				{/* TODO: (#69) Font Family
+				 * - 현재: 일반적인 웹 폰트 프리셋 드롭다운으로 구현
+				 * - 향후 개선: 텍스트 입력과 드롭다운을 조합하여 커스텀 폰트 입력 지원
+				 * - 프리셋 목록: Arial, Helvetica, Georgia, Times New Roman,
+				 *   Courier New, Verdana, monospace, sans-serif, serif
+				 */}
+				<div className="property-row">
+					<select
+						data-testid="prop-font-family"
+						value={style.fontFamily ?? ""}
+						onChange={(e) => handleStyleChange("fontFamily", e.target.value || undefined)}
+						style={{ flex: 1 }}
+					>
+						<option value="">Default</option>
+						<option value="Arial, sans-serif">Arial</option>
+						<option value="Helvetica, sans-serif">Helvetica</option>
+						<option value="Georgia, serif">Georgia</option>
+						<option value="'Times New Roman', serif">Times New Roman</option>
+						<option value="'Courier New', monospace">Courier New</option>
+						<option value="Verdana, sans-serif">Verdana</option>
+						<option value="monospace">Monospace</option>
+						<option value="sans-serif">Sans-serif</option>
+						<option value="serif">Serif</option>
+					</select>
+				</div>
+
+				<div className="property-grid" style={{ marginTop: 8 }}>
 					<label>
 						<span>Size</span>
 						<input
@@ -301,6 +328,38 @@ export function DesignTab({ node }: { node: SceneNode }) {
 						</select>
 					</label>
 				</div>
+
+				{/* TODO: (#69) Line Height & Letter Spacing
+				 * - lineHeight: 현재 숫자(배수) 입력만 지원 (예: 1.5)
+				 *   향후 개선: 단위 선택 토글(배수/px) 추가하여 px 값도 지원
+				 * - letterSpacing: 현재 px 단위 숫자 입력만 지원 (예: 0.5)
+				 *   향후 개선: 단위 선택 토글(px/em) 추가
+				 */}
+				<div className="property-grid" style={{ marginTop: 8 }}>
+					<label>
+						<span>LH</span>
+						<input
+							data-testid="prop-line-height"
+							type="number"
+							step="0.1"
+							placeholder="1.5"
+							value={style.lineHeight ?? ""}
+							onChange={(e) => handleStyleChange("lineHeight", e.target.value ? Number(e.target.value) : undefined)}
+						/>
+					</label>
+					<label>
+						<span>LS</span>
+						<input
+							data-testid="prop-letter-spacing"
+							type="number"
+							step="0.1"
+							placeholder="0"
+							value={style.letterSpacing ?? ""}
+							onChange={(e) => handleStyleChange("letterSpacing", e.target.value ? Number(e.target.value) : undefined)}
+						/>
+					</label>
+				</div>
+
 				<div className="property-row" style={{ marginTop: 8 }}>
 					<input
 						type="color"
