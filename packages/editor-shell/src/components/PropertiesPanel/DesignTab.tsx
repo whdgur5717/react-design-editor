@@ -1,16 +1,61 @@
+import { useState } from "react"
 import type { SceneNode } from "@design-editor/core"
 
 import { useEditorStore } from "../../services/EditorContext"
+
+// TODO(#66): Per-corner border-radius 관련 상수 및 타입 정의
+const CORNER_RADIUS_KEYS = [
+	"borderTopLeftRadius",
+	"borderTopRightRadius",
+	"borderBottomRightRadius",
+	"borderBottomLeftRadius",
+] as const
+
+type CornerRadiusKey = (typeof CORNER_RADIUS_KEYS)[number]
 
 export function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
 	const moveNode = useEditorStore((state) => state.moveNode)
 	const style = node.style ?? {}
 
+	// TODO(#66): 개별 코너 모드 활성화 여부를 판단
+	// - 개별 코너 값이 하나라도 존재하면 개별 모드로 시작
+	const hasPerCornerValues = CORNER_RADIUS_KEYS.some((key) => style[key] !== undefined)
+	const [isPerCorner, setIsPerCorner] = useState(hasPerCornerValues)
+
 	const handleStyleChange = (key: string, value: string | number | undefined) => {
 		updateNode(node.id, {
 			style: { ...style, [key]: value },
 		})
+	}
+
+	// TODO(#66): 단일 값 → 개별 값 전환 핸들러
+	// - 단일 borderRadius 값을 4개 코너에 복사
+	// - shorthand borderRadius 제거
+	const handleTogglePerCorner = () => {
+		if (!isPerCorner) {
+			// 단일 → 개별: borderRadius 값을 4개 코너에 분배
+			const currentRadius = style.borderRadius ?? 0
+			const perCornerStyle: Record<string, unknown> = { ...style, borderRadius: undefined }
+			for (const key of CORNER_RADIUS_KEYS) {
+				perCornerStyle[key] = currentRadius
+			}
+			updateNode(node.id, { style: perCornerStyle })
+		} else {
+			// 개별 → 단일: 4개 코너 값을 하나로 통합 (첫 번째 값 사용)
+			const firstValue = style.borderTopLeftRadius ?? 0
+			const unifiedStyle: Record<string, unknown> = { ...style, borderRadius: firstValue }
+			for (const key of CORNER_RADIUS_KEYS) {
+				unifiedStyle[key] = undefined
+			}
+			updateNode(node.id, { style: unifiedStyle })
+		}
+		setIsPerCorner(!isPerCorner)
+	}
+
+	// TODO(#66): 개별 코너 값 변경 핸들러
+	const handleCornerRadiusChange = (key: CornerRadiusKey, value: number | undefined) => {
+		handleStyleChange(key, value)
 	}
 
 	return (
@@ -255,15 +300,91 @@ export function DesignTab({ node }: { node: SceneNode }) {
 							onChange={(e) => handleStyleChange("borderWidth", e.target.value ? Number(e.target.value) : undefined)}
 						/>
 					</label>
-					<label>
-						<span>Radius</span>
-						<input
-							type="number"
-							value={style.borderRadius ?? ""}
-							onChange={(e) => handleStyleChange("borderRadius", e.target.value ? Number(e.target.value) : undefined)}
-						/>
-					</label>
+					{/* TODO(#66): 단일 borderRadius 입력 + 개별 코너 토글 버튼 */}
+					{!isPerCorner && (
+						<label>
+							<span>Radius</span>
+							<input
+								type="number"
+								data-testid="prop-border-radius"
+								value={style.borderRadius ?? ""}
+								onChange={(e) =>
+									handleStyleChange("borderRadius", e.target.value ? Number(e.target.value) : undefined)
+								}
+							/>
+						</label>
+					)}
+					<button
+						type="button"
+						data-testid="toggle-per-corner-radius"
+						onClick={handleTogglePerCorner}
+						title={isPerCorner ? "단일 radius로 전환" : "개별 코너 radius 설정"}
+						style={{ alignSelf: "flex-end", fontSize: 12, padding: "2px 6px" }}
+					>
+						{isPerCorner ? "○" : "◇"}
+					</button>
 				</div>
+				{/* TODO(#66): 개별 코너 입력 필드 (4개) */}
+				{isPerCorner && (
+					<div className="property-grid" data-testid="per-corner-radius" style={{ marginTop: 8 }}>
+						<label>
+							<span>TL</span>
+							<input
+								type="number"
+								data-testid="prop-border-top-left-radius"
+								value={style.borderTopLeftRadius ?? ""}
+								onChange={(e) =>
+									handleCornerRadiusChange(
+										"borderTopLeftRadius",
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</label>
+						<label>
+							<span>TR</span>
+							<input
+								type="number"
+								data-testid="prop-border-top-right-radius"
+								value={style.borderTopRightRadius ?? ""}
+								onChange={(e) =>
+									handleCornerRadiusChange(
+										"borderTopRightRadius",
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</label>
+						<label>
+							<span>BL</span>
+							<input
+								type="number"
+								data-testid="prop-border-bottom-left-radius"
+								value={style.borderBottomLeftRadius ?? ""}
+								onChange={(e) =>
+									handleCornerRadiusChange(
+										"borderBottomLeftRadius",
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</label>
+						<label>
+							<span>BR</span>
+							<input
+								type="number"
+								data-testid="prop-border-bottom-right-radius"
+								value={style.borderBottomRightRadius ?? ""}
+								onChange={(e) =>
+									handleCornerRadiusChange(
+										"borderBottomRightRadius",
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</label>
+					</div>
+				)}
 				<div className="property-row" style={{ marginTop: 8 }}>
 					<input
 						type="color"
