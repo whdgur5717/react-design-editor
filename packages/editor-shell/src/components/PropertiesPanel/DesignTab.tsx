@@ -5,7 +5,14 @@ import { useEditorStore } from "../../services/EditorContext"
 export function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
 	const moveNode = useEditorStore((state) => state.moveNode)
+	const findParentNode = useEditorStore((state) => state.findParentNode)
 	const style = node.style ?? {}
+
+	// TODO: Check if the selected node's parent has display: flex
+	// to conditionally show the Flex Child section
+	const parentNode = findParentNode(node.id)
+	const parentStyle = parentNode?.style ?? {}
+	const isFlexChild = parentStyle.display === "flex"
 
 	const handleStyleChange = (key: string, value: string | number | undefined) => {
 		updateNode(node.id, {
@@ -128,6 +135,78 @@ export function DesignTab({ node }: { node: SceneNode }) {
 					</>
 				)}
 			</section>
+
+			{/* Flex Child - shown when parent is display: flex */}
+			{/* TODO: Consider showing this section in a disabled state when not a flex child */}
+			{isFlexChild && (
+				<section className="property-section" data-testid="flex-child-section">
+					<h3 className="section-title">Flex Child</h3>
+					<div className="property-grid">
+						{/* TODO: Implement flexGrow number input (default: 0) */}
+						<label>
+							<span>Grow</span>
+							<input
+								data-testid="prop-flex-grow"
+								type="number"
+								min={0}
+								value={style.flexGrow ?? 0}
+								onChange={(e) => handleStyleChange("flexGrow", Number(e.target.value))}
+							/>
+						</label>
+						{/* TODO: Implement flexShrink number input (default: 1) */}
+						<label>
+							<span>Shrink</span>
+							<input
+								data-testid="prop-flex-shrink"
+								type="number"
+								min={0}
+								value={style.flexShrink ?? 1}
+								onChange={(e) => handleStyleChange("flexShrink", Number(e.target.value))}
+							/>
+						</label>
+					</div>
+					<div className="property-grid" style={{ marginTop: 8 }}>
+						{/* TODO: Implement flexBasis with support for px, %, and auto values */}
+						{/* TODO: Consider adding a unit selector (px / % / auto) */}
+						<label>
+							<span>Basis</span>
+							<input
+								data-testid="prop-flex-basis"
+								type="text"
+								placeholder="auto"
+								value={style.flexBasis ?? ""}
+								onChange={(e) => {
+									const val = e.target.value
+									if (val === "" || val === "auto") {
+										handleStyleChange("flexBasis", val === "" ? undefined : "auto")
+									} else {
+										// TODO: Parse and validate px/% values
+										handleStyleChange("flexBasis", val)
+									}
+								}}
+							/>
+						</label>
+						{/* TODO: Implement alignSelf dropdown */}
+						<label>
+							<span>Align</span>
+							<select
+								data-testid="prop-align-self"
+								value={style.alignSelf ?? "auto"}
+								onChange={(e) =>
+									handleStyleChange("alignSelf", e.target.value === "auto" ? undefined : e.target.value)
+								}
+							>
+								<option value="auto">Auto</option>
+								<option value="flex-start">Start</option>
+								<option value="center">Center</option>
+								<option value="flex-end">End</option>
+								<option value="stretch">Stretch</option>
+								<option value="baseline">Baseline</option>
+							</select>
+						</label>
+					</div>
+				</section>
+			)}
 
 			{/* CSS Position */}
 			<section className="property-section">

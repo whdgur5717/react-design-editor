@@ -542,6 +542,15 @@ export function createEditorStore() {
 					if (!page) return null
 					return findNode(page, id)
 				},
+
+				findParentNode(id: string): SceneNode | null {
+					const page = get().document.children.find((p) => p.id === get().currentPageId)
+					if (!page) return null
+					const parent = findParent(page, id)
+					// PageNode is not a SceneNode, so only return if it's a SceneNode (has 'type')
+					if (parent && "type" in parent) return parent as SceneNode
+					return null
+				},
 			})),
 		),
 	)

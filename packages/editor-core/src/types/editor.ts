@@ -127,6 +127,9 @@ export interface EditorActions {
 	/** 노드 찾기 */
 	findNode: (id: string) => SceneNode | null
 
+	/** 부모 노드 찾기 */
+	findParentNode: (id: string) => SceneNode | null
+
 	/** 드래그 프리뷰 설정 */
 	setDragPreview: (preview: { nodeId: string; dx: number; dy: number } | null) => void
 
