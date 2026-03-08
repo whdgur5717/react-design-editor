@@ -19,11 +19,6 @@
 			"name": "pkg:shell",
 			"pattern": "packages/editor-shell/**",
 			"color": "0e8a16"
-		},
-		{
-			"name": "pkg:figma-plugin",
-			"pattern": "packages/figma-plugin/**",
-			"color": "d93f0b"
 		}
 	]
 }

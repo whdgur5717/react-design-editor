@@ -1,7 +1,0 @@
-{
-	"extends": "@design-editor/tsconfig/base.json",
-	"compilerOptions": {
-		"types": ["@figma/plugin-typings"]
-	},
-	"include": ["**/*.ts", "../vite-env.d.ts"]
-}
