@@ -243,6 +243,38 @@ export function DesignTab({ node }: { node: SceneNode }) {
 				</div>
 			</section>
 
+			{/* Opacity */}
+			{/* TODO: opacity 값을 0~1 범위로 저장하되, UI에서는 0~100% 로 표시 */}
+			<section className="property-section">
+				<h3 className="section-title">Opacity</h3>
+				<div className="property-row">
+					{/* TODO: range 슬라이더와 number 입력을 동기화하여 동시에 업데이트 */}
+					<input
+						data-testid="prop-opacity-slider"
+						type="range"
+						min={0}
+						max={100}
+						value={Math.round((style.opacity !== undefined ? Number(style.opacity) : 1) * 100)}
+						onChange={(e) => handleStyleChange("opacity", Number(e.target.value) / 100)}
+						style={{ flex: 1 }}
+					/>
+					<input
+						data-testid="prop-opacity"
+						type="number"
+						min={0}
+						max={100}
+						value={Math.round((style.opacity !== undefined ? Number(style.opacity) : 1) * 100)}
+						onChange={(e) => {
+							const v = Number(e.target.value)
+							// TODO: 0~100 범위를 벗어나는 입력 클램핑 처리
+							handleStyleChange("opacity", Math.min(100, Math.max(0, v)) / 100)
+						}}
+						style={{ width: 48 }}
+					/>
+					<span>%</span>
+				</div>
+			</section>
+
 			{/* Border */}
 			<section className="property-section">
 				<h3 className="section-title">Border</h3>
@@ -277,6 +309,101 @@ export function DesignTab({ node }: { node: SceneNode }) {
 						<option value="dotted">Dotted</option>
 					</select>
 				</div>
+			</section>
+
+			{/* Box Shadow */}
+			{/* TODO: 다중 box-shadow 지원 (배열로 관리, 추가/삭제 UI) */}
+			{/* TODO: box-shadow 파싱 유틸 함수 분리 — parseShadow / composeShadow */}
+			<section className="property-section">
+				<h3 className="section-title">Shadow</h3>
+				{(() => {
+					// TODO: boxShadow 문자열을 파싱하여 개별 값으로 분해하는 유틸 함수로 분리
+					const shadow = typeof style.boxShadow === "string" ? style.boxShadow : ""
+					const parts = shadow.match(/^(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+(.+)$/)
+					const offsetX = parts ? Number(parts[1]) : 0
+					const offsetY = parts ? Number(parts[2]) : 0
+					const blur = parts ? Number(parts[3]) : 0
+					const spread = parts ? Number(parts[4]) : 0
+					const color = parts ? parts[5] : "rgba(0,0,0,0.2)"
+
+					// TODO: 개별 값 변경 시 전체 boxShadow 문자열을 재조합하는 헬퍼 함수로 분리
+					const composeShadow = (x: number, y: number, b: number, s: number, c: string) =>
+						`${x}px ${y}px ${b}px ${s}px ${c}`
+
+					return (
+						<>
+							<div className="property-grid">
+								<label>
+									<span>X</span>
+									<input
+										data-testid="prop-shadow-x"
+										type="number"
+										value={offsetX}
+										onChange={(e) =>
+											handleStyleChange("boxShadow", composeShadow(Number(e.target.value), offsetY, blur, spread, color))
+										}
+									/>
+								</label>
+								<label>
+									<span>Y</span>
+									<input
+										data-testid="prop-shadow-y"
+										type="number"
+										value={offsetY}
+										onChange={(e) =>
+											handleStyleChange("boxShadow", composeShadow(offsetX, Number(e.target.value), blur, spread, color))
+										}
+									/>
+								</label>
+							</div>
+							<div className="property-grid" style={{ marginTop: 8 }}>
+								<label>
+									<span>Blur</span>
+									<input
+										data-testid="prop-shadow-blur"
+										type="number"
+										min={0}
+										value={blur}
+										onChange={(e) =>
+											handleStyleChange("boxShadow", composeShadow(offsetX, offsetY, Number(e.target.value), spread, color))
+										}
+									/>
+								</label>
+								<label>
+									<span>Spread</span>
+									<input
+										data-testid="prop-shadow-spread"
+										type="number"
+										value={spread}
+										onChange={(e) =>
+											handleStyleChange("boxShadow", composeShadow(offsetX, offsetY, blur, Number(e.target.value), color))
+										}
+									/>
+								</label>
+							</div>
+							{/* TODO: rgba 컬러 피커 지원 — 현재 type="color"는 alpha 미지원, 별도 alpha 슬라이더 추가 필요 */}
+							<div className="property-row" style={{ marginTop: 8 }}>
+								<input
+									data-testid="prop-shadow-color"
+									type="color"
+									value={color.startsWith("#") ? color : "#000000"}
+									onChange={(e) =>
+										handleStyleChange("boxShadow", composeShadow(offsetX, offsetY, blur, spread, e.target.value))
+									}
+								/>
+								<input
+									data-testid="prop-shadow-color-text"
+									type="text"
+									value={color}
+									placeholder="rgba(0,0,0,0.2)"
+									onChange={(e) =>
+										handleStyleChange("boxShadow", composeShadow(offsetX, offsetY, blur, spread, e.target.value))
+									}
+								/>
+							</div>
+						</>
+					)
+				})()}
 			</section>
 
 			{/* Typography */}
