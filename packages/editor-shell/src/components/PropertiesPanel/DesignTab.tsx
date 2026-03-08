@@ -1,16 +1,73 @@
+import { useState } from "react"
 import type { SceneNode } from "@design-editor/core"
 
 import { useEditorStore } from "../../services/EditorContext"
+
+/**
+ * TODO (#65): 개별 방향 spacing 값이 존재하는지 확인하여 확장 모드 초기 상태를 결정
+ * paddingTop/Right/Bottom/Left 중 하나라도 설정되어 있으면 true 반환
+ */
+function hasPerSideValues(
+	style: Record<string, unknown>,
+	prefix: "padding" | "margin",
+): boolean {
+	return (
+		style[`${prefix}Top`] !== undefined ||
+		style[`${prefix}Right`] !== undefined ||
+		style[`${prefix}Bottom`] !== undefined ||
+		style[`${prefix}Left`] !== undefined
+	)
+}
 
 export function DesignTab({ node }: { node: SceneNode }) {
 	const updateNode = useEditorStore((state) => state.updateNode)
 	const moveNode = useEditorStore((state) => state.moveNode)
 	const style = node.style ?? {}
 
+	// TODO (#65): 개별 방향 모드 토글 상태
+	const [paddingExpanded, setPaddingExpanded] = useState(() => hasPerSideValues(style, "padding"))
+	const [marginExpanded, setMarginExpanded] = useState(() => hasPerSideValues(style, "margin"))
+
 	const handleStyleChange = (key: string, value: string | number | undefined) => {
 		updateNode(node.id, {
 			style: { ...style, [key]: value },
 		})
+	}
+
+	/**
+	 * TODO (#65): 단일 값 ↔ 개별 값 전환 핸들러
+	 * - 단일 → 개별: shorthand 값을 4방향에 복사 후 shorthand 제거
+	 * - 개별 → 단일: 4방향 값 제거 (shorthand는 사용자가 직접 입력)
+	 */
+	const handleTogglePerSide = (prefix: "padding" | "margin") => {
+		const isExpanding = prefix === "padding" ? !paddingExpanded : !marginExpanded
+		const currentShorthand = style[prefix]
+
+		if (isExpanding) {
+			// TODO (#65): 단일 값을 4방향으로 확장
+			// shorthand 값이 있으면 4방향 모두에 동일한 값을 설정하고 shorthand 제거
+			const newStyle = { ...style }
+			if (currentShorthand !== undefined) {
+				newStyle[`${prefix}Top`] = currentShorthand
+				newStyle[`${prefix}Right`] = currentShorthand
+				newStyle[`${prefix}Bottom`] = currentShorthand
+				newStyle[`${prefix}Left`] = currentShorthand
+			}
+			delete newStyle[prefix]
+			updateNode(node.id, { style: newStyle })
+		} else {
+			// TODO (#65): 개별 값을 단일 값으로 축소
+			// 4방향 값을 모두 제거 (사용자가 shorthand를 직접 입력)
+			const newStyle = { ...style }
+			delete newStyle[`${prefix}Top`]
+			delete newStyle[`${prefix}Right`]
+			delete newStyle[`${prefix}Bottom`]
+			delete newStyle[`${prefix}Left`]
+			updateNode(node.id, { style: newStyle })
+		}
+
+		if (prefix === "padding") setPaddingExpanded(!paddingExpanded)
+		else setMarginExpanded(!marginExpanded)
 	}
 
 	return (
@@ -199,29 +256,142 @@ export function DesignTab({ node }: { node: SceneNode }) {
 				</div>
 			</section>
 
-			{/* Spacing */}
+			{/* Spacing - Padding */}
 			<section className="property-section">
-				<h3 className="section-title">Spacing</h3>
-				<div className="property-grid">
-					<label>
-						<span>P</span>
-						<input
-							type="number"
-							placeholder="Padding"
-							value={style.padding ?? ""}
-							onChange={(e) => handleStyleChange("padding", e.target.value ? Number(e.target.value) : undefined)}
-						/>
-					</label>
-					<label>
-						<span>M</span>
-						<input
-							type="number"
-							placeholder="Margin"
-							value={style.margin ?? ""}
-							onChange={(e) => handleStyleChange("margin", e.target.value ? Number(e.target.value) : undefined)}
-						/>
-					</label>
+				<div className="section-title-row">
+					<h3 className="section-title">Padding</h3>
+					{/* TODO (#65): 단일/개별 전환 토글 버튼 */}
+					<button
+						className="spacing-toggle-btn"
+						title={paddingExpanded ? "단일 값으로 전환" : "개별 방향 설정"}
+						onClick={() => handleTogglePerSide("padding")}
+					>
+						{paddingExpanded ? "▪" : "⊞"}
+					</button>
 				</div>
+				{paddingExpanded ? (
+					/* TODO (#65): 4방향 개별 입력 UI */
+					<div className="spacing-per-side">
+						<label>
+							<span>T</span>
+							<input
+								type="number"
+								placeholder="Top"
+								value={style.paddingTop ?? ""}
+								onChange={(e) => handleStyleChange("paddingTop", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>R</span>
+							<input
+								type="number"
+								placeholder="Right"
+								value={style.paddingRight ?? ""}
+								onChange={(e) => handleStyleChange("paddingRight", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>B</span>
+							<input
+								type="number"
+								placeholder="Bottom"
+								value={style.paddingBottom ?? ""}
+								onChange={(e) => handleStyleChange("paddingBottom", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>L</span>
+							<input
+								type="number"
+								placeholder="Left"
+								value={style.paddingLeft ?? ""}
+								onChange={(e) => handleStyleChange("paddingLeft", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+					</div>
+				) : (
+					/* 기존 단일 입력 */
+					<div className="property-row">
+						<label>
+							<span>P</span>
+							<input
+								type="number"
+								placeholder="Padding"
+								value={style.padding ?? ""}
+								onChange={(e) => handleStyleChange("padding", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+					</div>
+				)}
+			</section>
+
+			{/* Spacing - Margin */}
+			<section className="property-section">
+				<div className="section-title-row">
+					<h3 className="section-title">Margin</h3>
+					{/* TODO (#65): 단일/개별 전환 토글 버튼 */}
+					<button
+						className="spacing-toggle-btn"
+						title={marginExpanded ? "단일 값으로 전환" : "개별 방향 설정"}
+						onClick={() => handleTogglePerSide("margin")}
+					>
+						{marginExpanded ? "▪" : "⊞"}
+					</button>
+				</div>
+				{marginExpanded ? (
+					/* TODO (#65): 4방향 개별 입력 UI */
+					<div className="spacing-per-side">
+						<label>
+							<span>T</span>
+							<input
+								type="number"
+								placeholder="Top"
+								value={style.marginTop ?? ""}
+								onChange={(e) => handleStyleChange("marginTop", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>R</span>
+							<input
+								type="number"
+								placeholder="Right"
+								value={style.marginRight ?? ""}
+								onChange={(e) => handleStyleChange("marginRight", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>B</span>
+							<input
+								type="number"
+								placeholder="Bottom"
+								value={style.marginBottom ?? ""}
+								onChange={(e) => handleStyleChange("marginBottom", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+						<label>
+							<span>L</span>
+							<input
+								type="number"
+								placeholder="Left"
+								value={style.marginLeft ?? ""}
+								onChange={(e) => handleStyleChange("marginLeft", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+					</div>
+				) : (
+					/* 기존 단일 입력 */
+					<div className="property-row">
+						<label>
+							<span>M</span>
+							<input
+								type="number"
+								placeholder="Margin"
+								value={style.margin ?? ""}
+								onChange={(e) => handleStyleChange("margin", e.target.value ? Number(e.target.value) : undefined)}
+							/>
+						</label>
+					</div>
+				)}
 			</section>
 
 			{/* Fill */}

@@ -19,6 +19,12 @@ const DEFAULT_OPTIONS: Required<SerializeOptions> = {
 
 /**
  * CSSProperties를 inline style 문자열로 변환
+ *
+ * NOTE (#65): 이 함수는 모든 style 속성을 일반적으로 직렬화하므로
+ * paddingTop/Right/Bottom/Left, marginTop/Right/Bottom/Left 등
+ * 개별 방향 속성도 추가 작업 없이 자동으로 처리됩니다.
+ * 단, DesignTab에서 개별 값 전환 시 shorthand(padding/margin)를 제거하여
+ * shorthand와 개별 값이 동시에 출력되지 않도록 합니다.
  */
 function serializeStyle(style: Record<string, unknown>): string {
 	const entries = Object.entries(style).filter(([, value]) => value !== undefined)
