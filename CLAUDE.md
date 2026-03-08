@@ -36,8 +36,7 @@ packages/
 ├── editor-core/        # Shared types (SceneNode, EditorState) & codegen
 ├── editor-components/  # Component registry (maps node types → React components)
 ├── editor-canvas/      # Canvas iframe app (Vite, port 3001) - renders nodes
-├── editor-shell/       # Main shell app (Vite, port 3000) - toolbar, panels, state
-└── figma-plugin/       # (Legacy) Originally started as Figma plugin, currently unused
+└── editor-shell/       # Main shell app (Vite, port 3000) - toolbar, panels, state
 
 config/
 ├── eslint-config/      # Shared ESLint flat config

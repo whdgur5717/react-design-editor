@@ -3,7 +3,6 @@ const packages = {
 	"editor-components": "@design-editor/components",
 	"editor-canvas": "@design-editor/canvas",
 	"editor-shell": "@design-editor/shell",
-	"figma-plugin": "@design-editor/figma-plugin",
 }
 
 const config = {}

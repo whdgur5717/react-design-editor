@@ -1,1 +1,0 @@
-export { exportSvg } from "./svg"
