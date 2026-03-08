@@ -65,6 +65,114 @@ export function DesignTab({ node }: { node: SceneNode }) {
 				</div>
 			</section>
 
+			{/* TODO(#68): Min/Max Size - 반응형 레이아웃을 위한 min/max 크기 속성 */}
+			{/* 각 필드는 숫자(px) 또는 퍼센트(%) 값을 지원해야 합니다 */}
+			{/* 빈 값은 속성 미설정(undefined)으로 처리합니다 */}
+			{/* serializeStyle()이 이미 일반적으로 처리하므로 codegen 추가 작업은 불필요합니다 */}
+			<section className="property-section">
+				<h3 className="section-title">Min / Max Size</h3>
+				<div className="property-grid">
+					{/* TODO(#68): minWidth 입력 필드 - type="text"로 px/% 모두 지원 */}
+					<label>
+						<span>Min W</span>
+						<input
+							data-testid="prop-min-w"
+							type="text"
+							placeholder="e.g. 100 or 50%"
+							value={style.minWidth ?? ""}
+							onChange={(e) => {
+								// TODO(#68): 값 파싱 로직 구현
+								// - 빈 값 → undefined (속성 제거)
+								// - 숫자만 → Number로 변환 (px 단위)
+								// - '%' 포함 → 문자열 그대로 전달 (퍼센트 단위)
+								const raw = e.target.value
+								if (!raw) {
+									handleStyleChange("minWidth", undefined)
+								} else if (raw.endsWith("%")) {
+									handleStyleChange("minWidth", raw)
+								} else {
+									const num = Number(raw)
+									handleStyleChange("minWidth", Number.isNaN(num) ? undefined : num)
+								}
+							}}
+						/>
+					</label>
+					{/* TODO(#68): maxWidth 입력 필드 */}
+					<label>
+						<span>Max W</span>
+						<input
+							data-testid="prop-max-w"
+							type="text"
+							placeholder="e.g. 800 or 100%"
+							value={style.maxWidth ?? ""}
+							onChange={(e) => {
+								// TODO(#68): 값 파싱 로직 - minWidth와 동일한 패턴
+								const raw = e.target.value
+								if (!raw) {
+									handleStyleChange("maxWidth", undefined)
+								} else if (raw.endsWith("%")) {
+									handleStyleChange("maxWidth", raw)
+								} else {
+									const num = Number(raw)
+									handleStyleChange("maxWidth", Number.isNaN(num) ? undefined : num)
+								}
+							}}
+						/>
+					</label>
+				</div>
+				<div className="property-grid" style={{ marginTop: 8 }}>
+					{/* TODO(#68): minHeight 입력 필드 */}
+					<label>
+						<span>Min H</span>
+						<input
+							data-testid="prop-min-h"
+							type="text"
+							placeholder="e.g. 100 or 50%"
+							value={style.minHeight ?? ""}
+							onChange={(e) => {
+								// TODO(#68): 값 파싱 로직 - minWidth와 동일한 패턴
+								const raw = e.target.value
+								if (!raw) {
+									handleStyleChange("minHeight", undefined)
+								} else if (raw.endsWith("%")) {
+									handleStyleChange("minHeight", raw)
+								} else {
+									const num = Number(raw)
+									handleStyleChange("minHeight", Number.isNaN(num) ? undefined : num)
+								}
+							}}
+						/>
+					</label>
+					{/* TODO(#68): maxHeight 입력 필드 */}
+					<label>
+						<span>Max H</span>
+						<input
+							data-testid="prop-max-h"
+							type="text"
+							placeholder="e.g. 800 or 100%"
+							value={style.maxHeight ?? ""}
+							onChange={(e) => {
+								// TODO(#68): 값 파싱 로직 - minWidth와 동일한 패턴
+								const raw = e.target.value
+								if (!raw) {
+									handleStyleChange("maxHeight", undefined)
+								} else if (raw.endsWith("%")) {
+									handleStyleChange("maxHeight", raw)
+								} else {
+									const num = Number(raw)
+									handleStyleChange("maxHeight", Number.isNaN(num) ? undefined : num)
+								}
+							}}
+						/>
+					</label>
+				</div>
+				{/* TODO(#68): 추가 개선사항 고려
+				 * - 값 파싱 로직을 공통 유틸리티 함수로 추출 (parseDimensionValue)
+				 * - min > max 관계에 대한 유효성 검증 추가
+				 * - 단위 토글 버튼 (px ↔ %) UI 고려
+				 */}
+			</section>
+
 			{/* Layout */}
 			<section className="property-section">
 				<h3 className="section-title">Layout</h3>
