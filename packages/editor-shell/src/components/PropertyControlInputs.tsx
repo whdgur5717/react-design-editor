@@ -1,5 +1,10 @@
 import type { PropertyControls } from "@design-editor/core"
 
+import { CheckboxInput } from "./inputs/CheckboxInput"
+import { NumberInput } from "./inputs/NumberInput"
+import { SelectInput } from "./inputs/SelectInput"
+import { TextInput } from "./inputs/TextInput"
+
 interface PropertyControlInputsProps {
 	controls: PropertyControls
 	values: Record<string, unknown>
@@ -17,21 +22,21 @@ export function PropertyControlInputs({ controls, values, onChange }: PropertyCo
 						return (
 							<label key={key} className="property-row">
 								<span>{control.title ?? key}</span>
-								<input type="text" value={String(value ?? "")} onChange={(e) => onChange(key, e.target.value)} />
+								<TextInput value={String(value ?? "")} onChange={(v) => onChange(key, v)} />
 							</label>
 						)
 					case "number":
 						return (
 							<label key={key} className="property-row">
 								<span>{control.title ?? key}</span>
-								<input type="number" value={Number(value ?? 0)} onChange={(e) => onChange(key, Number(e.target.value))} />
+								<NumberInput value={Number(value ?? 0)} onChange={(v) => onChange(key, v)} />
 							</label>
 						)
 					case "boolean":
 						return (
 							<label key={key} className="property-row">
 								<span>{control.title ?? key}</span>
-								<input type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(key, e.target.checked)} />
+								<CheckboxInput checked={Boolean(value)} onChange={(v) => onChange(key, v)} />
 							</label>
 						)
 					case "color":
@@ -45,13 +50,11 @@ export function PropertyControlInputs({ controls, values, onChange }: PropertyCo
 						return (
 							<label key={key} className="property-row">
 								<span>{control.title ?? key}</span>
-								<select value={String(value ?? "")} onChange={(e) => onChange(key, e.target.value)}>
-									{(control.options ?? []).map((opt) => (
-										<option key={opt} value={opt}>
-											{opt}
-										</option>
-									))}
-								</select>
+								<SelectInput
+									value={String(value ?? "")}
+									onChange={(v) => onChange(key, v)}
+									options={(control.options ?? []).map((opt) => ({ value: opt, label: opt }))}
+								/>
 							</label>
 						)
 				}
