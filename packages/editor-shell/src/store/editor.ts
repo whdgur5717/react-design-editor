@@ -536,6 +536,23 @@ export function createEditorStore() {
 					})
 				},
 
+				updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>) {
+					set((state) => {
+						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						if (!page) return
+						const node = findNode(page, id)
+						if (!node) return
+						if (!node.style) node.style = {}
+						for (const [key, val] of Object.entries(styleUpdates)) {
+							if (val === undefined) {
+								delete (node.style as Record<string, unknown>)[key]
+							} else {
+								;(node.style as Record<string, unknown>)[key] = val
+							}
+						}
+					})
+				},
+
 				// 유틸리티 메서드
 				findNode(id: string): SceneNode | null {
 					const page = get().document.children.find((p) => p.id === get().currentPageId)

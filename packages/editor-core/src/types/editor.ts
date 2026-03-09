@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react"
+
 import type { CodeComponentDefinition, DocumentNode, Position, SceneNode, Size } from "./node"
 import type { NodeRect } from "./protocol"
 
@@ -149,6 +151,9 @@ export interface EditorActions {
 
 	/** 코드 컴포넌트 인스턴스의 prop 값 설정 */
 	setInstancePropValues: (instanceId: string, propValues: Record<string, unknown>) => void
+
+	/** 노드 스타일 개별 속성 업데이트 */
+	updateNodeStyle: (id: string, styleUpdates: Partial<CSSProperties>) => void
 }
 
 /**

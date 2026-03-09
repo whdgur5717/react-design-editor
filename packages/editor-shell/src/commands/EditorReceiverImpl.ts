@@ -1,4 +1,5 @@
 import type { Position, SceneNode, Size } from "@design-editor/core"
+import type { CSSProperties } from "react"
 
 import type { EditorStoreApi } from "../store/editor"
 import type { EditorReceiver, InstanceOverrides } from "./types"
@@ -64,6 +65,14 @@ export class EditorReceiverImpl implements EditorReceiver {
 
 	resetInstanceOverrides(instanceId: string) {
 		this.store.getState().resetInstanceOverrides(instanceId)
+	}
+
+	updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>) {
+		this.store.getState().updateNodeStyle(id, styleUpdates)
+	}
+
+	setInstancePropValues(instanceId: string, propValues: Record<string, unknown>) {
+		this.store.getState().setInstancePropValues(instanceId, propValues)
 	}
 
 	// ========== 페이지 액션 ==========

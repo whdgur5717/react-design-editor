@@ -1,4 +1,5 @@
 import type { PageNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { CSSProperties } from "react"
 
 /**
  * Command 인터페이스 - Command Pattern의 핵심
@@ -82,6 +83,12 @@ export interface EditorReceiver {
 
 	/** 인스턴스 오버라이드 리셋 */
 	resetInstanceOverrides(instanceId: string): void
+
+	/** 노드 스타일 개별 속성 업데이트 */
+	updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>): void
+
+	/** 코드 컴포넌트 인스턴스의 prop 값 설정 */
+	setInstancePropValues(instanceId: string, propValues: Record<string, unknown>): void
 
 	// ========== 페이지 액션 (undo 대상) ==========
 
