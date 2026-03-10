@@ -36,6 +36,8 @@ jobs:
  deploy-shell:
   runs-on: ubuntu-latest
   needs: deploy-canvas
+  permissions:
+   pull-requests: write
   steps:
    - uses: actions/checkout@v4
    - uses: pnpm/action-setup@v4
