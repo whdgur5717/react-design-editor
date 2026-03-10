@@ -68,20 +68,20 @@ export class EditorPage {
 
 	// ── Properties panel ──
 
-	get propX() {
-		return this.page.locator('[data-testid="prop-x"]')
+	get positionX() {
+		return this.page.locator('[data-testid="position-x"]')
 	}
-	get propY() {
-		return this.page.locator('[data-testid="prop-y"]')
+	get positionY() {
+		return this.page.locator('[data-testid="position-y"]')
 	}
 	get propW() {
-		return this.page.locator('[data-testid="prop-w"]')
+		return this.page.locator('[data-testid="style-width"]')
 	}
 	get propH() {
-		return this.page.locator('[data-testid="prop-h"]')
+		return this.page.locator('[data-testid="style-height"]')
 	}
 	get propFill() {
-		return this.page.locator('[data-testid="prop-fill"]')
+		return this.page.locator('[data-testid="style-backgroundColor"]')
 	}
 	get propertiesEmpty() {
 		return this.page.locator('[data-testid="properties-empty"]')
