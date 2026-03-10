@@ -33,11 +33,11 @@ export function DesignTab({ node, parentStyle }: { node: SceneNode; parentStyle?
 				<div className="property-grid">
 					<label>
 						<span>X</span>
-						<NumberInput data-testid="prop-x" value={node.x} onChange={(v) => updatePosition({ x: v, y: node.y ?? 0 })} />
+						<NumberInput data-testid="position-x" value={node.x} onChange={(v) => updatePosition({ x: v, y: node.y ?? 0 })} />
 					</label>
 					<label>
 						<span>Y</span>
-						<NumberInput data-testid="prop-y" value={node.y} onChange={(v) => updatePosition({ x: node.x ?? 0, y: v })} />
+						<NumberInput data-testid="position-y" value={node.y} onChange={(v) => updatePosition({ x: node.x ?? 0, y: v })} />
 					</label>
 				</div>
 			</section>

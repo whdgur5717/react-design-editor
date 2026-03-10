@@ -21,12 +21,18 @@ function styleVal<T>(style: CSSProperties, key: keyof CSSProperties): T {
 }
 
 export function StyleControlRenderer({ control, style, onStyleChange }: StyleControlRendererProps) {
+	const testId = `style-${"shorthandKey" in control ? control.shorthandKey : control.key}`
+
 	switch (control.type) {
 		case "number":
 			return (
 				<label>
 					<span>{control.label}</span>
-					<NumberInput value={styleVal(style, control.key)} onChange={(v) => onStyleChange(control.key, v)} />
+					<NumberInput
+						data-testid={testId}
+						value={styleVal(style, control.key)}
+						onChange={(v) => onStyleChange(control.key, v)}
+					/>
 				</label>
 			)
 
@@ -35,6 +41,7 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 				<label>
 					<span>{control.label}</span>
 					<SelectInput
+						data-testid={testId}
 						value={styleVal(style, control.key)}
 						defaultValue={control.defaultValue}
 						onChange={(v) => {
@@ -49,6 +56,7 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 		case "color":
 			return (
 				<ColorInput
+					data-testid={testId}
 					value={styleVal(style, control.key)}
 					onChange={(v) => onStyleChange(control.key, v)}
 					defaultPickerColor={control.defaultPickerColor}
@@ -59,7 +67,11 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 			return (
 				<label>
 					<span>{control.label}</span>
-					<TextInput value={String(style[control.key] ?? "")} onChange={(v) => onStyleChange(control.key, v || undefined)} />
+					<TextInput
+						data-testid={testId}
+						value={String(style[control.key] ?? "")}
+						onChange={(v) => onStyleChange(control.key, v || undefined)}
+					/>
 				</label>
 			)
 
@@ -68,6 +80,7 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 				<label>
 					<span>{control.label}</span>
 					<SliderInput
+						data-testid={testId}
 						value={styleVal(style, control.key)}
 						onChange={(v) => onStyleChange(control.key, v)}
 						min={control.min}
@@ -81,6 +94,7 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 		case "shorthand":
 			return (
 				<ShorthandInput
+					data-testid={testId}
 					label={control.label}
 					shorthandKey={control.shorthandKey}
 					parts={control.parts}
@@ -90,6 +104,13 @@ export function StyleControlRenderer({ control, style, onStyleChange }: StyleCon
 			)
 
 		case "composite":
-			return <CompositeInput control={control} value={styleVal(style, control.key)} onStyleChange={onStyleChange} />
+			return (
+				<CompositeInput
+					data-testid={testId}
+					control={control}
+					value={styleVal(style, control.key)}
+					onStyleChange={onStyleChange}
+				/>
+			)
 	}
 }

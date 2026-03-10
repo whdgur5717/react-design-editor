@@ -9,9 +9,17 @@ interface ShorthandInputProps {
 	parts: readonly { key: keyof CSSProperties; label: string }[]
 	style: CSSProperties
 	onStyleChange: (key: keyof CSSProperties, value: CSSProperties[keyof CSSProperties]) => void
+	"data-testid"?: string
 }
 
-export function ShorthandInput({ label, shorthandKey, parts, style, onStyleChange }: ShorthandInputProps) {
+export function ShorthandInput({
+	label,
+	shorthandKey,
+	parts,
+	style,
+	onStyleChange,
+	"data-testid": testId,
+}: ShorthandInputProps) {
 	const hasPerSideValues = parts.some((p) => style[p.key] !== undefined)
 	const [expanded, setExpanded] = useState(hasPerSideValues)
 
@@ -49,7 +57,7 @@ export function ShorthandInput({ label, shorthandKey, parts, style, onStyleChang
 	}
 
 	return (
-		<div className="shorthand-input">
+		<div className="shorthand-input" data-testid={testId}>
 			{!expanded ? (
 				<div className="property-grid">
 					<label>

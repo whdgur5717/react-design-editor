@@ -9,9 +9,10 @@ interface CompositeInputProps {
 	control: CompositeControl
 	value: string | undefined
 	onStyleChange: (key: keyof CSSProperties, value: CSSProperties[keyof CSSProperties]) => void
+	"data-testid"?: string
 }
 
-export function CompositeInput({ control, value, onStyleChange }: CompositeInputProps) {
+export function CompositeInput({ control, value, onStyleChange, "data-testid": testId }: CompositeInputProps) {
 	const decomposed = useMemo(() => (value ? control.decompose(String(value)) : {}), [control, value])
 
 	const handlePartChange = (role: string, partValue: unknown) => {
@@ -25,7 +26,7 @@ export function CompositeInput({ control, value, onStyleChange }: CompositeInput
 	}
 
 	return (
-		<div className="composite-input">
+		<div className="composite-input" data-testid={testId}>
 			<div className="property-grid">
 				{control.parts.map((part) => (
 					<label key={part.role}>
