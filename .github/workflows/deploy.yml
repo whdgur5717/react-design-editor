@@ -50,8 +50,36 @@ jobs:
      env:
       VITE_CANVAS_URL: ${{ github.ref == 'refs/heads/main' && vars.CANVAS_PRODUCTION_URL || needs.deploy-canvas.outputs.url }}
    - name: Deploy shell
+     id: deploy-shell
      uses: cloudflare/wrangler-action@v3
      with:
       apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       command: pages deploy packages/editor-shell/dist --project-name=${{ vars.CF_SHELL_PROJECT }} --branch=${{ github.head_ref || github.ref_name }}
+   - name: Comment preview URL on PR
+     if: github.event_name == 'pull_request'
+     uses: actions/github-script@v7
+     with:
+      script: |
+       const body = `🚀 **Preview deployed**\n\n${{ steps.deploy-shell.outputs.deployment-url }}`;
+       const { data: comments } = await github.rest.issues.listComments({
+         owner: context.repo.owner,
+         repo: context.repo.repo,
+         issue_number: context.issue.number,
+       });
+       const existing = comments.find(c => c.body.includes('🚀 **Preview deployed**'));
+       if (existing) {
+         await github.rest.issues.updateComment({
+           owner: context.repo.owner,
+           repo: context.repo.repo,
+           comment_id: existing.id,
+           body,
+         });
+       } else {
+         await github.rest.issues.createComment({
+           owner: context.repo.owner,
+           repo: context.repo.repo,
+           issue_number: context.issue.number,
+           body,
+         });
+       }
