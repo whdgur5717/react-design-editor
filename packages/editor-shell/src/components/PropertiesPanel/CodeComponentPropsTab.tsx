@@ -1,7 +1,7 @@
 import type { CodeComponentDefinition, SceneNode } from "@design-editor/core"
 
-import { useEditorStore } from "../../services/EditorContext"
 import { PropertyControlInputs } from "../PropertyControlInputs"
+import { useNodeProperty } from "./useNodeProperty"
 
 export function CodeComponentPropsTab({
 	node,
@@ -10,13 +10,13 @@ export function CodeComponentPropsTab({
 	node: SceneNode & { type: "instance" }
 	codeComponent: CodeComponentDefinition
 }) {
-	const setInstancePropValues = useEditorStore((state) => state.setInstancePropValues)
+	const { updatePropValues } = useNodeProperty(node.id)
 
 	const controls = codeComponent.propertyControls
 	const values = node.propValues ?? {}
 
 	const handleChange = (key: string, value: unknown) => {
-		setInstancePropValues(node.id, { ...values, [key]: value })
+		updatePropValues({ ...values, [key]: value })
 	}
 
 	if (Object.keys(controls).length === 0) {
