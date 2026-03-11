@@ -2,9 +2,9 @@ import type { EditorStore } from "@design-editor/core"
 import { createContext, useContext } from "react"
 import { useStore } from "zustand"
 
-import type { EditorService } from "./EditorService"
+import type { Editor } from "./Editor"
 
-const EditorContext = createContext<EditorService | null>(null)
+const EditorContext = createContext<Editor | null>(null)
 
 export const EditorProvider = EditorContext.Provider
 

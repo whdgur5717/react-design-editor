@@ -6,11 +6,11 @@ import { shallow } from "zustand/shallow"
 
 import { UpdateNodeCommand } from "./commands"
 import { CanvasView } from "./components/CanvasView"
+import { Editor } from "./services/Editor"
 import { EditorProvider } from "./services/EditorContext"
-import { EditorService } from "./services/EditorService"
 
 export function App() {
-	const [editor] = useState(() => new EditorService())
+	const [editor] = useState(() => new Editor())
 	const canvasRefLatest = useRef<AsyncMethodReturns<CanvasMethods> | null>(null)
 	useEffect(() => {
 		editor.start()
@@ -43,7 +43,7 @@ export function App() {
 
 		canvasConnection.promise.then((child) => {
 			canvasRefLatest.current = child
-			editor.setCanvas(child)
+			editor.canvas.setCanvas(child)
 			editor.syncToCanvas()
 		})
 
@@ -58,7 +58,7 @@ export function App() {
 			iframe.src = "about:blank"
 			unsubscribe()
 			canvasConnection.destroy()
-			editor.setCanvas(null)
+			editor.canvas.setCanvas(null)
 		}
 	}, [editor])
 

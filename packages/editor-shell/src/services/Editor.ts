@@ -1,64 +1,98 @@
-import type { CanvasMethods, EditorTool, NodeRect, PageNode, SceneNode } from "@design-editor/core"
-import { clamp } from "es-toolkit"
-import type { AsyncMethodReturns } from "penpal"
+import type { EditorTool, NodeRect, PageNode, SceneNode } from "@design-editor/core"
 import { type AnyActor, createActor } from "xstate"
 
-import type { Command, NodeLocation } from "../commands"
+import type { Command, EditorReceiver, NodeLocation } from "../commands"
 import {
+	ActionRegistry,
 	CommandHistory,
+	DuplicateNodeCommand,
 	EditorReceiverImpl,
-	registerHistoryShortcuts,
-	registerNodeShortcuts,
-	registerSelectionShortcuts,
-	registerToolShortcuts,
-	ShortcutRegistryImpl,
+	RemoveNodeCommand,
 } from "../commands"
 import { createPointerMachine } from "../interaction"
-import { KeybindingRegistryImpl } from "../keybindings"
+import { KeybindingRegistry } from "../keybindings"
 import { createEditorStore, type EditorStoreApi } from "../store/editor"
 import { FrameTool } from "../tools/FrameTool"
 import { SelectTool } from "../tools/SelectTool"
 import { TextTool } from "../tools/TextTool"
-import { ToolRegistryImpl } from "../tools/ToolRegistry"
+import { ToolRegistry } from "../tools/ToolRegistry"
 import { ToolServiceImpl } from "../tools/ToolServiceImpl"
+import { CanvasBridge } from "./CanvasBridge"
 
 /**
- * EditorService — 모든 서브시스템을 소유하고 React Context로 제공
+ * Editor — 모든 서브시스템을 소유하고 React Context로 제공
  *
- * store, commandHistory, receiver, toolRegistry, shortcutRegistry,
- * keybindingRegistry, pointerActor를 모두 소유한다.
+ * store, commandHistory, receiver, toolRegistry, actionRegistry,
+ * keybindingRegistry, canvas, pointerActor를 모두 소유한다.
  */
-export class EditorService {
+export class Editor {
 	readonly store: EditorStoreApi
 	readonly commandHistory: CommandHistory
 	readonly receiver: EditorReceiverImpl
-	readonly toolRegistry: ToolRegistryImpl
-	readonly shortcutRegistry: ShortcutRegistryImpl
-	readonly keybindingRegistry: KeybindingRegistryImpl
+	readonly toolRegistry: ToolRegistry
+	readonly actionRegistry: ActionRegistry
+	readonly keybindingRegistry: KeybindingRegistry
+	readonly canvas: CanvasBridge
 	private pointerActor: AnyActor
-	private canvasRef: AsyncMethodReturns<CanvasMethods> | null = null
 
 	constructor() {
-		// 모든 서브시스템을 직접 생성
 		this.store = createEditorStore()
 		this.receiver = new EditorReceiverImpl(this.store)
 		this.commandHistory = new CommandHistory(50)
-		this.toolRegistry = new ToolRegistryImpl()
-		this.shortcutRegistry = new ShortcutRegistryImpl()
-		this.keybindingRegistry = new KeybindingRegistryImpl(this.store)
+		this.toolRegistry = new ToolRegistry()
+		this.actionRegistry = new ActionRegistry()
+		this.keybindingRegistry = new KeybindingRegistry(this.store)
+		this.canvas = new CanvasBridge()
 
 		// Tool 초기화
-		const toolService = new ToolServiceImpl(this)
+		const toolService = new ToolServiceImpl(this.store, this.receiver, this.commandHistory)
 		this.toolRegistry.init(toolService)
 		this.toolRegistry.register("select", new SelectTool(toolService))
 		this.toolRegistry.register("frame", new FrameTool(toolService))
 		this.toolRegistry.register("text", new TextTool(toolService))
 
-		// 단축키 등록
-		registerHistoryShortcuts(this)
-		registerNodeShortcuts(this)
-		registerSelectionShortcuts(this)
-		registerToolShortcuts(this)
+		// 액션 등록
+		this.actionRegistry.register("history:undo", () => this.commandHistory.undo())
+		this.actionRegistry.register("history:redo", () => this.commandHistory.redo())
+
+		this.actionRegistry.register("selection:clear", () => this.receiver.setSelection([]))
+		this.actionRegistry.register("selection:all", () => {
+			const page = this.receiver.getCurrentPage()
+			if (!page) return
+			const allIds = collectAllNodeIds(page.children)
+			this.receiver.setSelection(allIds)
+		})
+
+		this.actionRegistry.register("node:delete", () => {
+			const selection = this.receiver.getSelection()
+			if (selection.length === 0) return
+
+			const topLevelIds = filterToTopLevel(selection, this.receiver)
+
+			if (topLevelIds.length > 1) this.commandHistory.beginTransaction()
+			for (const id of topLevelIds) {
+				this.commandHistory.execute(new RemoveNodeCommand(this.receiver, id))
+			}
+			if (topLevelIds.length > 1) this.commandHistory.commitTransaction()
+
+			this.receiver.setSelection([])
+		})
+
+		this.actionRegistry.register("node:duplicate", () => {
+			const selection = this.receiver.getSelection()
+			if (selection.length === 0) return
+
+			if (selection.length > 1) this.commandHistory.beginTransaction()
+			for (const id of selection) {
+				this.commandHistory.execute(new DuplicateNodeCommand(this.receiver, id))
+			}
+			if (selection.length > 1) this.commandHistory.commitTransaction()
+		})
+
+		this.actionRegistry.register("tool:select", () => this.toolRegistry.setActiveTool("select"))
+		this.actionRegistry.register("tool:frame", () => this.toolRegistry.setActiveTool("frame"))
+		this.actionRegistry.register("tool:text", () => this.toolRegistry.setActiveTool("text"))
+		this.actionRegistry.register("tool:shape", () => this.toolRegistry.setActiveTool("shape"))
 
 		// 포인터 상태 머신
 		const machine = createPointerMachine(this)
@@ -75,7 +109,7 @@ export class EditorService {
 		this.pointerActor.stop()
 	}
 
-	// ── Pointer events — actor를 내부 구현으로 은닉 ──
+	// ── Input events — actor를 내부 구현으로 은닉 ──
 
 	sendPointerDown(e: {
 		clientX: number
@@ -120,25 +154,21 @@ export class EditorService {
 		})
 	}
 
-	// ── Canvas 연결 ──
-
-	setCanvas(ref: AsyncMethodReturns<CanvasMethods> | null) {
-		this.canvasRef = ref
+	sendWheel(e: {
+		deltaX: number
+		deltaY: number
+		clientX: number
+		clientY: number
+		ctrlKey: boolean
+		metaKey: boolean
+	}) {
+		this.pointerActor.send({
+			type: "WHEEL",
+			...e,
+		})
 	}
 
-	getCanvas() {
-		return this.canvasRef
-	}
-
-	// ── Canvas RPC ──
-
-	async hitTest(x: number, y: number) {
-		return (await this.canvasRef?.hitTest(x, y)) ?? null
-	}
-
-	async getNodeRect(nodeId: string) {
-		return (await this.canvasRef?.getNodeRect(nodeId)) ?? null
-	}
+	// ── Canvas 동기화 ──
 
 	syncToCanvas() {
 		const state = this.store.getState()
@@ -150,7 +180,7 @@ export class EditorService {
 			}
 		}
 
-		this.canvasRef?.syncState({
+		this.canvas.syncState({
 			document: state.document,
 			currentPageId: state.currentPageId,
 			zoom: state.zoom,
@@ -228,32 +258,6 @@ export class EditorService {
 		this.store.getState().setPan(x, y)
 	}
 
-	// ── Wheel 이벤트 (pan / zoom) ──
-
-	handleWheel(e: {
-		deltaX: number
-		deltaY: number
-		clientX: number
-		clientY: number
-		ctrlKey: boolean
-		metaKey: boolean
-	}) {
-		const { zoom, panX, panY } = this.store.getState()
-
-		if (e.ctrlKey || e.metaKey) {
-			// 줌: 마우스 포인터 기준
-			const newZoom = clamp(zoom * (1 - e.deltaY * 0.01), 0.1, 4)
-			const ratio = newZoom / zoom
-			const newPanX = e.clientX - (e.clientX - panX) * ratio
-			const newPanY = e.clientY - (e.clientY - panY) * ratio
-			this.store.getState().setZoom(newZoom)
-			this.store.getState().setPan(newPanX, newPanY)
-		} else {
-			// 팬
-			this.store.getState().setPan(panX - e.deltaX, panY - e.deltaY)
-		}
-	}
-
 	// ── Command 실행 ──
 
 	executeCommand(cmd: Command) {
@@ -273,4 +277,28 @@ export class EditorService {
 	getReceiver() {
 		return this.receiver
 	}
+}
+
+// ── 유틸리티 함수 ──
+
+function collectAllNodeIds(nodes: SceneNode[]) {
+	const ids: string[] = []
+	for (const node of nodes) {
+		ids.push(node.id)
+		if ("children" in node && Array.isArray(node.children)) {
+			ids.push(...collectAllNodeIds(node.children))
+		}
+	}
+	return ids
+}
+
+function filterToTopLevel(selection: string[], recv: EditorReceiver) {
+	return selection.filter((id) => {
+		let location = recv.findNodeLocation(id)
+		while (location) {
+			if (selection.includes(location.parentId)) return false
+			location = recv.findNodeLocation(location.parentId)
+		}
+		return true
+	})
 }
