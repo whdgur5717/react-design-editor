@@ -1,3 +1,4 @@
+export type { EditorAction } from "./defaults"
 export { defaultKeybindings } from "./defaults"
-export { KeybindingRegistryImpl } from "./KeybindingRegistry"
+export { KeybindingRegistry } from "./KeybindingRegistry"
 export type { Keybinding, KeyEventLike } from "./types"

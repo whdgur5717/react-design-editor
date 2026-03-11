@@ -1,8 +1,8 @@
 import type { EditorStoreApi } from "../store/editor"
-import { defaultKeybindings } from "./defaults"
+import { defaultKeybindings, type EditorAction } from "./defaults"
 import type { Keybinding, KeyEventLike } from "./types"
 
-export class KeybindingRegistryImpl {
+export class KeybindingRegistry {
 	private bindings: Keybinding[] = [...defaultKeybindings]
 
 	constructor(private readonly store: EditorStoreApi) {}
@@ -17,14 +17,14 @@ export class KeybindingRegistryImpl {
 	/**
 	 * Keybinding 제거
 	 */
-	unregister(command: string): void {
+	unregister(command: EditorAction): void {
 		this.bindings = this.bindings.filter((b) => b.command !== command)
 	}
 
 	/**
-	 * 키보드 이벤트에 매칭되는 Command ID 반환
+	 * 키보드 이벤트에 매칭되는 액션 ID 반환
 	 */
-	match(e: KeyEventLike): string | null {
+	match(e: KeyEventLike): EditorAction | null {
 		const binding = this.bindings.find(
 			(b) =>
 				b.key.toLowerCase() === e.key.toLowerCase() &&
