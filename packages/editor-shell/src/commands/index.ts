@@ -7,9 +7,5 @@ export type { Command, EditorReceiver, InstanceOverrides, MergableCommand, NodeL
 // ========== Node Commands ==========
 export * from "./node"
 
-// ========== Shortcut Registry ==========
-export { registerHistoryShortcuts } from "./historyShortcuts"
-export { registerNodeShortcuts } from "./nodeShortcuts"
-export { registerSelectionShortcuts } from "./selectionShortcuts"
-export { ShortcutRegistryImpl } from "./ShortcutRegistry"
-export { registerToolShortcuts } from "./toolShortcuts"
+// ========== Action Registry ==========
+export { ActionRegistry } from "./ActionRegistry"
