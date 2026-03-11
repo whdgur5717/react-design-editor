@@ -7,7 +7,7 @@ import type { Tool } from "./types"
  * ToolRegistry - Strategy Pattern의 Context
  * 모든 이벤트를 받아서 현재 활성화된 Tool에 위임
  */
-export class ToolRegistryImpl {
+export class ToolRegistry {
 	private tools = new Map<EditorTool, Tool>()
 	private service!: ToolService
 
