@@ -1,7 +1,8 @@
+import { clamp } from "es-toolkit"
 import { assign, setup } from "xstate"
 
 import { ResizeNodeCommand } from "../commands"
-import type { EditorService } from "../services/EditorService"
+import type { Editor } from "../services/Editor"
 import { screenToData } from "../utils/nodePosition"
 
 // ── Event types ──
@@ -41,6 +42,16 @@ type KeyDownEvent = {
 	target: HTMLElement
 }
 
+type WheelEvent_ = {
+	type: "WHEEL"
+	deltaX: number
+	deltaY: number
+	clientX: number
+	clientY: number
+	ctrlKey: boolean
+	metaKey: boolean
+}
+
 type HitTestDoneEvent = {
 	type: "HIT_TEST_DONE"
 	nodeId: string | null
@@ -62,6 +73,7 @@ type PointerMachineEvent =
 	| PointerMoveEvent
 	| PointerUpEvent
 	| KeyDownEvent
+	| WheelEvent_
 	| HitTestDoneEvent
 	| UpdateOverNodeEvent
 
@@ -90,8 +102,8 @@ const DOUBLE_CLICK_MS = 300
 
 // ── Machine factory ──
 
-export function createPointerMachine(editorService: EditorService) {
-	const { toolRegistry, shortcutRegistry, keybindingRegistry } = editorService
+export function createPointerMachine(editor: Editor) {
+	const { toolRegistry, actionRegistry, keybindingRegistry, canvas } = editor
 
 	return setup({
 		types: {
@@ -105,14 +117,14 @@ export function createPointerMachine(editorService: EditorService) {
 			},
 
 			updateHover: (_, params: { clientX: number; clientY: number }) => {
-				editorService.hitTest(params.clientX, params.clientY).then((nodeId) => {
-					editorService.setHoveredId(nodeId)
+				canvas.hitTest(params.clientX, params.clientY).then((nodeId) => {
+					editor.setHoveredId(nodeId)
 				})
 			},
 
 			dispatchHitTest: ({ self }, params: { event: PointerEvent_ }) => {
 				const { clientX, clientY, pointerId, shiftKey, metaKey, target } = params.event
-				editorService.hitTest(clientX, clientY).then((nodeId) => {
+				canvas.hitTest(clientX, clientY).then((nodeId) => {
 					self.send({
 						type: "HIT_TEST_DONE",
 						nodeId,
@@ -127,31 +139,31 @@ export function createPointerMachine(editorService: EditorService) {
 			},
 
 			initDrag: ({ context }) => {
-				const selection = editorService.getSelection()
+				const selection = editor.getSelection()
 				if (context.nodeId && !selection.includes(context.nodeId)) {
-					editorService.setSelection([context.nodeId])
+					editor.setSelection([context.nodeId])
 				}
 			},
 
 			updateDragPreview: ({ context, self }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
-				const zoom = editorService.getZoom()
+				const zoom = editor.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
-				editorService.setDragPreview({ nodeId: context.nodeId, dx, dy })
+				editor.setDragPreview({ nodeId: context.nodeId, dx, dy })
 
-				editorService.hitTest(params.clientX, params.clientY).then((nodeId) => {
+				canvas.hitTest(params.clientX, params.clientY).then((nodeId) => {
 					self.send({ type: "UPDATE_OVER_NODE", nodeId })
 				})
 			},
 
 			commitDrag: ({ context }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
-				const zoom = editorService.getZoom()
+				const zoom = editor.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
 
-				editorService.setDragPreview(null)
+				editor.setDragPreview(null)
 
 				toolRegistry.handleDragEnd(context.nodeId, {
 					delta: { x: dx, y: dy },
@@ -163,7 +175,7 @@ export function createPointerMachine(editorService: EditorService) {
 			updateResize: ({ context }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
 
-				const zoom = editorService.getZoom()
+				const zoom = editor.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
 
@@ -176,19 +188,19 @@ export function createPointerMachine(editorService: EditorService) {
 				if (handle.includes("s")) height = Math.max(1, context.startHeight + dy)
 				if (handle.includes("n")) height = Math.max(1, context.startHeight - dy)
 
-				const node = editorService.findNode(context.nodeId)
+				const node = editor.findNode(context.nodeId)
 				if (!node) return
 
 				const from = { width: node.style?.width, height: node.style?.height }
 				const to = { width, height }
-				const receiver = editorService.getReceiver()
+				const receiver = editor.getReceiver()
 				const mergeKey = `resize:${context.nodeId}:${context.resizeSessionId}`
-				editorService.executeCommand(new ResizeNodeCommand(receiver, context.nodeId, from, to, mergeKey))
+				editor.executeCommand(new ResizeNodeCommand(receiver, context.nodeId, from, to, mergeKey))
 			},
 
 			singleClick: ({ context }) => {
-				const zoom = editorService.getZoom()
-				const { x: panX, y: panY } = editorService.getPan()
+				const zoom = editor.getZoom()
+				const { x: panX, y: panY } = editor.getPan()
 				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
 				toolRegistry.handleClick(context.nodeId, {
 					x: data.x,
@@ -199,8 +211,8 @@ export function createPointerMachine(editorService: EditorService) {
 			},
 
 			doubleClick: ({ context }) => {
-				const zoom = editorService.getZoom()
-				const { x: panX, y: panY } = editorService.getPan()
+				const zoom = editor.getZoom()
+				const { x: panX, y: panY } = editor.getPan()
 				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
 				toolRegistry.handleClick(context.nodeId, {
 					x: data.x,
@@ -219,18 +231,35 @@ export function createPointerMachine(editorService: EditorService) {
 				if (target.tagName === "IFRAME") return
 
 				const payload = { key, code, shiftKey, ctrlKey, metaKey, altKey }
-				const shortcutId = keybindingRegistry.match(payload)
-				if (shortcutId) {
-					shortcutRegistry.execute(shortcutId)
+				const actionId = keybindingRegistry.match(payload)
+				if (actionId) {
+					actionRegistry.execute(actionId)
 					return
 				}
 
 				toolRegistry.getActiveTool()?.onKeyDown(payload)
 			},
 
+			handleWheel: (_, params: { event: WheelEvent_ }) => {
+				const { zoom, panX, panY } = editor.store.getState()
+
+				if (params.event.ctrlKey || params.event.metaKey) {
+					// 줌: 마우스 포인터 기준
+					const newZoom = clamp(zoom * (1 - params.event.deltaY * 0.01), 0.1, 4)
+					const ratio = newZoom / zoom
+					const newPanX = params.event.clientX - (params.event.clientX - panX) * ratio
+					const newPanY = params.event.clientY - (params.event.clientY - panY) * ratio
+					editor.store.getState().setZoom(newZoom)
+					editor.store.getState().setPan(newPanX, newPanY)
+				} else {
+					// 팬
+					editor.store.getState().setPan(panX - params.event.deltaX, panY - params.event.deltaY)
+				}
+			},
+
 			cancelDrag: ({ context }) => {
 				if (context.nodeId) {
-					editorService.setDragPreview(null)
+					editor.setDragPreview(null)
 				}
 			},
 		},
@@ -275,6 +304,9 @@ export function createPointerMachine(editorService: EditorService) {
 			KEY_DOWN: {
 				actions: { type: "handleKeyDown", params: ({ event }) => ({ event }) },
 			},
+			WHEEL: {
+				actions: { type: "handleWheel", params: ({ event }) => ({ event }) },
+			},
 		},
 
 		states: {
@@ -296,13 +328,13 @@ export function createPointerMachine(editorService: EditorService) {
 							actions: assign(({ event }) => {
 								const target = event.target
 								const resizeHandle = target.closest("[data-resize-handle]") as HTMLElement
-								const nodeId = editorService.getSelection()[0] ?? null
-								const node = nodeId ? editorService.findNode(nodeId) : null
+								const nodeId = editor.getSelection()[0] ?? null
+								const node = nodeId ? editor.findNode(nodeId) : null
 
 								let width = typeof node?.style?.width === "number" ? node.style.width : 0
 								let height = typeof node?.style?.height === "number" ? node.style.height : 0
 								if (nodeId && (width === 0 || height === 0)) {
-									const rendered = editorService.getNodeRenderedRect(nodeId)
+									const rendered = editor.getNodeRenderedRect(nodeId)
 									if (rendered) {
 										if (width === 0) width = rendered.width
 										if (height === 0) height = rendered.height
@@ -372,7 +404,7 @@ export function createPointerMachine(editorService: EditorService) {
 									target: "dragging",
 									actions: [
 										assign(({ context }) => {
-											const node = context.nodeId ? editorService.findNode(context.nodeId) : null
+											const node = context.nodeId ? editor.findNode(context.nodeId) : null
 											const initialX = node?.x ?? 0
 											const initialY = node?.y ?? 0
 											return { initialNodePosition: { x: initialX, y: initialY } }

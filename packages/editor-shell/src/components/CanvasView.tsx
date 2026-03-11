@@ -46,7 +46,7 @@ export function CanvasView() {
 
 		const onWheel = (e: WheelEvent) => {
 			e.preventDefault()
-			editor.handleWheel({
+			editor.sendWheel({
 				deltaX: e.deltaX,
 				deltaY: e.deltaY,
 				clientX: e.clientX,
