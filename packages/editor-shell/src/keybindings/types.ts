@@ -1,3 +1,5 @@
+import type { EditorAction } from "./defaults"
+
 /**
  * Keybinding 정의
  */
@@ -13,8 +15,8 @@ export interface Keybinding {
 		alt?: boolean
 	}
 
-	/** 실행할 Command ID */
-	command: string
+	/** 실행할 액션 ID */
+	command: EditorAction
 
 	/** 조건 (예: 'hasSelection') */
 	when?: string
