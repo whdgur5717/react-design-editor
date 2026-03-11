@@ -29,3 +29,31 @@
 - **결정**: 통합. 백로그에서 P0 #1 하나로 합침.
 - **근거**: 구현 단위를 결정하는 것은 개발자 영역. 같은 패널 코드를 두 번 만지는 것보다 한 번에 하는 게 합리적. 단, 스코프는 합의된 속성 목록으로 한정 -- gradient, transform, 패널 전면 재설계는 OUT.
 - **영향**: P0이 2개에서 1개로. "Properties Panel: Full Style Coverage"가 Phase 1의 유일한 P0 블로커.
+
+## 2026-03-09: NumberInput UX 전략 -- Figma-style Hybrid (Option D)
+
+- **맥락**: Properties Panel에서 NumberInput이 onChange로 동작해, 키 입력마다 즉시 스타일에 반영됨. 중간값(400→40→4)이 캔버스에 모두 반영되고 빈 칸 입력이 불가능한 문제. Phase 1 P0(Full Style Coverage)에서 숫자 입력이 대폭 늘어나기 전에 패턴을 확정해야 함.
+- **선택지**:
+  1. Option A: onChange 유지 (실시간, 중간값 문제)
+  2. Option B: onSubmit only (Enter/blur, 실시간 피드백 없음)
+  3. Option C: debounce hybrid (두 모드 모두 어중간)
+  4. Option D: Figma-style hybrid (타이핑=onSubmit, 라벨 드래그=onChange)
+- **결정**: Option D. Figma-style hybrid.
+- **근거**: 사용자의 숫자 입력에는 두 가지 모드가 있다: (1) 정확한 값을 아는 경우 → 타이핑 → onSubmit이 적합, (2) 시각적으로 탐색하는 경우 → 드래그/스크럽 → onChange가 적합. 하나의 전략으로 둘 다 커버할 수 없으므로 모드별로 다른 커밋 전략을 적용. 이 에디터는 Design=Code이므로 중간값이 실제 코드에 반영되는 부작용이 더 크고, label drag는 슬라이더 위젯 없이 시각적 탐색을 제공하는 고효율 UI 패턴.
+- **구체적 동작**:
+  - 타이핑: Enter/blur 시에만 커밋. 타이핑 중에는 로컬 state만 변경.
+  - 빈 입력 + blur: 이전 커밋 값으로 복원 (0이나 NaN 아님).
+  - 라벨 드래그: 실시간 커밋 (onChange). 드래그 시작→끝이 하나의 undo 단위.
+  - Arrow Up/Down (포커스 시): 즉시 커밋. Shift+Arrow로 10단위.
+  - Undo: 커밋된 값만 undo 히스토리에 기록.
+- **영향**: Properties Panel의 모든 숫자 입력에 적용되는 기반 UX 패턴. P0 작업(Full Style Coverage) 전에 확정되어야 함. 슬라이더 위젯은 scope out.
+
+## 2026-03-08: Image 요소 지원 보류
+
+- **맥락**: P1 이슈 생성 중 개발자가 "이미지는 이미지 서버가 있어야 가능해서 지금 구현 못 한다"고 피드백.
+- **선택지**:
+  1. data URL / blob URL로 서버 없이 구현
+  2. 이미지 서버 인프라가 준비될 때까지 보류
+- **결정**: 보류. 이미지 서버 인프라 준비 후 재검토.
+- **근거**: data URL은 번들 크기 폭발, blob URL은 세션 한정이라 실용적이지 않다. 프로덕션에서 쓸 수 있는 이미지 기능은 서버 인프라가 전제 조건.
+- **영향**: Image Element (#7)은 backlog에 proposed로 유지하되 서버 인프라 의존성 명시. 당장 P1 작업 대상에서 제외.

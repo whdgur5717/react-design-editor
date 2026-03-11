@@ -32,7 +32,7 @@ P2 = nice to have, not required for Phase 1 gate.
 ### 1. Properties Panel: Full Style Coverage
 
 - **WHY**: The properties panel is missing many common CSS properties. Users cannot set per-side spacing, opacity, box-shadow, per-corner border-radius, min/max dimensions, extended typography, or flex child properties. Without these, users cannot construct real-world UI layouts in the editor.
-- **Status**: proposed
+- **Status**: ready → #94
 - **Full spec**: See below (Properties Panel Spec)
 
 ---
@@ -52,7 +52,7 @@ P2 = nice to have, not required for Phase 1 gate.
 - **Scope**:
   - IN: Copy, cut, paste within the editor; cross-page paste
   - OUT: Paste from external sources (e.g., pasting HTML from browser), paste as image
-- **Status**: proposed
+- **Status**: ready → #95
 
 ---
 
@@ -67,7 +67,7 @@ P2 = nice to have, not required for Phase 1 gate.
 - **Scope**:
   - IN: Frame tool, Text tool
   - OUT: Shape tool (separate item)
-- **Status**: proposed
+- **Status**: ready → #96
 
 ---
 
