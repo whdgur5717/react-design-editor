@@ -1,4 +1,5 @@
-import { useEffect } from "react"
+import { debounce } from "es-toolkit"
+import { useEffect, useRef } from "react"
 
 import { useView } from "../hooks/useView"
 import { useEditor } from "../services/EditorContext"
@@ -11,10 +12,15 @@ import { Toolbar } from "./Toolbar"
 export function CanvasView() {
 	const editor = useEditor()
 	const [{ edit: editingComponentId }] = useView()
+	const overlayRef = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {
 		const eventTarget = document.getElementById("canvas-event-target")
 		if (!eventTarget) return
+
+		const showOverlay = debounce(() => {
+			if (overlayRef.current) overlayRef.current.style.visibility = "visible"
+		}, 100)
 
 		const onPointerDown = (e: PointerEvent) => {
 			e.preventDefault()
@@ -46,6 +52,8 @@ export function CanvasView() {
 
 		const onWheel = (e: WheelEvent) => {
 			e.preventDefault()
+			if (overlayRef.current) overlayRef.current.style.visibility = "hidden"
+			showOverlay()
 			editor.sendWheel({
 				deltaX: e.deltaX,
 				deltaY: e.deltaY,
@@ -80,6 +88,7 @@ export function CanvasView() {
 			eventTarget.removeEventListener("pointerup", onPointerUp)
 			eventTarget.removeEventListener("wheel", onWheel)
 			window.removeEventListener("keydown", onKeyDown, { capture: true })
+			showOverlay.cancel()
 		}
 	}, [editor])
 
@@ -88,7 +97,9 @@ export function CanvasView() {
 			<div>
 				<div id="canvas-event-target" className="canvas-event-target">
 					<div className="canvas-area" />
-					<ToolManagerOverlay />
+					<div ref={overlayRef}>
+						<ToolManagerOverlay />
+					</div>
 				</div>
 			</div>
 			<div>
