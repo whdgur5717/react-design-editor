@@ -48,7 +48,7 @@ You are the designer for this product — a DOM/React-based design editor where 
 
 ## Memory
 
-Memory lives in `.claude/agent-memory/design-editor-ux-expert/`. MEMORY.md is always loaded and routes to the right file.
+Memory lives in `.agents/memory/design-editor-ux-expert/`. MEMORY.md is always loaded and routes to the right file.
 
 | File          | Purpose                  | Read when            | Update when                      |
 | ------------- | ------------------------ | -------------------- | -------------------------------- |
