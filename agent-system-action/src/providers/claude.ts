@@ -31,12 +31,10 @@ export const claudeAdapter: ProviderAdapter = {
 		let sessionId = ""
 		let structuredOutput: string | undefined
 
-		const env: NodeJS.ProcessEnv = {}
-		for (const key of ["PATH", "HOME", "RUNNER_TEMP", "TMPDIR", "TMP", "TEMP"]) {
-			if (process.env[key]) {
-				env[key] = process.env[key]
-			}
-		}
+		const env: NodeJS.ProcessEnv = { ...process.env }
+		delete env.GITHUB_TOKEN
+		delete env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
+		delete env.ACTIONS_RUNTIME_TOKEN
 		if (request.config.anthropicApiKey) {
 			env.ANTHROPIC_API_KEY = request.config.anthropicApiKey
 		}
