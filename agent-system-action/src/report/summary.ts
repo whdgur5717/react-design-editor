@@ -7,6 +7,10 @@ export async function writeStepSummary(input: {
 	durationMs: number
 	executionFile: string
 }) {
+	if (!process.env.GITHUB_STEP_SUMMARY) {
+		return
+	}
+
 	await core.summary
 		.addHeading("Agent System Action")
 		.addCodeBlock(input.finalMessage || "(empty)", "md")
