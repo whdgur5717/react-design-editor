@@ -47,3 +47,18 @@ test("forces safe behavior for untrusted fork", async () => {
 	const policy = await decidePolicy({ config: baseConfig })
 	assert.equal(policy.allowedBehavior, "comment")
 })
+
+test("non-write allowlist must not grant write behavior", async () => {
+	;(github.context as unknown as { payload: Record<string, unknown>; actor: string }).payload = {}
+	;(github.context as unknown as { payload: Record<string, unknown>; actor: string }).actor = "trusted-user"
+
+	const policy = await decidePolicy({
+		config: {
+			...baseConfig,
+			allowedNonWriteUsers: "trusted-user",
+		},
+	})
+
+	assert.equal(policy.trustTier, "trusted")
+	assert.equal(policy.allowWrite, false)
+})

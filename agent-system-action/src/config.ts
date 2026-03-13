@@ -138,6 +138,8 @@ export function loadConfig(): NormalizedConfig {
 		throw new Error("Only one of openai-api-key or codex-auth-json-b64 may be set")
 	}
 
+	const skillDirectories = getMultilineInput("skill_directories")
+
 	return {
 		mode: parseMode(getOptionalInput("mode") || "auto"),
 		provider: parseProvider(getOptionalInput("provider") || "codex"),
@@ -159,7 +161,7 @@ export function loadConfig(): NormalizedConfig {
 		allowUsers: getOptionalInput("allow_users"),
 		allowBots: getBooleanInput("allow_bots", false),
 		allowedNonWriteUsers: getOptionalInput("allowed_non_write_users"),
-		skillDirectories: getMultilineInput("skill_directories"),
+		skillDirectories: skillDirectories.length > 0 ? skillDirectories : [".agents/skills"],
 		openaiApiKey,
 		codexAuthJsonB64,
 		codexVersion: getOptionalInput("codex_version") || "0.114.0",

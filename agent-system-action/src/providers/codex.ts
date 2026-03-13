@@ -1,4 +1,4 @@
-import { chmod, cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises"
+import { chmod, cp, mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { spawn } from "node:child_process"
@@ -139,13 +139,20 @@ export const codexAdapter: ProviderAdapter = {
 
 		const env = pickSafeEnv(process.env)
 		const resolvedSkillDirs = request.config.skillDirectories.map((dir) => resolveAgainstWorkspace(dir))
-		if (resolvedSkillDirs.length > 0) {
+		const existingSkillDirs = await filterExistingDirectories(resolvedSkillDirs)
+		if (existingSkillDirs.length > 0) {
 			if (!runtimeCodexHome) {
 				runtimeCodexHome = await mkdtemp(path.join(os.tmpdir(), "agent-system-codex-home-"))
 			}
-			await exposeSkillDirectories(resolvedSkillDirs, runtimeCodexHome)
+			await exposeSkillDirectories(existingSkillDirs, runtimeCodexHome)
 			env.CODEX_HOME = runtimeCodexHome
-			core.info(`[codex] skills mounted count=${resolvedSkillDirs.length} dirs=${resolvedSkillDirs.join(",")}`)
+			core.info(`[codex] skills mounted count=${existingSkillDirs.length} dirs=${existingSkillDirs.join(",")}`)
+			const skipped = resolvedSkillDirs.filter((dir) => !existingSkillDirs.includes(dir))
+			if (skipped.length > 0) {
+				core.info(`[codex] skipped missing skill dirs=${skipped.join(",")}`)
+			}
+		} else if (resolvedSkillDirs.length > 0) {
+			core.info(`[codex] no existing skill directories found from input=${resolvedSkillDirs.join(",")}`)
 		}
 
 		if (request.config.codexAuthJsonB64) {
@@ -231,6 +238,19 @@ function resolveAgainstWorkspace(inputPath: string): string {
 	}
 	const base = process.env.GITHUB_WORKSPACE || process.cwd()
 	return path.resolve(base, inputPath)
+}
+
+async function filterExistingDirectories(paths: string[]): Promise<string[]> {
+	const result: string[] = []
+	for (const p of paths) {
+		try {
+			const entry = await stat(p)
+			if (entry.isDirectory()) {
+				result.push(p)
+			}
+		} catch {}
+	}
+	return result
 }
 
 function tryParseStructuredOutput(finalMessage: string, required: boolean): string | undefined {

@@ -86,7 +86,7 @@ inputs:
  skill-directories:
   description: "Newline-separated skill directories to expose to Codex"
   required: false
-  default: ""
+  default: ".agents/skills"
  openai-api-key:
   description: "OpenAI API key for Codex"
   required: false
@@ -159,7 +159,7 @@ runs:
  using: "composite"
  steps:
   - name: Ensure Node.js available
-    uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+    uses: actions/setup-node@v5
     with:
      node-version: "24"
 

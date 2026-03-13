@@ -2,7 +2,7 @@ import * as core from "@actions/core"
 import * as github from "@actions/github"
 import { getProviderAdapter } from "./providers"
 import { loadConfig, loadPromptSource, loadTemplateSource } from "./config"
-import type { ResolvedMode, ResolvedProvider } from "./types"
+import type { NormalizedConfig, ResolvedMode, ResolvedProvider } from "./types"
 import { detectMentionTrigger, extractUserRequest } from "./trigger"
 import { decidePolicy } from "./policy"
 import { renderTemplate } from "./prompt/template"
@@ -133,12 +133,19 @@ async function run() {
 		}
 
 		const adapter = getProviderAdapter(provider)
+		const effectiveConfig: NormalizedConfig = {
+			...config,
+			sandbox: policy.allowWrite ? config.sandbox : "read-only",
+		}
+		if (!policy.allowWrite && config.sandbox !== "read-only") {
+			core.info(`[agent] sandbox override applied ${config.sandbox} -> read-only (policy-enforced)`)
+		}
 		core.info(
 			`[agent] adapter name=${adapter.name} supportsStreaming=${adapter.capabilities.supportsStreaming} supportsStructuredOutput=${adapter.capabilities.supportsStructuredOutput}`,
 		)
 		const timeoutMs = config.timeoutMinutes * 60 * 1000
 		const result = await withTimeout(
-			adapter.run({ prompt, config, mode }),
+			adapter.run({ prompt, config: effectiveConfig, mode }),
 			timeoutMs,
 			`Execution timed out after ${config.timeoutMinutes} minutes`,
 		)

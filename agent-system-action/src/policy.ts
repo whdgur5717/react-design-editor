@@ -16,6 +16,7 @@ export async function decidePolicy({ config }: PolicyInput): Promise<PolicyDecis
 	const isIssueCommentOnPr = Boolean(payload.issue?.pull_request)
 	const isFork = Boolean(payload.pull_request?.head?.repo?.fork) || isIssueCommentOnPr
 	const isBot = actor.endsWith("[bot]")
+	const nonWriteAllowlisted = matchesAllowSpec(actor, config.allowedNonWriteUsers)
 
 	let trustTier: PolicyDecision["trustTier"] = "untrusted"
 	const writeAccess =
@@ -25,7 +26,7 @@ export async function decidePolicy({ config }: PolicyInput): Promise<PolicyDecis
 
 	if (writeAccess) {
 		trustTier = "maintainer"
-	} else if (matchesAllowSpec(actor, config.allowUsers) || matchesAllowSpec(actor, config.allowedNonWriteUsers)) {
+	} else if (matchesAllowSpec(actor, config.allowUsers) || nonWriteAllowlisted) {
 		trustTier = "trusted"
 	} else if (isBot && config.allowBots) {
 		trustTier = "trusted"
@@ -38,7 +39,8 @@ export async function decidePolicy({ config }: PolicyInput): Promise<PolicyDecis
 		}
 	}
 
-	const allowWrite = allowedBehavior === "branch-commit-push" && trustTier !== "untrusted" && !isFork
+	const allowWrite =
+		allowedBehavior === "branch-commit-push" && trustTier === "maintainer" && !isFork && !nonWriteAllowlisted
 
 	return {
 		trustTier,
