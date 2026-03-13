@@ -31,16 +31,22 @@ jobs:
 
    - name: Assert final output
      shell: bash
+     env:
+      FINAL_MESSAGE: ${{ steps.agent.outputs.final_message }}
+      EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
      run: |
-      final="${{ steps.agent.outputs.final_message }}"
-      exec_file="${{ steps.agent.outputs.execution_file }}"
-      echo "final_message=$final"
-      echo "execution_file=$exec_file"
-      if [[ -z "$final" ]]; then
-        echo "final_message is empty"
-        exit 1
-      fi
-      if [[ -z "$exec_file" ]]; then
-        echo "execution_file output is empty"
-        exit 1
-      fi
+      python3 - <<'PY'
+      import os
+
+      final = os.environ.get("FINAL_MESSAGE", "")
+      execution_file = os.environ.get("EXECUTION_FILE", "")
+
+      print("execution_file=", execution_file)
+      print("final_preview=", final[:300].replace("\n", "\\n"))
+
+      if not final.strip():
+          raise SystemExit("final_message is empty")
+
+      if not execution_file.strip():
+          raise SystemExit("execution_file output is empty")
+      PY
