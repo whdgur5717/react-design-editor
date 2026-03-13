@@ -3,6 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { spawn } from "node:child_process"
 import parseArgsStringToArgv from "string-argv"
+import * as core from "@actions/core"
 import type { AgentRequest, AgentResult, ProviderAdapter } from "./types"
 
 const DISALLOWED_EXTRA_ARGS = new Set(["--sandbox", "--cd", "--output-last-message", "--output-schema"])
@@ -101,6 +102,7 @@ export const codexAdapter: ProviderAdapter = {
 		}
 
 		const installEnv = pickSafeEnv(process.env)
+		core.info(`[codex] installing @openai/codex@${installVersion}`)
 		await runCommand("npm", ["install", "-g", `@openai/codex@${installVersion}`], "", installEnv, timeoutMs)
 
 		const args = [
@@ -131,16 +133,22 @@ export const codexAdapter: ProviderAdapter = {
 		const extraArgs = parseExtraArgs(request.config.codexArgs)
 		validateExtraArgs(extraArgs)
 		args.push(...extraArgs)
+		core.info(
+			`[codex] run config sandbox=${request.config.sandbox} model=${request.config.model || "(default)"} effort=${request.config.effort || "(default)"} outputSchema=${request.config.outputSchema ? "yes" : "no"} extraArgs=${extraArgs.length}`,
+		)
 
 		const env = pickSafeEnv(process.env)
 		if (request.config.codexAuthJsonB64) {
+			core.info("[codex] auth mode=subscription (codex-auth-json-b64)")
 			codexHomeForAuth = await writeSubscriptionAuthHome(request.config.codexAuthJsonB64)
 			env.CODEX_HOME = codexHomeForAuth
 		} else if (request.config.openaiApiKey) {
+			core.info("[codex] auth mode=api-key (openai-api-key)")
 			env.OPENAI_API_KEY = request.config.openaiApiKey
 		} else {
 			throw new Error("Codex requires either openai-api-key or codex-auth-json-b64")
 		}
+		core.info(`[codex] command=codex ${args.join(" ")}`)
 
 		try {
 			const commandOutput = await runCommand("codex", args, request.prompt, env, timeoutMs)
@@ -156,6 +164,9 @@ export const codexAdapter: ProviderAdapter = {
 				stdoutLength: commandOutput.stdout.length,
 				stderrLength: commandOutput.stderr.length,
 			}
+			core.info(
+				`[codex] completed outputFile=${outputFile} finalMessageLength=${finalMessage.length} stdoutLength=${commandOutput.stdout.length} stderrLength=${commandOutput.stderr.length}`,
+			)
 			await writeFile(executionFile, JSON.stringify(execution, null, 2), "utf8")
 
 			return {

@@ -2,6 +2,7 @@ import { mkdtemp, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { spawn } from "node:child_process"
+import * as core from "@actions/core"
 import type { AgentRequest, AgentResult, ProviderAdapter } from "./types"
 
 type SdkMessage = {
@@ -23,6 +24,7 @@ export const claudeAdapter: ProviderAdapter = {
 		const query = sdk.query as (input: { prompt: string; options: Record<string, unknown> }) => AsyncIterable<SdkMessage>
 		const timeoutMs = request.config.timeoutMinutes * 60 * 1000
 		const executable = await ensureClaudeExecutable(timeoutMs)
+		core.info(`[claude] executable=${executable}`)
 
 		const tempDir = await mkdtemp(path.join(os.tmpdir(), "agent-system-claude-"))
 		const executionFile = path.join(tempDir, "execution.json")
@@ -36,9 +38,11 @@ export const claudeAdapter: ProviderAdapter = {
 		delete env.ACTIONS_ID_TOKEN_REQUEST_TOKEN
 		delete env.ACTIONS_RUNTIME_TOKEN
 		if (request.config.anthropicApiKey) {
+			core.info("[claude] auth mode=anthropic-api-key")
 			env.ANTHROPIC_API_KEY = request.config.anthropicApiKey
 		}
 		if (request.config.claudeCodeOauthToken) {
+			core.info("[claude] auth mode=oauth-token")
 			env.CLAUDE_CODE_OAUTH_TOKEN = request.config.claudeCodeOauthToken
 		}
 
@@ -47,6 +51,7 @@ export const claudeAdapter: ProviderAdapter = {
 			maxTurns: 50,
 			pathToClaudeCodeExecutable: executable,
 		}
+		core.info(`[claude] run config outputSchema=${request.config.outputSchema ? "yes" : "no"} timeoutMs=${timeoutMs}`)
 
 		for await (const message of query({ prompt: request.prompt, options })) {
 			if (messages.length < 2000) {
@@ -79,6 +84,9 @@ export const claudeAdapter: ProviderAdapter = {
 		}
 
 		await writeFile(executionFile, JSON.stringify(messages, null, 2), "utf8")
+		core.info(
+			`[claude] completed finalMessageLength=${finalMessage.length} messagesCaptured=${messages.length} sessionId=${sessionId || "(none)"}`,
+		)
 
 		return {
 			finalMessage,

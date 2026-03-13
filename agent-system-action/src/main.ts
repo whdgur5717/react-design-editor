@@ -53,6 +53,9 @@ async function run() {
 	const config = loadConfig()
 	const mode = resolveMode(config.mode)
 	const provider = resolveProvider(config.provider)
+	core.info(
+		`[agent] start provider=${provider} mode=${mode} event=${github.context.eventName} actor=${github.context.actor || "unknown"}`,
+	)
 
 	let octokit: Octokit | null = null
 	let commentId: number | null = null
@@ -79,6 +82,9 @@ async function run() {
 		}
 
 		const policy = await decidePolicy({ config })
+		core.info(
+			`[agent] policy trustTier=${policy.trustTier} allowedBehavior=${policy.allowedBehavior} allowWrite=${policy.allowWrite} allowComment=${policy.allowComment}`,
+		)
 
 		if (mode === "mention" && policy.trustTier === "untrusted") {
 			core.info("Untrusted mention context detected; skipping provider execution")
@@ -113,6 +119,9 @@ async function run() {
 			userRequest,
 			config,
 		})
+		core.info(
+			`[agent] prompt lengths base=${basePrompt.length} template=${renderedTemplate.length} userRequest=${userRequest.length} final=${prompt.length}`,
+		)
 
 		if (commentTarget && octokit && config.trackProgress) {
 			commentId = await publishOrUpdateComment({
@@ -124,6 +133,9 @@ async function run() {
 		}
 
 		const adapter = getProviderAdapter(provider)
+		core.info(
+			`[agent] adapter name=${adapter.name} supportsStreaming=${adapter.capabilities.supportsStreaming} supportsStructuredOutput=${adapter.capabilities.supportsStructuredOutput}`,
+		)
 		const timeoutMs = config.timeoutMinutes * 60 * 1000
 		const result = await withTimeout(
 			adapter.run({ prompt, config, mode }),
