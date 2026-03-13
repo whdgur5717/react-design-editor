@@ -1,6 +1,7 @@
 import { mkdtemp, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
+import { spawn } from "node:child_process"
 import type { AgentRequest, AgentResult, ProviderAdapter } from "./types"
 
 type SdkMessage = {
@@ -20,6 +21,8 @@ export const claudeAdapter: ProviderAdapter = {
 	async run(request: AgentRequest): Promise<AgentResult> {
 		const sdk = await import("@anthropic-ai/claude-agent-sdk")
 		const query = sdk.query as (input: { prompt: string; options: Record<string, unknown> }) => AsyncIterable<SdkMessage>
+		const timeoutMs = request.config.timeoutMinutes * 60 * 1000
+		const executable = await ensureClaudeExecutable(timeoutMs)
 
 		const tempDir = await mkdtemp(path.join(os.tmpdir(), "agent-system-claude-"))
 		const executionFile = path.join(tempDir, "execution.json")
@@ -44,6 +47,7 @@ export const claudeAdapter: ProviderAdapter = {
 		const options: Record<string, unknown> = {
 			env,
 			maxTurns: 50,
+			pathToClaudeCodeExecutable: executable,
 		}
 
 		for await (const message of query({ prompt: request.prompt, options })) {
@@ -85,4 +89,62 @@ export const claudeAdapter: ProviderAdapter = {
 			sessionId,
 		}
 	},
+}
+
+async function ensureClaudeExecutable(timeoutMs: number): Promise<string> {
+	const claudePath = await which("claude", timeoutMs)
+	if (claudePath) {
+		return claudePath
+	}
+
+	await runCommand("bash", ["-lc", "curl -fsSL https://claude.ai/install.sh | bash"], timeoutMs)
+
+	const installedPath = await which("claude", timeoutMs)
+	if (!installedPath) {
+		throw new Error("Failed to install Claude Code executable")
+	}
+
+	return installedPath
+}
+
+async function which(binary: string, timeoutMs: number): Promise<string> {
+	try {
+		const output = await runCommand("bash", ["-lc", `command -v ${binary}`], timeoutMs)
+		return output.trim()
+	} catch {
+		return ""
+	}
+}
+
+function runCommand(program: string, args: string[], timeoutMs: number): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const child = spawn(program, args, { stdio: ["ignore", "pipe", "pipe"] })
+		let stdout = ""
+		let stderr = ""
+		const timer = setTimeout(() => {
+			child.kill("SIGKILL")
+			reject(new Error(`${program} timed out after ${timeoutMs} ms`))
+		}, timeoutMs)
+
+		child.stdout.on("data", (chunk) => {
+			stdout += String(chunk)
+		})
+		child.stderr.on("data", (chunk) => {
+			stderr += String(chunk)
+		})
+
+		child.on("error", (error) => {
+			clearTimeout(timer)
+			reject(error)
+		})
+
+		child.on("close", (code) => {
+			clearTimeout(timer)
+			if (code === 0) {
+				resolve(stdout)
+				return
+			}
+			reject(new Error(`${program} exited with code ${code}: ${stderr || stdout}`))
+		})
+	})
 }
