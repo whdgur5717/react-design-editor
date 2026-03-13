@@ -10,6 +10,7 @@ import { buildPrompt } from "./prompt/build"
 import { redactSecrets } from "./logging/redact"
 import { resolveCommentTarget, renderCommentBody, publishOrUpdateComment } from "./github/comments"
 import { writeStepSummary } from "./report/summary"
+import { createBranchCommitAndPush } from "./git/branch"
 import { Octokit } from "@octokit/rest"
 
 function resolveMode(configMode: "auto" | "mention" | "prompt"): ResolvedMode {
@@ -150,6 +151,26 @@ async function run() {
 			`Execution timed out after ${config.timeoutMinutes} minutes`,
 		)
 		const durationMs = Date.now() - startedAt
+		let branchName = ""
+		let compareUrl = ""
+
+		if (policy.allowedBehavior === "branch-commit-push" && policy.allowWrite) {
+			const branchResult = await createBranchCommitAndPush({
+				repository: process.env.GITHUB_REPOSITORY || "",
+				runId: process.env.GITHUB_RUN_ID,
+				provider,
+			})
+			if (branchResult.changed) {
+				branchName = branchResult.branchName || ""
+				compareUrl = branchResult.compareUrl || ""
+				core.info(`[agent] pushed branch=${branchName}`)
+				if (compareUrl) {
+					core.info(`[agent] compare_url=${compareUrl}`)
+				}
+			} else {
+				core.info("[agent] branch-commit-push requested but no file changes detected")
+			}
+		}
 
 		core.setOutput("provider", provider)
 		core.setOutput("mode", mode)
@@ -158,6 +179,8 @@ async function run() {
 		core.setOutput("structured_output", result.structuredOutput || "")
 		core.setOutput("duration_ms", String(durationMs))
 		core.setOutput("comment_id", commentId ? String(commentId) : "")
+		core.setOutput("branch_name", branchName)
+		core.setOutput("compare_url", compareUrl)
 
 		if (config.displayReport) {
 			await writeStepSummary({
@@ -185,10 +208,6 @@ async function run() {
 				}),
 			})
 			core.setOutput("comment_id", String(commentId))
-		}
-
-		if (policy.allowedBehavior === "branch-commit-push" && policy.allowWrite) {
-			core.info("branch-commit-push behavior selected; provider is expected to have made workspace changes")
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error)

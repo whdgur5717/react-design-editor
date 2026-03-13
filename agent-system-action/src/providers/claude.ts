@@ -57,6 +57,9 @@ export const claudeAdapter: ProviderAdapter = {
 			if (messages.length < 2000) {
 				messages.push(message)
 			}
+			if (request.config.showFullOutput) {
+				core.info(`[claude:event] type=${message.type}${message.subtype ? ` subtype=${message.subtype}` : ""}`)
+			}
 
 			if (message.type === "assistant") {
 				const text = String(message.text || "")

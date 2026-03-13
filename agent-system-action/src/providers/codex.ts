@@ -47,6 +47,7 @@ function runCommand(
 	input: string,
 	env: NodeJS.ProcessEnv,
 	timeoutMs: number,
+	showFullOutput = false,
 ): Promise<{ stdout: string; stderr: string }> {
 	return new Promise((resolve, reject) => {
 		const child = spawn(program, args, {
@@ -62,10 +63,18 @@ function runCommand(
 		}, timeoutMs)
 
 		child.stdout.on("data", (chunk) => {
-			stdout += String(chunk)
+			const text = String(chunk)
+			stdout += text
+			if (showFullOutput) {
+				process.stdout.write(text)
+			}
 		})
 		child.stderr.on("data", (chunk) => {
-			stderr += String(chunk)
+			const text = String(chunk)
+			stderr += text
+			if (showFullOutput) {
+				process.stderr.write(text)
+			}
 		})
 
 		child.stdin.write(input)
@@ -103,7 +112,14 @@ export const codexAdapter: ProviderAdapter = {
 
 		const installEnv = pickSafeEnv(process.env)
 		core.info(`[codex] installing @openai/codex@${installVersion}`)
-		await runCommand("npm", ["install", "-g", `@openai/codex@${installVersion}`], "", installEnv, timeoutMs)
+		await runCommand(
+			"npm",
+			["install", "-g", `@openai/codex@${installVersion}`],
+			"",
+			installEnv,
+			timeoutMs,
+			request.config.showFullOutput,
+		)
 
 		const args = [
 			"exec",
@@ -171,7 +187,7 @@ export const codexAdapter: ProviderAdapter = {
 		core.info(`[codex] command=codex ${args.join(" ")}`)
 
 		try {
-			const commandOutput = await runCommand("codex", args, request.prompt, env, timeoutMs)
+			const commandOutput = await runCommand("codex", args, request.prompt, env, timeoutMs, request.config.showFullOutput)
 
 			const finalMessage = await readFile(outputFile, "utf8")
 			const structuredOutput = tryParseStructuredOutput(finalMessage, Boolean(request.config.outputSchema))

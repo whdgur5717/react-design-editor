@@ -154,6 +154,12 @@ outputs:
  comment_id:
   description: "Comment id"
   value: ${{ steps.run.outputs.comment_id }}
+ branch_name:
+  description: "Pushed branch name when branch-commit-push runs"
+  value: ${{ steps.run.outputs.branch_name }}
+ compare_url:
+  description: "Compare URL for pushed branch"
+  value: ${{ steps.run.outputs.compare_url }}
 
 runs:
  using: "composite"
