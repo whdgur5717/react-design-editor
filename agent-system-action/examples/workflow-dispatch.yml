@@ -1,0 +1,23 @@
+name: Agent prompt mode
+
+on:
+ workflow_dispatch:
+  inputs:
+   prompt:
+    description: Prompt for the agent
+    required: true
+    type: string
+
+jobs:
+ agent:
+  runs-on: ubuntu-latest
+  permissions:
+   contents: read
+  steps:
+   - uses: actions/checkout@v5
+   - uses: ./agent-system-action
+     with:
+      mode: prompt
+      provider: claude
+      prompt: ${{ inputs.prompt }}
+      anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

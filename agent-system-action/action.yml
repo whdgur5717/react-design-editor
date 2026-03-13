@@ -1,0 +1,192 @@
+name: "Agent System Action"
+description: "Provider-agnostic GitHub agent action (Codex + Claude)"
+author: "Local"
+
+inputs:
+ mode:
+  description: "Execution mode: auto | mention | prompt"
+  required: false
+  default: "auto"
+ provider:
+  description: "Provider: auto | codex | claude"
+  required: false
+  default: "codex"
+ prompt:
+  description: "Inline prompt"
+  required: false
+  default: ""
+ prompt-file:
+  description: "Prompt file path"
+  required: false
+  default: ""
+ prompt-template:
+  description: "Inline prompt template"
+  required: false
+  default: ""
+ prompt-template-file:
+  description: "Prompt template file path"
+  required: false
+  default: ""
+ append-system-prompt:
+  description: "Prepended system instructions"
+  required: false
+  default: ""
+ custom-instructions:
+  description: "Extra instructions before user request"
+  required: false
+  default: ""
+ trigger-phrase:
+  description: "Mention trigger phrase"
+  required: false
+  default: "@agent"
+ require-trigger:
+  description: "Require trigger phrase in mention mode"
+  required: false
+  default: "true"
+ behavior:
+  description: "Behavior: comment | patch-suggestion | branch-commit-push"
+  required: false
+  default: "comment"
+ github-token:
+  description: "GitHub token"
+  required: false
+  default: ""
+ github-comment-mode:
+  description: "Comment target: off | issue | pr"
+  required: false
+  default: "off"
+ use-sticky-comment:
+  description: "Reuse sticky comment"
+  required: false
+  default: "true"
+ track-progress:
+  description: "Show progress logs and running comment"
+  required: false
+  default: "true"
+ display-report:
+  description: "Write step summary"
+  required: false
+  default: "true"
+ show-full-output:
+  description: "Print full provider output"
+  required: false
+  default: "false"
+ allow-users:
+  description: "Comma-separated actor allowlist or *"
+  required: false
+  default: ""
+ allow-bots:
+  description: "Allow bot actors"
+  required: false
+  default: "false"
+ allowed-non-write-users:
+  description: "Comma-separated non-write allowlist or *"
+  required: false
+  default: ""
+  openai-api-key:
+   description: "OpenAI API key for Codex"
+   required: false
+   default: ""
+  codex-version:
+   description: "@openai/codex version"
+   required: false
+   default: "0.114.0"
+ codex-args:
+  description: "Extra codex exec args"
+  required: false
+  default: ""
+ sandbox:
+  description: "Codex sandbox mode"
+  required: false
+  default: "workspace-write"
+ model:
+  description: "Model override"
+  required: false
+  default: ""
+ effort:
+  description: "Reasoning effort override"
+  required: false
+  default: ""
+ anthropic-api-key:
+  description: "Anthropic API key"
+  required: false
+  default: ""
+ claude-code-oauth-token:
+  description: "Claude Code OAuth token"
+  required: false
+  default: ""
+ timeout-minutes:
+  description: "Timeout minutes"
+  required: false
+  default: "20"
+ output-schema:
+  description: "JSON schema for structured output"
+  required: false
+  default: ""
+
+outputs:
+ final_message:
+  description: "Final provider response"
+  value: ${{ steps.run.outputs.final_message }}
+ execution_file:
+  description: "Execution log path"
+  value: ${{ steps.run.outputs.execution_file }}
+ structured_output:
+  description: "Structured output JSON string"
+  value: ${{ steps.run.outputs.structured_output }}
+ duration_ms:
+  description: "Duration in milliseconds"
+  value: ${{ steps.run.outputs.duration_ms }}
+ provider:
+  description: "Resolved provider"
+  value: ${{ steps.run.outputs.provider }}
+ mode:
+  description: "Resolved mode"
+  value: ${{ steps.run.outputs.mode }}
+ comment_id:
+  description: "Comment id"
+  value: ${{ steps.run.outputs.comment_id }}
+
+runs:
+ using: "composite"
+ steps:
+  - name: Ensure Node.js available
+    uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+    with:
+     node-version: "20"
+
+  - name: Run agent system action
+    id: run
+    shell: bash
+    run: node "${{ github.action_path }}/dist/main.js"
+    env:
+     INPUT_MODE: ${{ inputs.mode }}
+     INPUT_PROVIDER: ${{ inputs.provider }}
+     INPUT_PROMPT: ${{ inputs.prompt }}
+     INPUT_PROMPT_FILE: ${{ inputs['prompt-file'] }}
+     INPUT_PROMPT_TEMPLATE: ${{ inputs['prompt-template'] }}
+     INPUT_PROMPT_TEMPLATE_FILE: ${{ inputs['prompt-template-file'] }}
+     INPUT_APPEND_SYSTEM_PROMPT: ${{ inputs['append-system-prompt'] }}
+     INPUT_CUSTOM_INSTRUCTIONS: ${{ inputs['custom-instructions'] }}
+     INPUT_TRIGGER_PHRASE: ${{ inputs['trigger-phrase'] }}
+     INPUT_REQUIRE_TRIGGER: ${{ inputs['require-trigger'] }}
+     INPUT_BEHAVIOR: ${{ inputs.behavior }}
+     INPUT_GITHUB_TOKEN: ${{ inputs['github-token'] }}
+     INPUT_GITHUB_COMMENT_MODE: ${{ inputs['github-comment-mode'] }}
+     INPUT_USE_STICKY_COMMENT: ${{ inputs['use-sticky-comment'] }}
+     INPUT_TRACK_PROGRESS: ${{ inputs['track-progress'] }}
+     INPUT_DISPLAY_REPORT: ${{ inputs['display-report'] }}
+     INPUT_SHOW_FULL_OUTPUT: ${{ inputs['show-full-output'] }}
+     INPUT_ALLOW_USERS: ${{ inputs['allow-users'] }}
+     INPUT_ALLOW_BOTS: ${{ inputs['allow-bots'] }}
+     INPUT_ALLOWED_NON_WRITE_USERS: ${{ inputs['allowed-non-write-users'] }}
+     INPUT_OPENAI_API_KEY: ${{ inputs['openai-api-key'] }}
+     INPUT_CODEX_VERSION: ${{ inputs['codex-version'] }}
+     INPUT_CODEX_ARGS: ${{ inputs['codex-args'] }}
+     INPUT_SANDBOX: ${{ inputs.sandbox }}
+     INPUT_MODEL: ${{ inputs.model }}
+     INPUT_EFFORT: ${{ inputs.effort }}
+     INPUT_ANTHROPIC_API_KEY: ${{ inputs['anthropic-api-key'] }}
+     INPUT_CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs['claude-code-oauth-token'] }}
+     INPUT_TIMEOUT_MINUTES: ${{ inputs['timeout-minutes'] }}
+     INPUT_OUTPUT_SCHEMA: ${{ inputs['output-schema'] }}

@@ -1,0 +1,26 @@
+name: Agent mention mode
+
+on:
+ issue_comment:
+  types: [created]
+ pull_request_review_comment:
+  types: [created]
+
+jobs:
+ agent:
+  runs-on: ubuntu-latest
+  permissions:
+   contents: read
+   issues: write
+   pull-requests: write
+  steps:
+   - uses: actions/checkout@v5
+   - uses: ./agent-system-action
+     with:
+      mode: mention
+      provider: codex
+      trigger-phrase: "@agent"
+      github-token: ${{ github.token }}
+      github-comment-mode: issue
+      prompt: "Please answer based on repository context."
+      openai-api-key: ${{ secrets.OPENAI_API_KEY }}

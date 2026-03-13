@@ -1,0 +1,45 @@
+name: Verify Agent System Action
+
+on:
+ pull_request:
+ push:
+  branches: [main]
+
+jobs:
+ verify:
+  runs-on: ubuntu-latest
+  steps:
+   - name: Checkout repository
+     uses: actions/checkout@v5
+
+   - name: Setup pnpm
+     uses: pnpm/action-setup@v4
+     with:
+      run_install: false
+
+   - name: Setup Node.js
+     uses: actions/setup-node@v5
+     with:
+      node-version: 22
+      cache: "pnpm"
+
+   - name: Install dependencies
+     run: pnpm -C agent-system-action install --frozen-lockfile
+
+   - name: Typecheck
+     run: pnpm -C agent-system-action check
+
+   - name: Build
+     run: pnpm -C agent-system-action build
+
+   - name: Test
+     run: pnpm -C agent-system-action test
+
+   - name: Ensure dist is up-to-date
+     run: |
+      status_output="$(git status --short -- agent-system-action/dist)"
+      if [[ -n "$status_output" ]]; then
+        echo '::error::dist is stale. Rebuild and commit agent-system-action/dist.'
+        echo "$status_output"
+        exit 1
+      fi

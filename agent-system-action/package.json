@@ -1,0 +1,26 @@
+{
+	"name": "agent-system-action",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "esbuild src/main.ts --sourcemap=inline --format=cjs --bundle --platform=node --target=node20 --outfile=dist/main.js",
+		"check": "tsc --noEmit",
+		"test": "node --import tsx --test test/**/*.test.ts",
+		"local:run": "node scripts/local-run.mjs"
+	},
+	"dependencies": {
+		"@actions/core": "^1.11.1",
+		"@actions/github": "^6.0.0",
+		"@anthropic-ai/claude-agent-sdk": "^0.2.74",
+		"@octokit/rest": "^21.1.1",
+		"string-argv": "0.3.2"
+	},
+	"devDependencies": {
+		"@types/node": "^20.12.7",
+		"esbuild": "^0.23.0",
+		"tsx": "^4.20.5",
+		"typescript": "^5.4.5"
+	},
+	"packageManager": "pnpm@10.28.0"
+}
