@@ -2,6 +2,9 @@ name: tmp-agent-system-action-e2e
 
 on:
  workflow_dispatch:
+ push:
+  branches:
+   - feat/agent-system-action-wt-20260313
 
 jobs:
  e2e:
