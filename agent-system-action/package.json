@@ -2,7 +2,6 @@
 	"name": "agent-system-action",
 	"version": "0.0.0",
 	"private": true,
-	"type": "module",
 	"scripts": {
 		"build": "esbuild src/main.ts --sourcemap=inline --format=cjs --bundle --platform=node --target=node20 --outfile=dist/main.js",
 		"check": "tsc --noEmit",
