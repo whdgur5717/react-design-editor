@@ -155,6 +155,16 @@ runs:
     with:
      node-version: "20"
 
+  - name: Install action dependencies
+    shell: bash
+    run: npm ci
+    working-directory: ${{ github.action_path }}
+
+  - name: Build action bundle
+    shell: bash
+    run: npm run build
+    working-directory: ${{ github.action_path }}
+
   - name: Run agent system action
     id: run
     shell: bash
