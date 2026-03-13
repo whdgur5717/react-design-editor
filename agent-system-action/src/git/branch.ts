@@ -23,6 +23,8 @@ export async function createBranchCommitAndPush(input: {
 	const branchName = `agent/${safeProvider}-${stamp}`
 
 	await runGit(["checkout", "-b", branchName])
+	await runGit(["config", "user.name", "agent-system-action"])
+	await runGit(["config", "user.email", "agent-system-action@users.noreply.github.com"])
 	await runGit(["add", "-A"])
 
 	const shortRun = (input.runId || "manual").slice(0, 16)
