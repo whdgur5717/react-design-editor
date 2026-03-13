@@ -8,36 +8,36 @@ on:
 
 jobs:
  e2e:
- runs-on: ubuntu-latest
- permissions:
-  contents: read
-  issues: write
-  pull-requests: write
- steps:
-  - name: Checkout
-    uses: actions/checkout@v5
+  runs-on: ubuntu-latest
+  permissions:
+   contents: read
+   issues: write
+   pull-requests: write
+  steps:
+   - name: Checkout
+     uses: actions/checkout@v5
 
-  - name: Run local action (Claude)
-    id: agent
-    uses: ./agent-system-action
-    with:
-     mode: prompt
-     provider: claude
-     prompt: "Reply with exactly: E2E_OK"
-     claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-     github-comment-mode: off
-     display-report: true
-     track-progress: false
+   - name: Run local action (Claude)
+     id: agent
+     uses: ./agent-system-action
+     with:
+      mode: prompt
+      provider: claude
+      prompt: "Reply with exactly: E2E_OK"
+      claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      github-comment-mode: off
+      display-report: true
+      track-progress: false
 
-  - name: Assert final output
-    shell: bash
-    run: |
-     final="${{ steps.agent.outputs.final_message }}"
-     echo "final_message=$final"
-         if [[ "$final" != *"E2E_OK"* ]]; then
-           echo "Expected output to contain E2E_OK"
-           exit 1
-         fi
+   - name: Assert final output
+     shell: bash
+     run: |
+      final="${{ steps.agent.outputs.final_message }}"
+      echo "final_message=$final"
+      if [[ "$final" != *"E2E_OK"* ]]; then
+        echo "Expected output to contain E2E_OK"
+        exit 1
+      fi
 
  official_control:
   runs-on: ubuntu-latest
