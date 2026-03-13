@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"build": "esbuild src/main.ts --sourcemap=inline --format=cjs --bundle --platform=node --target=node20 --outfile=dist/main.js",
+		"build": "esbuild src/main.ts --sourcemap=inline --format=cjs --bundle --platform=node --target=node24 --outfile=dist/main.js",
 		"check": "tsc --noEmit",
 		"test": "node --import tsx --test test/**/*.test.ts",
 		"local:run": "node scripts/local-run.mjs"

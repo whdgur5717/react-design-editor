@@ -2,6 +2,11 @@ name: tmp-agent-system-action-e2e
 
 on:
  workflow_dispatch:
+  inputs:
+   prompt:
+    description: "Prompt for Codex behavioral test"
+    required: false
+    default: "먼저 네가 사용 가능한 Skill/능력을 설명하고, 그 다음 이 저장소 변경사항을 코드리뷰해줘. 리뷰는 문제점/개선점/우선순위로 정리해줘."
 
 jobs:
  codex_subscription_e2e:
@@ -18,7 +23,7 @@ jobs:
      with:
       mode: prompt
       provider: codex
-      prompt: "Reply with exactly: E2E_OK"
+      prompt: ${{ inputs.prompt }}
       codex-auth-json-b64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
       github-comment-mode: off
       display-report: true
@@ -33,10 +38,6 @@ jobs:
       echo "execution_file=$exec_file"
       if [[ -z "$final" ]]; then
         echo "final_message is empty"
-        exit 1
-      fi
-      if [[ "$final" != *"E2E_OK"* ]]; then
-        echo "Expected output to contain E2E_OK"
         exit 1
       fi
       if [[ -z "$exec_file" ]]; then

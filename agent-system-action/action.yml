@@ -157,7 +157,7 @@ runs:
   - name: Ensure Node.js available
     uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
     with:
-     node-version: "20"
+     node-version: "24"
 
   - name: Install action dependencies
     shell: bash
