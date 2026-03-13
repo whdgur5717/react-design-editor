@@ -173,6 +173,9 @@ async function run() {
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error)
+		if (error instanceof Error) {
+			core.error(`stack: ${error.stack || "(no stack)"}`)
+		}
 		const redactedMessage = redactSecrets(message, [
 			config.openaiApiKey,
 			config.anthropicApiKey,
