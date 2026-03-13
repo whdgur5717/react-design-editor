@@ -25,6 +25,7 @@ const baseConfig: NormalizedConfig = {
 	allowUsers: "",
 	allowBots: false,
 	allowedNonWriteUsers: "",
+	skillDirectories: [],
 	openaiApiKey: "",
 	codexAuthJsonB64: "",
 	codexVersion: "latest",

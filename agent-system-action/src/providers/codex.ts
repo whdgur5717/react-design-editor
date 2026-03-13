@@ -1,4 +1,4 @@
-import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { chmod, cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { spawn } from "node:child_process"
@@ -94,7 +94,7 @@ export const codexAdapter: ProviderAdapter = {
 		const outputFile = path.join(tempDir, "last-message.md")
 		const executionFile = path.join(tempDir, "execution.json")
 		const timeoutMs = request.config.timeoutMinutes * 60 * 1000
-		let codexHomeForAuth = ""
+		let runtimeCodexHome = ""
 
 		const installVersion = request.config.codexVersion || "0.114.0"
 		if (installVersion === "latest") {
@@ -138,10 +138,23 @@ export const codexAdapter: ProviderAdapter = {
 		)
 
 		const env = pickSafeEnv(process.env)
+		const resolvedSkillDirs = request.config.skillDirectories.map((dir) => resolveAgainstWorkspace(dir))
+		if (resolvedSkillDirs.length > 0) {
+			if (!runtimeCodexHome) {
+				runtimeCodexHome = await mkdtemp(path.join(os.tmpdir(), "agent-system-codex-home-"))
+			}
+			await exposeSkillDirectories(resolvedSkillDirs, runtimeCodexHome)
+			env.CODEX_HOME = runtimeCodexHome
+			core.info(`[codex] skills mounted count=${resolvedSkillDirs.length} dirs=${resolvedSkillDirs.join(",")}`)
+		}
+
 		if (request.config.codexAuthJsonB64) {
 			core.info("[codex] auth mode=subscription (codex-auth-json-b64)")
-			codexHomeForAuth = await writeSubscriptionAuthHome(request.config.codexAuthJsonB64)
-			env.CODEX_HOME = codexHomeForAuth
+			if (!runtimeCodexHome) {
+				runtimeCodexHome = await mkdtemp(path.join(os.tmpdir(), "agent-system-codex-home-"))
+			}
+			await writeSubscriptionAuth(runtimeCodexHome, request.config.codexAuthJsonB64)
+			env.CODEX_HOME = runtimeCodexHome
 		} else if (request.config.openaiApiKey) {
 			core.info("[codex] auth mode=api-key (openai-api-key)")
 			env.OPENAI_API_KEY = request.config.openaiApiKey
@@ -175,14 +188,14 @@ export const codexAdapter: ProviderAdapter = {
 				structuredOutput,
 			}
 		} finally {
-			if (codexHomeForAuth) {
-				await rm(codexHomeForAuth, { recursive: true, force: true })
+			if (runtimeCodexHome) {
+				await rm(runtimeCodexHome, { recursive: true, force: true })
 			}
 		}
 	},
 }
 
-async function writeSubscriptionAuthHome(authJsonB64: string): Promise<string> {
+async function writeSubscriptionAuth(codexHome: string, authJsonB64: string): Promise<void> {
 	let authJson = ""
 	try {
 		authJson = Buffer.from(authJsonB64, "base64").toString("utf8")
@@ -191,11 +204,33 @@ async function writeSubscriptionAuthHome(authJsonB64: string): Promise<string> {
 		throw new Error("codex-auth-json-b64 must be valid base64 JSON")
 	}
 
-	const codexHome = await mkdtemp(path.join(os.tmpdir(), "agent-system-codex-home-"))
+	await mkdir(codexHome, { recursive: true })
 	const authFile = path.join(codexHome, "auth.json")
 	await writeFile(authFile, authJson, "utf8")
 	await chmod(authFile, 0o600)
-	return codexHome
+}
+
+async function exposeSkillDirectories(skillDirectories: string[], codexHome: string): Promise<void> {
+	const skillHome = path.join(codexHome, "skills")
+	await mkdir(skillHome, { recursive: true })
+
+	for (const [index, directory] of skillDirectories.entries()) {
+		const base = path.basename(directory) || `skill-${index + 1}`
+		const target = path.join(skillHome, `${index + 1}-${base}`)
+		try {
+			await symlink(directory, target, "dir")
+		} catch {
+			await cp(directory, target, { recursive: true })
+		}
+	}
+}
+
+function resolveAgainstWorkspace(inputPath: string): string {
+	if (path.isAbsolute(inputPath)) {
+		return inputPath
+	}
+	const base = process.env.GITHUB_WORKSPACE || process.cwd()
+	return path.resolve(base, inputPath)
 }
 
 function tryParseStructuredOutput(finalMessage: string, required: boolean): string | undefined {

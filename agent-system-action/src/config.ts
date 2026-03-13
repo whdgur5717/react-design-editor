@@ -16,6 +16,17 @@ function getBooleanInput(name: string, defaultValue = false): boolean {
 	return !["0", "false", "no", "off"].includes(raw.trim().toLowerCase())
 }
 
+function getMultilineInput(name: string): string[] {
+	const raw = core.getInput(name)
+	if (!raw) {
+		return []
+	}
+	return raw
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+}
+
 function getNumberInput(name: string, defaultValue: number): number {
 	const raw = core.getInput(name)
 	if (!raw) {
@@ -148,6 +159,7 @@ export function loadConfig(): NormalizedConfig {
 		allowUsers: getOptionalInput("allow_users"),
 		allowBots: getBooleanInput("allow_bots", false),
 		allowedNonWriteUsers: getOptionalInput("allowed_non_write_users"),
+		skillDirectories: getMultilineInput("skill_directories"),
 		openaiApiKey,
 		codexAuthJsonB64,
 		codexVersion: getOptionalInput("codex_version") || "0.114.0",

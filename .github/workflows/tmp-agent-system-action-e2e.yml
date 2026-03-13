@@ -24,6 +24,7 @@ jobs:
       mode: prompt
       provider: codex
       prompt: ${{ inputs.prompt }}
+      skill-directories: .agents/skills
       codex-auth-json-b64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
       github-comment-mode: off
       display-report: true

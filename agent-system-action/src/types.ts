@@ -25,6 +25,7 @@ export type NormalizedConfig = {
 	allowUsers: string
 	allowBots: boolean
 	allowedNonWriteUsers: string
+	skillDirectories: string[]
 	openaiApiKey: string
 	codexAuthJsonB64: string
 	codexVersion: string
