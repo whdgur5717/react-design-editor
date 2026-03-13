@@ -32,3 +32,12 @@ test("loads default values", () => {
 	assert.equal(config.behavior, "comment")
 	assert.equal(config.timeoutMinutes, 20)
 })
+
+test("fails when both openai key and codex auth are set", () => {
+	clearInputs()
+	setInput("prompt", "hello")
+	setInput("openai_api_key", "sk-test")
+	setInput("codex_auth_json_b64", "e30=")
+
+	assert.throws(() => loadConfig(), /Only one of openai-api-key or codex-auth-json-b64/)
+})

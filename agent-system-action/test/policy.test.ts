@@ -26,6 +26,7 @@ const baseConfig: NormalizedConfig = {
 	allowBots: false,
 	allowedNonWriteUsers: "",
 	openaiApiKey: "",
+	codexAuthJsonB64: "",
 	codexVersion: "latest",
 	codexArgs: "",
 	sandbox: "workspace-write",

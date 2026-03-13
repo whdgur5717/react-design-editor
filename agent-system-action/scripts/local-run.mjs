@@ -11,6 +11,7 @@ function parseArgs(argv) {
 		mode: "prompt",
 		timeoutMinutes: "20",
 		sandbox: "workspace-write",
+		codexAuthJsonB64: "",
 	}
 
 	for (let i = 2; i < argv.length; i += 1) {
@@ -37,6 +38,11 @@ function parseArgs(argv) {
 		}
 		if (arg === "--sandbox") {
 			args.sandbox = argv[i + 1] || args.sandbox
+			i += 1
+			continue
+		}
+		if (arg === "--codex-auth-json-b64") {
+			args.codexAuthJsonB64 = argv[i + 1] || ""
 			i += 1
 			continue
 		}
@@ -79,8 +85,12 @@ function run() {
 
 	if (args.provider === "codex") {
 		env.INPUT_OPENAI_API_KEY = env.INPUT_OPENAI_API_KEY || process.env.OPENAI_API_KEY || ""
-		if (!env.INPUT_OPENAI_API_KEY) {
-			throw new Error("Codex run requires OPENAI_API_KEY or INPUT_OPENAI_API_KEY")
+		env.INPUT_CODEX_AUTH_JSON_B64 =
+			args.codexAuthJsonB64 || env.INPUT_CODEX_AUTH_JSON_B64 || process.env.CODEX_AUTH_JSON_B64 || ""
+		if (!env.INPUT_OPENAI_API_KEY && !env.INPUT_CODEX_AUTH_JSON_B64) {
+			throw new Error(
+				"Codex run requires OPENAI_API_KEY/INPUT_OPENAI_API_KEY or CODEX_AUTH_JSON_B64/INPUT_CODEX_AUTH_JSON_B64",
+			)
 		}
 	}
 

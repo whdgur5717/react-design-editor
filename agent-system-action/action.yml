@@ -83,14 +83,18 @@ inputs:
   description: "Comma-separated non-write allowlist or *"
   required: false
   default: ""
-  openai-api-key:
-   description: "OpenAI API key for Codex"
-   required: false
-   default: ""
-  codex-version:
-   description: "@openai/codex version"
-   required: false
-   default: "0.114.0"
+ openai-api-key:
+  description: "OpenAI API key for Codex"
+  required: false
+  default: ""
+ codex-auth-json-b64:
+  description: "Base64-encoded Codex auth.json for subscription-style authentication"
+  required: false
+  default: ""
+ codex-version:
+  description: "@openai/codex version"
+  required: false
+  default: "0.114.0"
  codex-args:
   description: "Extra codex exec args"
   required: false
@@ -191,6 +195,7 @@ runs:
      INPUT_ALLOW_BOTS: ${{ inputs['allow-bots'] }}
      INPUT_ALLOWED_NON_WRITE_USERS: ${{ inputs['allowed-non-write-users'] }}
      INPUT_OPENAI_API_KEY: ${{ inputs['openai-api-key'] }}
+     INPUT_CODEX_AUTH_JSON_B64: ${{ inputs['codex-auth-json-b64'] }}
      INPUT_CODEX_VERSION: ${{ inputs['codex-version'] }}
      INPUT_CODEX_ARGS: ${{ inputs['codex-args'] }}
      INPUT_SANDBOX: ${{ inputs.sandbox }}

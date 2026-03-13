@@ -26,6 +26,7 @@ export type NormalizedConfig = {
 	allowBots: boolean
 	allowedNonWriteUsers: string
 	openaiApiKey: string
+	codexAuthJsonB64: string
 	codexVersion: string
 	codexArgs: string
 	sandbox: "read-only" | "workspace-write" | "danger-full-access"

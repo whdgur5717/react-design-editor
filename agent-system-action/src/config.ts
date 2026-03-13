@@ -121,6 +121,12 @@ export function loadConfig(): NormalizedConfig {
 		throw new Error("Only one of anthropic-api-key or claude-code-oauth-token may be set")
 	}
 
+	const openaiApiKey = getOptionalInput("openai_api_key")
+	const codexAuthJsonB64 = getOptionalInput("codex_auth_json_b64")
+	if (openaiApiKey && codexAuthJsonB64) {
+		throw new Error("Only one of openai-api-key or codex-auth-json-b64 may be set")
+	}
+
 	return {
 		mode: parseMode(getOptionalInput("mode") || "auto"),
 		provider: parseProvider(getOptionalInput("provider") || "codex"),
@@ -142,7 +148,8 @@ export function loadConfig(): NormalizedConfig {
 		allowUsers: getOptionalInput("allow_users"),
 		allowBots: getBooleanInput("allow_bots", false),
 		allowedNonWriteUsers: getOptionalInput("allowed_non_write_users"),
-		openaiApiKey: getOptionalInput("openai_api_key"),
+		openaiApiKey,
+		codexAuthJsonB64,
 		codexVersion: getOptionalInput("codex_version") || "0.114.0",
 		codexArgs: getOptionalInput("codex_args"),
 		sandbox: parseSandbox(getOptionalInput("sandbox") || "workspace-write"),

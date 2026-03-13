@@ -2,29 +2,24 @@ name: tmp-agent-system-action-e2e
 
 on:
  workflow_dispatch:
- push:
-  branches:
-   - feat/agent-system-action-wt-20260313
 
 jobs:
- e2e:
+ codex_subscription_e2e:
   runs-on: ubuntu-latest
   permissions:
    contents: read
-   issues: write
-   pull-requests: write
   steps:
    - name: Checkout
      uses: actions/checkout@v5
 
-   - name: Run local action (Claude)
+   - name: Run local action (Codex subscription)
      id: agent
      uses: ./agent-system-action
      with:
       mode: prompt
-      provider: claude
+      provider: codex
       prompt: "Reply with exactly: E2E_OK"
-      claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      codex-auth-json-b64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
       github-comment-mode: off
       display-report: true
       track-progress: false
@@ -33,24 +28,18 @@ jobs:
      shell: bash
      run: |
       final="${{ steps.agent.outputs.final_message }}"
+      exec_file="${{ steps.agent.outputs.execution_file }}"
       echo "final_message=$final"
+      echo "execution_file=$exec_file"
+      if [[ -z "$final" ]]; then
+        echo "final_message is empty"
+        exit 1
+      fi
       if [[ "$final" != *"E2E_OK"* ]]; then
         echo "Expected output to contain E2E_OK"
         exit 1
       fi
-
- official_control:
-  runs-on: ubuntu-latest
-  permissions:
-   contents: read
-   id-token: write
-  steps:
-   - name: Checkout
-     uses: actions/checkout@v5
-
-   - name: Run official Claude action control test
-     id: control
-     uses: anthropics/claude-code-action@v1
-     with:
-      claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-      prompt: "Reply with exactly: E2E_OK"
+      if [[ -z "$exec_file" ]]; then
+        echo "execution_file output is empty"
+        exit 1
+      fi

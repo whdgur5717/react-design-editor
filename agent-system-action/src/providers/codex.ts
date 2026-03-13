@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from "node:fs/promises"
+import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { spawn } from "node:child_process"
@@ -93,6 +93,7 @@ export const codexAdapter: ProviderAdapter = {
 		const outputFile = path.join(tempDir, "last-message.md")
 		const executionFile = path.join(tempDir, "execution.json")
 		const timeoutMs = request.config.timeoutMinutes * 60 * 1000
+		let codexHomeForAuth = ""
 
 		const installVersion = request.config.codexVersion || "0.114.0"
 		if (installVersion === "latest") {
@@ -132,31 +133,58 @@ export const codexAdapter: ProviderAdapter = {
 		args.push(...extraArgs)
 
 		const env = pickSafeEnv(process.env)
-		if (request.config.openaiApiKey) {
+		if (request.config.codexAuthJsonB64) {
+			codexHomeForAuth = await writeSubscriptionAuthHome(request.config.codexAuthJsonB64)
+			env.CODEX_HOME = codexHomeForAuth
+		} else if (request.config.openaiApiKey) {
 			env.OPENAI_API_KEY = request.config.openaiApiKey
+		} else {
+			throw new Error("Codex requires either openai-api-key or codex-auth-json-b64")
 		}
 
-		const commandOutput = await runCommand("codex", args, request.prompt, env, timeoutMs)
+		try {
+			const commandOutput = await runCommand("codex", args, request.prompt, env, timeoutMs)
 
-		const finalMessage = await readFile(outputFile, "utf8")
-		const structuredOutput = tryParseStructuredOutput(finalMessage, Boolean(request.config.outputSchema))
+			const finalMessage = await readFile(outputFile, "utf8")
+			const structuredOutput = tryParseStructuredOutput(finalMessage, Boolean(request.config.outputSchema))
 
-		const execution = {
-			provider: "codex",
-			mode: request.mode,
-			command: ["codex", ...args],
-			outputFile,
-			stdoutLength: commandOutput.stdout.length,
-			stderrLength: commandOutput.stderr.length,
-		}
-		await writeFile(executionFile, JSON.stringify(execution, null, 2), "utf8")
+			const execution = {
+				provider: "codex",
+				mode: request.mode,
+				command: ["codex", ...args],
+				outputFile,
+				stdoutLength: commandOutput.stdout.length,
+				stderrLength: commandOutput.stderr.length,
+			}
+			await writeFile(executionFile, JSON.stringify(execution, null, 2), "utf8")
 
-		return {
-			finalMessage,
-			executionFile,
-			structuredOutput,
+			return {
+				finalMessage,
+				executionFile,
+				structuredOutput,
+			}
+		} finally {
+			if (codexHomeForAuth) {
+				await rm(codexHomeForAuth, { recursive: true, force: true })
+			}
 		}
 	},
+}
+
+async function writeSubscriptionAuthHome(authJsonB64: string): Promise<string> {
+	let authJson = ""
+	try {
+		authJson = Buffer.from(authJsonB64, "base64").toString("utf8")
+		JSON.parse(authJson)
+	} catch {
+		throw new Error("codex-auth-json-b64 must be valid base64 JSON")
+	}
+
+	const codexHome = await mkdtemp(path.join(os.tmpdir(), "agent-system-codex-home-"))
+	const authFile = path.join(codexHome, "auth.json")
+	await writeFile(authFile, authJson, "utf8")
+	await chmod(authFile, 0o600)
+	return codexHome
 }
 
 function tryParseStructuredOutput(finalMessage: string, required: boolean): string | undefined {

@@ -178,6 +178,7 @@ async function run() {
 		}
 		const redactedMessage = redactSecrets(message, [
 			config.openaiApiKey,
+			config.codexAuthJsonB64,
 			config.anthropicApiKey,
 			config.claudeCodeOauthToken,
 		])
