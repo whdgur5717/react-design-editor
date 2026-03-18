@@ -17,15 +17,70 @@ Template for each plan:
 - **Context**: Add missing style properties so the Phase 1 gate is met.
 - **Scope (IN)**: New style inputs in the properties panel as defined by the PM issue.
 - **Scope (OUT)**: Gradients, full redesign, sliders unless explicitly required.
-- **Risks**: Number input commit strategy, undo grouping, missing `data-testid` selectors.
+- **Risks**:
+  - Number input commit strategy can leak intermediate values if shell state updates before blur or Enter.
+  - Undo/redo can restore only part of a style edit if commit boundaries are wrong.
+  - Some shorthand/composite inner controls may lack deterministic `data-testid` hooks, which blocks reliable E2E automation.
 - **Acceptance Criteria (binary)**:
-  - Style edits persist and reflect on canvas.
-  - Undo and redo restore committed values.
+  - Representative controls from each supported properties-panel control family update the selected node without shell/canvas errors:
+    - number: `width`, `minWidth`, `fontSize`
+    - select: `display`, `position`, `overflow`, `borderStyle`, `textAlign`
+    - shorthand: `padding`, `margin`, `borderRadius`
+    - color: `backgroundColor`, `borderColor`, `color`
+    - slider: `opacity`
+    - composite: `boxShadow`
+    - text: `fontFamily`
+  - Conditional sections render correctly from controlling values:
+    - `display=flex` reveals `Flex Layout`
+    - `position=absolute|fixed|sticky` reveals `Position Offsets`
+    - non-matching values hide those sections again
+  - Typing in numeric style inputs does not commit intermediate values while the field remains focused.
+  - Numeric style inputs commit the final valid value on `blur` and `Enter`.
+  - Invalid or empty numeric drafts revert to the last committed value on `blur`.
+  - `Escape` during numeric editing discards the draft and restores the last committed value.
+  - Undo and redo restore the last committed style value in both the properties panel and the canvas node.
+  - A single typed numeric edit that commits on `blur` or `Enter` is reversible as one undo step.
 - **Verification Commands**:
+  - `pnpm lint`
+  - `pnpm type-check`
   - `pnpm test:unit`
   - `pnpm test:e2e`
 - **E2E Scenarios**:
-  - Edit width and height inputs; verify the canvas node style changes.
-  - Type a partial number then blur; verify commit strategy matches the PM decision.
+  - **Baseline selection / existing values**
+    - Select `root` from the layers panel.
+    - Expect `Design` tab visible and baseline inputs populated from current node state.
+    - Minimum selectors already present in repo truth: `style-width`, `style-height`, `style-backgroundColor`, `position-x`, `position-y`.
+  - **Representative control coverage matrix**
+    - Number: change `width` and `fontSize`, then verify panel values persist after blur and selected canvas node reflects the committed values.
+    - Select: switch `display` to `flex`, `position` to `absolute`, `overflow` to `hidden`, `borderStyle` to `dashed`, `textAlign` to `center`; verify each selection persists and dependent sections toggle as expected.
+    - Shorthand: set per-side `padding` and `margin`, then verify the committed values survive blur and re-selection.
+    - Color: change `backgroundColor`, `borderColor`, and text `color`, then verify the selected node reflects the committed colors.
+    - Slider: change `opacity`, then verify the committed numeric value is reflected on the selected node.
+    - Composite: set `boxShadow` x/y/blur/spread/color and verify the composed shadow persists.
+    - Text: change `fontFamily` and verify persistence after blur and re-selection.
+  - **Conditional rendering**
+    - Set `display=flex`; expect `Flex Layout` controls to appear.
+    - Return `display` to a non-flex value; expect `Flex Layout` controls to disappear.
+    - Set `position=absolute`; expect `Position Offsets` controls to appear.
+    - Return `position` to `static`; expect `Position Offsets` controls to disappear.
+  - **Number input commit strategy**
+    - Focus `style-width`, type a partial draft such as replacing `400` with `45`, and keep focus.
+    - While still focused, verify the committed panel/canvas state remains at the previous value.
+    - Blur the field; expect the final valid number to commit once.
+    - Repeat with `Enter`; expect identical commit behavior.
+    - Clear the field or type a non-numeric draft, then blur; expect reversion to the last committed value.
+    - Type a new draft and press `Escape`; expect the draft to be discarded and the last committed value restored.
+  - **Undo / redo of committed values**
+    - Commit a width change through `blur`; run undo and verify both the input and canvas node return to the pre-edit value.
+    - Run redo and verify both surfaces return to the committed value.
+    - Repeat for one non-number style family (`backgroundColor` or `display`) to ensure history is not width-only.
+  - **Re-selection persistence**
+    - After committing several style changes, deselect and reselect the same node.
+    - Expect all committed values to remain visible in the properties panel and on the canvas node.
+- **Execution Notes**:
+- Prefer Playwright E2E using `e2e/fixtures.ts` and `e2e/pom/EditorPage.ts`.
+- Extend the existing properties-panel coverage in `e2e/tests/editor.spec.ts` and `e2e/tests/node-interaction.spec.ts` rather than creating an isolated QA-only harness.
+- If shorthand/composite child controls do not expose stable selectors yet, add deterministic `data-testid` hooks before treating automation as complete.
+- Capture Playwright report or trace for failures because this change crosses shell UI, canvas rendering, and undo history.
 - **Cross-links**:
   - See PM decision: 2026-03-09: NumberInput UX 전략 -- Figma-style Hybrid (Option D)

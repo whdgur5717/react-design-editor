@@ -18,7 +18,7 @@ P2 = nice to have, not required for Phase 1 gate.
 - Selection: Click, shift-click multi-select
 - Movement: Drag to move root nodes, arrow key nudge, drag-to-reparent
 - Resize: 8-handle resize on selection
-- Styling: Size, display/flex layout, CSS position, overflow, padding (single value), margin (single value), background color, border (width/radius/color/style), typography (size/weight/color/align)
+- Styling: Size (w/h/min/max), display/flex layout, CSS position, overflow, per-side padding, per-side margin, background color, border (width/per-corner radius/color/style), opacity, box-shadow, typography (family/size/weight/line-height/letter-spacing/color/align), flex child (grow/shrink/basis/alignSelf) — Properties Panel (QA 검증 중)
 - Organization: Layer panel with visibility toggle, lock, reorder (drag), pages
 - Code generation: ElementNode JSX, TextNode text extraction, InstanceNode JSX
 - History: Undo/redo
@@ -32,12 +32,29 @@ P2 = nice to have, not required for Phase 1 gate.
 ### 1. Properties Panel: Full Style Coverage
 
 - **WHY**: The properties panel is missing many common CSS properties. Users cannot set per-side spacing, opacity, box-shadow, per-corner border-radius, min/max dimensions, extended typography, or flex child properties. Without these, users cannot construct real-world UI layouts in the editor.
-- **Status**: ready → #94
+- **Status**: ready → #94 (구현 완료, QA 검증 중)
 - **Full spec**: See below (Properties Panel Spec)
+- **P0 완료 기준**: (1) 구현 완료 ✓, (2) QA 테스트 통과 — 진행 중, (3) 코드 생성 반영 확인 — 진행 중
+- **참고**: 라벨 드래그는 미구현이나 P0 판정에서 제외됨 (별도 P1 추적)
 
 ---
 
 ## P1 -- Next priority after P0
+
+### 2.5. NumberInput 라벨 드래그 (Figma-style Scrub)
+
+- **WHY**: NumberInput의 Option D 결정 중 (d) 라벨 드래그가 미구현. 숫자 입력에서 시각적 탐색(정확한 값을 모를 때 드래그로 값을 탐색)이 불가능. 타이핑 + Arrow 키로 값 설정은 가능하므로 capability gap이 아닌 efficiency gap.
+- **User story**: As a user, I want to drag on a number input's label to visually scrub the value, so that I can quickly explore different values without typing.
+- **Success criteria**:
+  - 라벨 위에서 마우스 드래그 시 값이 실시간으로 변경됨
+  - 드래그 시작→끝이 하나의 undo 단위
+  - 드래그 중 커서가 좌우 화살표로 변경
+- **Scope**:
+  - IN: 라벨 드래그 → 실시간 커밋, undo 단위 처리
+  - OUT: 커스텀 드래그 감도 설정
+- **Status**: proposed
+
+---
 
 ### 3. Copy / Paste
 
