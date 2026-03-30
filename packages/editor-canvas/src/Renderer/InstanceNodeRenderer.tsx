@@ -16,7 +16,11 @@ class CodeComponentErrorBoundary extends React.Component<
 	override render() {
 		if (this.state.error) {
 			return (
-				<div data-node-id={this.props.nodeId} style={{ color: "red", padding: 8, fontSize: 12 }}>
+				<div
+					data-node-id={this.props.nodeId}
+					data-node-measure-id={this.props.nodeId}
+					style={{ color: "red", padding: 8, fontSize: 12 }}
+				>
 					Error: {this.state.error}
 				</div>
 			)
@@ -37,7 +41,7 @@ export function renderInstanceContent(instance: InstanceNode, ctx: RenderContext
 
 export function renderInstanceNode(instance: InstanceNode, ctx: RenderContext): React.ReactNode {
 	return (
-		<div key={instance.id} data-node-id={instance.id} style={instance.style}>
+		<div key={instance.id} data-node-id={instance.id} data-node-measure-id={instance.id} style={instance.style}>
 			{renderInstanceContent(instance, ctx)}
 		</div>
 	)

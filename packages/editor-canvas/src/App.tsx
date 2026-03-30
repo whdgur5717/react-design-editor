@@ -1,19 +1,12 @@
 import "./App.css"
 import "@design-editor/components"
 
-import type { EditorTool, NodeRect, PageNode, ShellMethods, SyncStatePayload } from "@design-editor/core"
+import type { EditorTool, PageNode, ShellMethods, SyncStatePayload } from "@design-editor/core"
 import { type AsyncMethodReturns, connectToParent } from "penpal"
-import { type ComponentType, useCallback, useEffect, useRef, useState } from "react"
+import { type ComponentType, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 
+import { collectNodeRects, getNodeRect, getTargetNodeId } from "./dom/nodeMeasurement"
 import { CanvasRenderer } from "./Renderer/CanvasRenderer"
-
-function getTargetNodeId(el: Element | null): string | null {
-	while (el && el !== document.body) {
-		if (el instanceof HTMLElement && el.dataset.nodeId) return el.dataset.nodeId
-		el = el.parentElement
-	}
-	return null
-}
 
 export function App() {
 	const [currentPage, setCurrentPage] = useState<PageNode | null>(null)
@@ -24,6 +17,11 @@ export function App() {
 	const [codeComponentMap, setCodeComponentMap] = useState<Record<string, ComponentType<Record<string, unknown>>>>({})
 	const loadedSourcesRef = useRef<Record<string, string>>({})
 	const parentMethodsRef = useRef<AsyncMethodReturns<ShellMethods> | null>(null)
+
+	const publishNodeRects = useCallback(() => {
+		parentMethodsRef.current?.onNodeRectsUpdated(collectNodeRects())
+	}, [])
+
 	const loadCodeComponents = useCallback(async (sources: Record<string, string>) => {
 		const newMap: Record<string, ComponentType<Record<string, unknown>>> = {}
 		let changed = false
@@ -67,18 +65,6 @@ export function App() {
 	}, [])
 
 	useEffect(() => {
-		function collectNodeRects(): Record<string, NodeRect> {
-			const rects: Record<string, NodeRect> = {}
-			const elements = document.querySelectorAll("[data-node-id]")
-			for (const el of elements) {
-				const nodeId = (el as HTMLElement).dataset.nodeId
-				if (!nodeId) continue
-				const rect = el.getBoundingClientRect()
-				rects[nodeId] = { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
-			}
-			return rects
-		}
-
 		const connection = connectToParent<ShellMethods>({
 			methods: {
 				syncState(state: SyncStatePayload) {
@@ -92,11 +78,6 @@ export function App() {
 					if (state.codeComponentSources && Object.keys(state.codeComponentSources).length > 0) {
 						loadCodeComponents(state.codeComponentSources)
 					}
-
-					requestAnimationFrame(() => {
-						const rects = collectNodeRects()
-						parentMethodsRef.current?.onNodeRectsUpdated(rects)
-					})
 				},
 
 				hitTest(x: number, y: number): string | null {
@@ -105,10 +86,7 @@ export function App() {
 				},
 
 				getNodeRect(nodeId: string) {
-					const el = document.querySelector(`[data-node-id="${nodeId}"]`)
-					if (!el) return null
-					const rect = el.getBoundingClientRect()
-					return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+					return getNodeRect(nodeId)
 				},
 
 				getNodeRects() {
@@ -124,7 +102,17 @@ export function App() {
 		return () => {
 			connection.destroy()
 		}
-	}, [])
+	}, [loadCodeComponents])
+
+	useLayoutEffect(() => {
+		if (!currentPage) return
+
+		const frameId = requestAnimationFrame(() => {
+			publishNodeRects()
+		})
+
+		return () => cancelAnimationFrame(frameId)
+	}, [currentPage, zoom, panX, panY, codeComponentMap, publishNodeRects])
 
 	const handleTextChange = useCallback((nodeId: string, content: unknown) => {
 		parentMethodsRef.current?.onTextChange(nodeId, content)
@@ -144,11 +132,12 @@ export function App() {
 				left: 0,
 				width: 0,
 				height: 0,
+				transformOrigin: "0 0",
+				transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
 				willChange: "transform",
 				isolation: "isolate",
 			}}
 		>
-			<style>{`#canvas-container { transform-origin: 0 0; transform: translate(${panX}px, ${panY}px) scale(${zoom}); }`}</style>
 			<CanvasRenderer page={currentPage} codeComponents={codeComponentMap} onTextChange={handleTextChange} />
 		</div>
 	)

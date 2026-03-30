@@ -1,10 +1,14 @@
-import type { EditorTool, NodeRect, PageNode, SceneNode } from "@design-editor/core"
+import type { CanvasMethods, EditorTool, NodeRect, PageNode, SceneNode, Size } from "@design-editor/core"
+import type { AsyncMethodReturns } from "penpal"
 import { type AnyActor, createActor } from "xstate"
+import { shallow } from "zustand/shallow"
 
 import { ActionRegistry } from "../commands/ActionRegistry"
 import { CommandHistory } from "../commands/CommandHistory"
 import { EditorReceiverImpl } from "../commands/EditorReceiverImpl"
+import { ResizeNodeCommand } from "../commands/node/ResizeNodeCommand"
 import type { Command, NodeLocation } from "../commands/types"
+import { hitTestNodeIdInPage } from "../document/hitTest"
 import { createPointerMachine } from "../interaction"
 import { KeybindingRegistry } from "../keybindings"
 import { createEditorStore, type EditorStoreApi } from "../store/editor"
@@ -151,8 +155,29 @@ export class Editor {
 
 	// ── Canvas 동기화 ──
 
+	attachCanvas(ref: AsyncMethodReturns<CanvasMethods>) {
+		this.canvas.setCanvas(ref)
+		this.syncToCanvas()
+	}
+
+	detachCanvas() {
+		this.canvas.setCanvas(null)
+	}
+
+	subscribeCanvasSync() {
+		return this.store.subscribe(
+			(s) => [s.document, s.currentPageId, s.codeComponents, s.zoom, s.panX, s.panY, s.selection, s.activeTool],
+			() => this.syncToCanvas(),
+			{ equalityFn: shallow },
+		)
+	}
+
 	applyTextChangeFromCanvas(nodeId: string, content: unknown) {
 		this.applyCanvasTextChange.run(nodeId, content)
+	}
+
+	setNodeRectsCache(rects: Record<string, NodeRect>) {
+		this.store.getState().setNodeRectsCache(rects)
 	}
 
 	createCodeComponent(name: string, source: string) {
@@ -253,6 +278,13 @@ export class Editor {
 		return this.store.getState().nodeRectsCache[nodeId] ?? null
 	}
 
+	hitTestNodeId(clientX: number, clientY: number) {
+		const state = this.store.getState()
+		const page = state.document.children.find((p) => p.id === state.currentPageId)
+		if (!page) return null
+		return hitTestNodeIdInPage(page, state.nodeRectsCache, state.zoom, state.panX, state.panY, clientX, clientY)
+	}
+
 	getHistorySnapshot() {
 		return this.commandHistory.getSnapshot()
 	}
@@ -287,6 +319,10 @@ export class Editor {
 		this.store.getState().setPan(x, y)
 	}
 
+	setZoom(zoom: number) {
+		this.store.getState().setZoom(zoom)
+	}
+
 	// ── Command 실행 ──
 
 	executeCommand(cmd: Command) {
@@ -299,6 +335,10 @@ export class Editor {
 
 	commitTransaction() {
 		this.commandHistory.commitTransaction()
+	}
+
+	resizeNode(nodeId: string, from: Size, to: Size, mergeKey: string) {
+		this.commandHistory.execute(new ResizeNodeCommand(this.receiver, nodeId, from, to, mergeKey))
 	}
 
 	undo() {

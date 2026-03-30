@@ -12,13 +12,13 @@ export function renderElementNode(node: ElementNode, ctx: RenderContext): React.
 	if (!Component) {
 		return React.createElement(
 			node.tag,
-			{ key: node.id, "data-node-id": node.id, style: node.style, ...node.props },
+			{ key: node.id, "data-node-id": node.id, "data-node-measure-id": node.id, style: node.style, ...node.props },
 			children,
 		)
 	}
 
 	return (
-		<Component key={node.id} data-node-id={node.id} style={node.style} {...node.props}>
+		<Component key={node.id} data-node-id={node.id} data-node-measure-id={node.id} style={node.style} {...node.props}>
 			{children}
 		</Component>
 	)
