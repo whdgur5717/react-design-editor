@@ -24,6 +24,7 @@ import { DuplicateSelectionUsecase } from "../usecases/DuplicateSelectionUsecase
 import { NodePropertyUsecase } from "../usecases/NodePropertyUsecase"
 import { SelectAllUsecase } from "../usecases/SelectAllUsecase"
 import { CanvasBridge } from "./CanvasBridge"
+import { ClipboardRuntime } from "./ClipboardRuntime"
 
 export class Editor {
 	readonly store: EditorStoreApi
@@ -34,6 +35,7 @@ export class Editor {
 	readonly keybindingRegistry: KeybindingRegistry
 	readonly canvas: CanvasBridge
 	private pointerActor: AnyActor
+	private clipboardRuntime: ClipboardRuntime
 	private deleteSelection: DeleteSelectionUsecase
 	private duplicateSelection: DuplicateSelectionUsecase
 	private selectAll: SelectAllUsecase
@@ -56,6 +58,7 @@ export class Editor {
 		this.toolRegistry.register("select", new SelectTool(toolService))
 		this.toolRegistry.register("frame", new FrameTool(toolService))
 		this.toolRegistry.register("text", new TextTool(toolService))
+		this.clipboardRuntime = new ClipboardRuntime(this.receiver, this.commandHistory)
 		this.deleteSelection = new DeleteSelectionUsecase(this.receiver, this.commandHistory)
 		this.duplicateSelection = new DuplicateSelectionUsecase(this.receiver, this.commandHistory)
 		this.selectAll = new SelectAllUsecase(this.receiver)
@@ -73,6 +76,10 @@ export class Editor {
 		this.actionRegistry.register("node:delete", () => this.deleteSelection.run())
 
 		this.actionRegistry.register("node:duplicate", () => this.duplicateSelection.run())
+
+		this.actionRegistry.register("clipboard:copy", () => this.clipboardRuntime.copy())
+		this.actionRegistry.register("clipboard:cut", () => this.clipboardRuntime.cut())
+		this.actionRegistry.register("clipboard:paste", () => this.clipboardRuntime.paste())
 
 		this.actionRegistry.register("tool:select", () => this.toolRegistry.setActiveTool("select"))
 		this.actionRegistry.register("tool:frame", () => this.toolRegistry.setActiveTool("frame"))
