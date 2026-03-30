@@ -221,6 +221,7 @@ export function createPointerMachine(editor: Editor) {
 					return
 				}
 				if (target.tagName === "IFRAME") return
+				if (shouldPreserveNativeClipboard(target, key, metaKey, ctrlKey)) return
 
 				const payload = { key, code, shiftKey, ctrlKey, metaKey, altKey }
 				const actionId = keybindingRegistry.match(payload)
@@ -470,4 +471,13 @@ export function createPointerMachine(editor: Editor) {
 			},
 		},
 	})
+}
+function shouldPreserveNativeClipboard(target: HTMLElement, key: string, metaKey: boolean, ctrlKey: boolean) {
+	const isClipboardShortcut = (metaKey || ctrlKey) && ["c", "x", "v"].includes(key.toLowerCase())
+	if (!isClipboardShortcut) return false
+
+	const selection = window.getSelection()?.toString().trim()
+	if (!selection) return false
+
+	return !target.closest("#canvas-event-target")
 }

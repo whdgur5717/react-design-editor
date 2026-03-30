@@ -16,6 +16,9 @@ export const defaultKeybindings = [
 	{ key: "Backspace", modifiers: {}, command: "node:delete", when: "hasSelection" },
 	{ key: "Delete", modifiers: {}, command: "node:delete", when: "hasSelection" },
 	{ key: "d", modifiers: { meta: true }, command: "node:duplicate", when: "hasSelection" },
+	{ key: "c", modifiers: { meta: true }, command: "clipboard:copy", when: "hasSelection" },
+	{ key: "x", modifiers: { meta: true }, command: "clipboard:cut", when: "hasSelection" },
+	{ key: "v", modifiers: { meta: true }, command: "clipboard:paste" },
 
 	// Tool 전환
 	{ key: "v", modifiers: {}, command: "tool:select" },
