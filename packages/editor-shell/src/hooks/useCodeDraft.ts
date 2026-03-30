@@ -46,7 +46,7 @@ export function useCodeDraft(componentId: string) {
 		const result = await compileCode(code)
 		if (result.error) {
 			setCompileState((prev) => ({ ...prev, isCompiling: false, error: result.error }))
-			editor.store.getState().updateCodeComponent(componentId, {
+			editor.updateCodeComponent(componentId, {
 				source: code,
 				compilationError: result.error,
 			})
@@ -64,14 +64,14 @@ export function useCodeDraft(componentId: string) {
 		// propertyControls 추출은 별도로 시도
 		try {
 			const mod = await loadCompiledModule(result.compiledCode!)
-			editor.store.getState().updateCodeComponent(componentId, {
+			editor.updateCodeComponent(componentId, {
 				source: code,
 				compiledCode: result.compiledCode,
 				propertyControls: mod.propertyControls,
 				compilationError: null,
 			})
 		} catch {
-			editor.store.getState().updateCodeComponent(componentId, {
+			editor.updateCodeComponent(componentId, {
 				source: code,
 				compiledCode: result.compiledCode,
 				compilationError: null,
