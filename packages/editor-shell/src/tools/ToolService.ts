@@ -1,6 +1,6 @@
-import type { EditorTool, SceneNode } from "@design-editor/core"
+import type { EditorTool, PageNode, Position, SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver } from "../commands"
+import type { Command } from "../commands/types"
 
 /**
  * ToolService - Tool이 필요한 의존성을 추상화한 인터페이스
@@ -20,11 +20,13 @@ export interface ToolService {
 	findNode(id: string): SceneNode | null
 	findNodeLocation(id: string): { parentId: string; index: number } | null
 	getCurrentPageId(): string
+	getCurrentPage(): PageNode | null
 
 	// Tool 상태
 	getActiveTool(): EditorTool
 	setActiveTool(tool: EditorTool): void
 
-	// Receiver 접근 (Command 생성용)
-	getReceiver(): EditorReceiver
+	executeAddNode(parentId: string, node: SceneNode, index?: number): void
+	executeMoveNode(nodeId: string, from: Position, to: Position): void
+	executeReparentNode(nodeId: string, newParentId: string): void
 }

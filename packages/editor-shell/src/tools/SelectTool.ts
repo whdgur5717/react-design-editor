@@ -1,6 +1,5 @@
 import type { ClickPayload, DragPayload, KeyPayload, PageNode } from "@design-editor/core"
 
-import { MoveNodeCommand, ReparentNodeCommand } from "../commands"
 import { getAbsolutePosition, isRootNode } from "../utils/nodePosition"
 import type { ToolService } from "./ToolService"
 import { BaseTool } from "./types"
@@ -62,8 +61,7 @@ export class SelectTool extends BaseTool {
 		const location = this.service.findNodeLocation(nodeId)
 		if (!location) return
 
-		const receiver = this.service.getReceiver()
-		const page = receiver.getCurrentPage()
+		const page = this.service.getCurrentPage()
 		if (!page) return
 
 		const currentLeft = payload.initialPosition?.x ?? node.x ?? 0
@@ -83,14 +81,14 @@ export class SelectTool extends BaseTool {
 			}
 
 			this.service.beginTransaction()
-			this.service.executeCommand(new ReparentNodeCommand(receiver, nodeId, targetParentId))
-			this.service.executeCommand(new MoveNodeCommand(receiver, nodeId, from, to))
+			this.service.executeReparentNode(nodeId, targetParentId)
+			this.service.executeMoveNode(nodeId, from, to)
 			this.service.commitTransaction()
 		} else {
 			// 같은 부모 → 이동만
 			const from = { x: currentLeft, y: currentTop }
 			const to = { x: currentLeft + payload.delta.x, y: currentTop + payload.delta.y }
-			this.service.executeCommand(new MoveNodeCommand(receiver, nodeId, from, to))
+			this.service.executeMoveNode(nodeId, from, to)
 		}
 	}
 
@@ -119,8 +117,7 @@ export class SelectTool extends BaseTool {
 				return
 		}
 
-		const receiver = this.service.getReceiver()
-		const page = receiver.getCurrentPage()
+		const page = this.service.getCurrentPage()
 		if (!page) return
 
 		// 루트 노드만 nudge 가능
@@ -140,8 +137,7 @@ export class SelectTool extends BaseTool {
 			const from = { x: currentLeft, y: currentTop }
 			const to = { x: currentLeft + dx, y: currentTop + dy }
 
-			const command = new MoveNodeCommand(receiver, id, from, to)
-			this.service.executeCommand(command)
+			this.service.executeMoveNode(id, from, to)
 		}
 
 		if (rootSelection.length > 1) {

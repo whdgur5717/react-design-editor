@@ -1,8 +1,11 @@
-import type { EditorTool, SceneNode } from "@design-editor/core"
+import type { EditorTool, PageNode, Position, SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver } from "../commands"
-import type { CommandHistory } from "../commands"
-import type { EditorReceiverImpl } from "../commands"
+import type { CommandHistory } from "../commands/CommandHistory"
+import type { EditorReceiverImpl } from "../commands/EditorReceiverImpl"
+import { AddNodeCommand } from "../commands/node/AddNodeCommand"
+import { MoveNodeCommand } from "../commands/node/MoveNodeCommand"
+import { ReparentNodeCommand } from "../commands/node/ReparentNodeCommand"
+import type { Command } from "../commands/types"
 import type { EditorStoreApi } from "../store/editor"
 import type { ToolService } from "./ToolService"
 
@@ -52,6 +55,10 @@ export class ToolServiceImpl implements ToolService {
 		return this.receiver.getCurrentPageId()
 	}
 
+	getCurrentPage(): PageNode | null {
+		return this.receiver.getCurrentPage()
+	}
+
 	getActiveTool(): EditorTool {
 		return this.store.getState().activeTool
 	}
@@ -60,7 +67,15 @@ export class ToolServiceImpl implements ToolService {
 		this.store.getState().setActiveTool(tool)
 	}
 
-	getReceiver(): EditorReceiver {
-		return this.receiver
+	executeAddNode(parentId: string, node: SceneNode, index?: number) {
+		this.commandHistory.execute(new AddNodeCommand(this.receiver, parentId, node, index))
+	}
+
+	executeMoveNode(nodeId: string, from: Position, to: Position) {
+		this.commandHistory.execute(new MoveNodeCommand(this.receiver, nodeId, from, to))
+	}
+
+	executeReparentNode(nodeId: string, newParentId: string) {
+		this.commandHistory.execute(new ReparentNodeCommand(this.receiver, nodeId, newParentId))
 	}
 }
