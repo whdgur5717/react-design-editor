@@ -135,7 +135,7 @@ Shell                              Canvas
 브라우저 포인터/키보드 이벤트
      │  (canvas-event-target에서 캡처)
      ▼
-EditorService
+Editor
      │
      ▼
 포인터 상태 머신 (XState)
@@ -177,15 +177,16 @@ idle ──POINTER_DOWN──▶ hitTesting ──HIT_TEST_DONE──▶ active
 - **clicking**: 더블클릭 판정 (타이머 기반)
 - **resizing**: 리사이즈 핸들에서 시작된 경우 hitTest 없이 바로 진입
 
-### EditorService
+### Editor
 
 모든 서브시스템을 소유하는 중앙 조율자. React Context로 제공된다.
 
-- 스토어, 명령어 히스토리, 도구 레지스트리, 단축키 레지스트리, 키바인딩 레지스트리, 포인터 상태 머신을 소유
-- Canvas RPC 연결 관리 (`setCanvas()`, `getNodeRect()`, `getNodeRects()`, `syncToCanvas()`)
+- 스토어, 명령어 히스토리, 액션 레지스트리, 도구 레지스트리, 키바인딩 레지스트리, CanvasBridge, 포인터 상태 머신을 소유
+- Canvas RPC 연결 관리 (`attachCanvas()`, `detachCanvas()`, `subscribeCanvasSync()`, `syncToCanvas()`)
+- Shell hit test와 overlay geometry 동기화를 위한 API 제공 (`setNodeRectsCache()`, `hitTestNodeId()`)
 - 포인터/키보드 이벤트를 상태 머신에 전달하는 공개 메서드 제공
 
-**참조**: `editor-shell/src/services/EditorService.ts`
+**참조**: `editor-shell/src/services/Editor.ts`
 
 ### 도구 시스템 (Strategy 패턴)
 
