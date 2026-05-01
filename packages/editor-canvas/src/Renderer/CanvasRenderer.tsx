@@ -45,8 +45,8 @@ export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRen
 								{
 									position: "fixed",
 									transform: `translateX(${x}px) translateY(${y}px)`,
-									width: width ?? "fit-content",
-									height: height ?? "fit-content",
+									width: width,
+									height: height,
 									willChange: "transform",
 									contain: "layout style",
 									isolation: "isolate",
@@ -55,7 +55,11 @@ export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRen
 								} as React.CSSProperties
 							}
 						>
-							<div style={{ ...contentStyle, width, height, position: "relative" }} data-layout-type="inner">
+							<div
+								data-node-measure-id={child.id}
+								style={{ ...contentStyle, width, height, position: "relative" }}
+								data-layout-type="inner"
+							>
 								{renderRootContent(child, ctx)}
 							</div>
 						</div>

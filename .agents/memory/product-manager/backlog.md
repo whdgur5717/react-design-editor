@@ -15,7 +15,7 @@
 - Node creation: Frame, Text, Code Component instances
 - Selection: click, shift-click multi-select
 - Movement and resize: drag to move root nodes, 8-handle resize, arrow key nudge
-- Styling: size, display/flex layout, CSS position, overflow, single-value padding/margin, background color, border, typography basics
+- Styling: full properties-panel style coverage for common static UI construction
 - Organization: layers panel, pages, reorder, lock, visibility
 - Code generation: element, text, and instance nodes
 - History: undo/redo
@@ -23,12 +23,16 @@
 
 ## P0 -- Must complete for Phase 1
 
+- None open
+
+## Recently Shipped
+
 ### 1. Properties Panel: Full Style Coverage
 
-- **WHY**: The properties panel is still missing many common CSS properties, so users cannot construct many real-world UI layouts.
-- **Status**: ready -> #94
+- **WHY**: The properties panel was missing many common CSS properties, so users could not construct many real-world UI layouts.
+- **Status**: shipped -> #94
 
-## P1 -- Next priority after P0
+## P1 -- Current next priority
 
 ### 2. Copy / Paste
 

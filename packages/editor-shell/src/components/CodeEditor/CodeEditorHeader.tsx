@@ -18,7 +18,7 @@ export function CodeEditorHeader({ componentId, componentName }: { componentId: 
 	const handleNameCommit = () => {
 		setNameEditing(false)
 		if (nameValue.trim() && nameValue !== componentName) {
-			editor.store.getState().updateCodeComponent(componentId, { name: nameValue.trim() })
+			editor.renameCodeComponent(componentId, nameValue.trim())
 		}
 	}
 

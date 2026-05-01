@@ -1,0 +1,20 @@
+project_doc_fallback_filenames = ["CLAUDE.md"]
+
+[agents]
+max_threads = 6
+max_depth = 1
+
+[agents."product-manager"]
+description = "Product management specialist for scope, prioritization, backlog, and success criteria."
+config_file = "agents/product-manager.toml"
+
+[agents."qa-engineer"]
+description = "QA specialist for quality gates, test plans, regression triage, and verification strategy."
+config_file = "agents/qa-engineer.toml"
+
+[agents."design-editor-ux-expert"]
+description = "Design-system and UX specialist for tokens, interaction states, accessibility, and visual consistency."
+config_file = "agents/design-editor-ux-expert.toml"
+
+[features]
+multi_agent = true

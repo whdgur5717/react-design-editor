@@ -1,5 +1,9 @@
 # w-context.md
 
+Shared source of truth: `.agents/skills/write-context/SKILL.md`.
+
+This file is a Claude-specific command adapter only. The workflow itself must stay aligned with the shared skill so Codex and Claude use the same behavior.
+
 현재 작업 중인 폴더에 CONTEXT.md 파일을 생성하거나 업데이트합니다.
 
 ## 목적

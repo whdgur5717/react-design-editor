@@ -1,14 +1,14 @@
-import type { EditorTool, NodeRect, PageNode, SceneNode } from "@design-editor/core"
+import type { CanvasMethods, EditorTool, NodeRect, PageNode, SceneNode, Size } from "@design-editor/core"
+import type { AsyncMethodReturns } from "penpal"
 import { type AnyActor, createActor } from "xstate"
+import { shallow } from "zustand/shallow"
 
-import type { Command, EditorReceiver, NodeLocation } from "../commands"
-import {
-	ActionRegistry,
-	CommandHistory,
-	DuplicateNodeCommand,
-	EditorReceiverImpl,
-	RemoveNodeCommand,
-} from "../commands"
+import { ActionRegistry } from "../commands/ActionRegistry"
+import { CommandHistory } from "../commands/CommandHistory"
+import { EditorReceiverImpl } from "../commands/EditorReceiverImpl"
+import { ResizeNodeCommand } from "../commands/node/ResizeNodeCommand"
+import type { Command, NodeLocation } from "../commands/types"
+import { hitTestNodeIdInPage } from "../document/hitTest"
 import { createPointerMachine } from "../interaction"
 import { KeybindingRegistry } from "../keybindings"
 import { createEditorStore, type EditorStoreApi } from "../store/editor"
@@ -17,14 +17,15 @@ import { SelectTool } from "../tools/SelectTool"
 import { TextTool } from "../tools/TextTool"
 import { ToolRegistry } from "../tools/ToolRegistry"
 import { ToolServiceImpl } from "../tools/ToolServiceImpl"
+import { ApplyCanvasTextChangeUsecase } from "../usecases/ApplyCanvasTextChangeUsecase"
+import { CodeComponentUsecase } from "../usecases/CodeComponentUsecase"
+import { DeleteSelectionUsecase } from "../usecases/DeleteSelectionUsecase"
+import { DuplicateSelectionUsecase } from "../usecases/DuplicateSelectionUsecase"
+import { NodePropertyUsecase } from "../usecases/NodePropertyUsecase"
+import { SelectAllUsecase } from "../usecases/SelectAllUsecase"
 import { CanvasBridge } from "./CanvasBridge"
+import { ClipboardRuntime } from "./ClipboardRuntime"
 
-/**
- * Editor — 모든 서브시스템을 소유하고 React Context로 제공
- *
- * store, commandHistory, receiver, toolRegistry, actionRegistry,
- * keybindingRegistry, canvas, pointerActor를 모두 소유한다.
- */
 export class Editor {
 	readonly store: EditorStoreApi
 	readonly commandHistory: CommandHistory
@@ -34,6 +35,13 @@ export class Editor {
 	readonly keybindingRegistry: KeybindingRegistry
 	readonly canvas: CanvasBridge
 	private pointerActor: AnyActor
+	private clipboardRuntime: ClipboardRuntime
+	private deleteSelection: DeleteSelectionUsecase
+	private duplicateSelection: DuplicateSelectionUsecase
+	private selectAll: SelectAllUsecase
+	private applyCanvasTextChange: ApplyCanvasTextChangeUsecase
+	private codeComponent: CodeComponentUsecase
+	private nodeProperty: NodePropertyUsecase
 
 	constructor() {
 		this.store = createEditorStore()
@@ -50,44 +58,28 @@ export class Editor {
 		this.toolRegistry.register("select", new SelectTool(toolService))
 		this.toolRegistry.register("frame", new FrameTool(toolService))
 		this.toolRegistry.register("text", new TextTool(toolService))
+		this.clipboardRuntime = new ClipboardRuntime(this.receiver, this.commandHistory)
+		this.deleteSelection = new DeleteSelectionUsecase(this.receiver, this.commandHistory)
+		this.duplicateSelection = new DuplicateSelectionUsecase(this.receiver, this.commandHistory)
+		this.selectAll = new SelectAllUsecase(this.receiver)
+		this.applyCanvasTextChange = new ApplyCanvasTextChangeUsecase(this.receiver, this.commandHistory)
+		this.codeComponent = new CodeComponentUsecase(this.store)
+		this.nodeProperty = new NodePropertyUsecase(this.receiver, this.commandHistory)
 
 		// 액션 등록
 		this.actionRegistry.register("history:undo", () => this.commandHistory.undo())
 		this.actionRegistry.register("history:redo", () => this.commandHistory.redo())
 
 		this.actionRegistry.register("selection:clear", () => this.receiver.setSelection([]))
-		this.actionRegistry.register("selection:all", () => {
-			const page = this.receiver.getCurrentPage()
-			if (!page) return
-			const allIds = collectAllNodeIds(page.children)
-			this.receiver.setSelection(allIds)
-		})
+		this.actionRegistry.register("selection:all", () => this.selectAll.run())
 
-		this.actionRegistry.register("node:delete", () => {
-			const selection = this.receiver.getSelection()
-			if (selection.length === 0) return
+		this.actionRegistry.register("node:delete", () => this.deleteSelection.run())
 
-			const topLevelIds = filterToTopLevel(selection, this.receiver)
+		this.actionRegistry.register("node:duplicate", () => this.duplicateSelection.run())
 
-			if (topLevelIds.length > 1) this.commandHistory.beginTransaction()
-			for (const id of topLevelIds) {
-				this.commandHistory.execute(new RemoveNodeCommand(this.receiver, id))
-			}
-			if (topLevelIds.length > 1) this.commandHistory.commitTransaction()
-
-			this.receiver.setSelection([])
-		})
-
-		this.actionRegistry.register("node:duplicate", () => {
-			const selection = this.receiver.getSelection()
-			if (selection.length === 0) return
-
-			if (selection.length > 1) this.commandHistory.beginTransaction()
-			for (const id of selection) {
-				this.commandHistory.execute(new DuplicateNodeCommand(this.receiver, id))
-			}
-			if (selection.length > 1) this.commandHistory.commitTransaction()
-		})
+		this.actionRegistry.register("clipboard:copy", () => this.clipboardRuntime.copy())
+		this.actionRegistry.register("clipboard:cut", () => this.clipboardRuntime.cut())
+		this.actionRegistry.register("clipboard:paste", () => this.clipboardRuntime.paste())
 
 		this.actionRegistry.register("tool:select", () => this.toolRegistry.setActiveTool("select"))
 		this.actionRegistry.register("tool:frame", () => this.toolRegistry.setActiveTool("frame"))
@@ -170,6 +162,67 @@ export class Editor {
 
 	// ── Canvas 동기화 ──
 
+	attachCanvas(ref: AsyncMethodReturns<CanvasMethods>) {
+		this.canvas.setCanvas(ref)
+		this.syncToCanvas()
+	}
+
+	detachCanvas() {
+		this.canvas.setCanvas(null)
+	}
+
+	subscribeCanvasSync() {
+		return this.store.subscribe(
+			(s) => [s.document, s.currentPageId, s.codeComponents, s.zoom, s.panX, s.panY, s.selection, s.activeTool],
+			() => this.syncToCanvas(),
+			{ equalityFn: shallow },
+		)
+	}
+
+	applyTextChangeFromCanvas(nodeId: string, content: unknown) {
+		this.applyCanvasTextChange.run(nodeId, content)
+	}
+
+	setNodeRectsCache(rects: Record<string, NodeRect>) {
+		this.store.getState().setNodeRectsCache(rects)
+	}
+
+	createCodeComponent(name: string, source: string) {
+		return this.codeComponent.create(name, source)
+	}
+
+	renameCodeComponent(id: string, name: string) {
+		this.codeComponent.rename(id, name)
+	}
+
+	updateCodeComponent(id: string, updates: Parameters<CodeComponentUsecase["update"]>[1]) {
+		this.codeComponent.update(id, updates)
+	}
+
+	removeCodeComponent(id: string) {
+		this.codeComponent.remove(id)
+	}
+
+	addCodeComponentInstanceToCurrentPage(componentId: string) {
+		return this.codeComponent.addInstanceToCurrentPage(componentId)
+	}
+
+	updateNodeStyleProperty(
+		nodeId: string,
+		key: Parameters<NodePropertyUsecase["updateStyle"]>[1],
+		value: Parameters<NodePropertyUsecase["updateStyle"]>[2],
+	) {
+		this.nodeProperty.updateStyle(nodeId, key, value)
+	}
+
+	updateNodePosition(nodeId: string, position: Parameters<NodePropertyUsecase["updatePosition"]>[1]) {
+		this.nodeProperty.updatePosition(nodeId, position)
+	}
+
+	updateInstancePropValues(nodeId: string, propValues: Parameters<NodePropertyUsecase["updatePropValues"]>[1]) {
+		this.nodeProperty.updatePropValues(nodeId, propValues)
+	}
+
 	syncToCanvas() {
 		const state = this.store.getState()
 
@@ -232,6 +285,21 @@ export class Editor {
 		return this.store.getState().nodeRectsCache[nodeId] ?? null
 	}
 
+	hitTestNodeId(clientX: number, clientY: number) {
+		const state = this.store.getState()
+		const page = state.document.children.find((p) => p.id === state.currentPageId)
+		if (!page) return null
+		return hitTestNodeIdInPage(page, state.nodeRectsCache, state.zoom, state.panX, state.panY, clientX, clientY)
+	}
+
+	getHistorySnapshot() {
+		return this.commandHistory.getSnapshot()
+	}
+
+	subscribeHistory(listener: () => void) {
+		return this.commandHistory.subscribe(listener)
+	}
+
 	// ── 쓰기 ──
 
 	setSelection(ids: string[]) {
@@ -258,6 +326,10 @@ export class Editor {
 		this.store.getState().setPan(x, y)
 	}
 
+	setZoom(zoom: number) {
+		this.store.getState().setZoom(zoom)
+	}
+
 	// ── Command 실행 ──
 
 	executeCommand(cmd: Command) {
@@ -272,33 +344,15 @@ export class Editor {
 		this.commandHistory.commitTransaction()
 	}
 
-	// ── Receiver 접근 (Command 생성용) ──
-
-	getReceiver() {
-		return this.receiver
+	resizeNode(nodeId: string, from: Size, to: Size, mergeKey: string) {
+		this.commandHistory.execute(new ResizeNodeCommand(this.receiver, nodeId, from, to, mergeKey))
 	}
-}
 
-// ── 유틸리티 함수 ──
-
-function collectAllNodeIds(nodes: SceneNode[]) {
-	const ids: string[] = []
-	for (const node of nodes) {
-		ids.push(node.id)
-		if ("children" in node && Array.isArray(node.children)) {
-			ids.push(...collectAllNodeIds(node.children))
-		}
+	undo() {
+		this.commandHistory.undo()
 	}
-	return ids
-}
 
-function filterToTopLevel(selection: string[], recv: EditorReceiver) {
-	return selection.filter((id) => {
-		let location = recv.findNodeLocation(id)
-		while (location) {
-			if (selection.includes(location.parentId)) return false
-			location = recv.findNodeLocation(location.parentId)
-		}
-		return true
-	})
+	redo() {
+		this.commandHistory.redo()
+	}
 }

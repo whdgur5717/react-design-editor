@@ -34,16 +34,118 @@ test.describe("노드 리사이즈", () => {
 	})
 })
 
+test.describe("노드 이동", () => {
+	test("선택된 노드를 드래그하면 x, y 좌표가 이동량만큼 변경된다", async ({ editor }) => {
+		await editor.layerRow("root").click()
+
+		const startX = Number(await editor.positionX.inputValue())
+		const startY = Number(await editor.positionY.inputValue())
+
+		await editor.dragOnCanvas({ x: 330, y: 150 }, { x: 410, y: 210 })
+
+		await expect(editor.positionX).toHaveValue(String(startX + 80))
+		await expect(editor.positionY).toHaveValue(String(startY + 60))
+	})
+})
+
 test.describe("Zoom", () => {
 	test("Zoom In 버튼을 누르면 100%→110%, Zoom Out 두 번 누르면 110%→90%로 변경된다", async ({ editor }) => {
-		const zoomText = editor.page.locator(".zoom-level")
-		await expect(zoomText).toHaveText("100%")
+		await expect(editor.page.getByText("100%")).toBeVisible()
 
 		await editor.toolButton("Zoom In").click()
-		await expect(zoomText).toHaveText("110%")
+		await expect(editor.page.getByText("110%")).toBeVisible()
 
 		await editor.toolButton("Zoom Out").click()
 		await editor.toolButton("Zoom Out").click()
-		await expect(zoomText).toHaveText("90%")
+		await expect(editor.page.getByText("90%")).toBeVisible()
+	})
+})
+
+test.describe("Canvas geometry sync", () => {
+	test("selection overlay는 pan 중 노드와 계속 정렬된다", async ({ editor }) => {
+		await editor.layerRow("root").click()
+		await expect(editor.selectionBorder).toBeVisible()
+
+		await editor.panCanvas(0, 120)
+		await editor.panCanvas(0, 120)
+		await editor.panCanvas(0, -80)
+
+		await editor.page.waitForTimeout(100)
+
+		const nodeBox = await editor.canvasNode("root").boundingBox()
+		const selectionBox = await editor.selectionBorder.boundingBox()
+
+		expect(nodeBox).not.toBeNull()
+		expect(selectionBox).not.toBeNull()
+
+		if (!nodeBox || !selectionBox) return
+
+		expect(Math.abs(nodeBox.x - selectionBox.x)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.y - selectionBox.y)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.width - selectionBox.width)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.height - selectionBox.height)).toBeLessThan(2)
+	})
+
+	test("selection overlay는 빠른 wheel pan 이후에도 노드와 정렬된다", async ({ editor }) => {
+		await editor.layerRow("root").click()
+		await expect(editor.selectionBorder).toBeVisible()
+
+		for (let i = 0; i < 20; i++) {
+			await editor.panCanvas(0, 24)
+		}
+
+		for (let i = 0; i < 8; i++) {
+			await editor.panCanvas(0, -18)
+		}
+
+		await editor.page.waitForTimeout(100)
+
+		const nodeBox = await editor.canvasNode("root").boundingBox()
+		const selectionBox = await editor.selectionBorder.boundingBox()
+
+		expect(nodeBox).not.toBeNull()
+		expect(selectionBox).not.toBeNull()
+
+		if (!nodeBox || !selectionBox) return
+
+		expect(Math.abs(nodeBox.x - selectionBox.x)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.y - selectionBox.y)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.width - selectionBox.width)).toBeLessThan(2)
+		expect(Math.abs(nodeBox.height - selectionBox.height)).toBeLessThan(2)
+	})
+
+	test("pan과 zoom 이후 캔버스 클릭은 같은 노드를 선택하고 overlay가 정렬된다", async ({ editor }) => {
+		await editor.panCanvas(0, 120)
+		await editor.panCanvas(0, 80)
+		await editor.toolButton("Zoom In").click()
+		await editor.toolButton("Zoom In").click()
+
+		const nodeBox = await editor.canvasNode("root").boundingBox()
+		const canvasAreaBox = await editor.page.locator(".canvas-area").boundingBox()
+		expect(nodeBox).not.toBeNull()
+		expect(canvasAreaBox).not.toBeNull()
+
+		if (!nodeBox || !canvasAreaBox) return
+
+		const clickX = Math.min(nodeBox.x + nodeBox.width - 12, Math.max(nodeBox.x + 12, canvasAreaBox.x + 12))
+		const clickY = Math.min(nodeBox.y + nodeBox.height - 12, Math.max(nodeBox.y + 12, canvasAreaBox.y + 12))
+
+		await editor.page.mouse.click(clickX, clickY)
+		await expect(editor.selectionBorder).toBeVisible()
+
+		await expect
+			.poll(async () => {
+				const nodeBoxNow = await editor.canvasNode("root").boundingBox()
+				const selectionBoxNow = await editor.selectionBorder.boundingBox()
+				if (!nodeBoxNow || !selectionBoxNow) return Number.POSITIVE_INFINITY
+
+				return Math.max(
+					Math.abs(nodeBoxNow.x - selectionBoxNow.x),
+					Math.abs(nodeBoxNow.y - selectionBoxNow.y),
+					Math.abs(nodeBoxNow.width - selectionBoxNow.width),
+					Math.abs(nodeBoxNow.height - selectionBoxNow.height),
+				)
+			})
+			.toBeLessThan(2)
 	})
 })

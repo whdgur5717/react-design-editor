@@ -1,0 +1,20 @@
+# 디자인 결정 기록
+
+## 2026-03-05: 브랜드 컬러 - Warm Amber + Deep Slate Teal
+
+- **맥락**: 기존 Indigo `#6366F1`이 Tailwind 기본값 그대로라는 문제. 경쟁 도구들과 시각적으로 구별되지 않음.
+- **선택지**:
+  1. Indigo `#6366F1` 유지
+  2. Warm Amber `#E08A2D` (Main) + Deep Slate Teal `#2D5C7B` (Sub)
+- **결정**: Warm Amber + Deep Slate Teal로 변경 (PM 조건부 승인 - 접근성 검증 필요)
+- **근거**: (1) 경쟁 도구(Figma, Framer, Webflow, VS Code)가 Hue 210-270 점유. Hue 32는 빈 대역. (2) "코드를 직접 손으로 빚는다"는 공방 메타포와 따뜻한 톤의 정합성. (3) 시맨틱 충돌 없음(Error Red, Success Green과 안 겹침).
+- **잔여 과제**: WCAG AA 명도 대비 검증, 다크 모드 목업, 컬러 스케일(hover/pressed/disabled) 정의.
+- **영향**: 에디터 UI 전체 테마, 파비콘, 랜딩 페이지에 적용 예정. PM decisions.md 교차 참조.
+
+## 2026-03-05: 디자인 원칙 5개 확정
+
+- **맥락**: 에디터의 시각적 정체성을 정의할 원칙이 필요했음.
+- **선택지**: PM 초기 4개 원칙 vs Designer가 보강한 5개 원칙
+- **결정**: 5개로 확정 - 코드 동시성, 친숙함, 코드 의식적 디자인, 경량함, Craft over Feature
+- **근거**: (1) PM의 "투명성"을 "코드 동시성"으로 확장 - 단순 인지가 아닌 공존. (2) "Craft over Feature" 추가 - 현재 유니코드 아이콘 등 프로토타입 수준 UI가 남아있어 이 원칙이 필요.
+- **영향**: 모든 디자인 리뷰와 결정의 기준. `guidelines.md`에 기록.

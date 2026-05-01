@@ -1,10 +1,8 @@
-import type { CanvasMethods, NodeRect, TextChangePayload } from "@design-editor/core"
+import type { CanvasMethods, NodeRect } from "@design-editor/core"
 import type { AsyncMethodReturns } from "penpal"
 import { connectToChild } from "penpal"
 import { useEffect, useRef, useState } from "react"
-import { shallow } from "zustand/shallow"
 
-import { UpdateNodeCommand } from "./commands"
 import { CanvasView } from "./components/CanvasView"
 import { Editor } from "./services/Editor"
 import { EditorProvider } from "./services/EditorContext"
@@ -27,38 +25,26 @@ export function App() {
 			iframe,
 			methods: {
 				onTextChange(nodeId: string, content: unknown) {
-					const currentNode = editor.receiver.findNode(nodeId)
-					if (currentNode?.type === "text") {
-						const command = new UpdateNodeCommand(editor.receiver, nodeId, {
-							content: content as TextChangePayload["content"],
-						})
-						editor.commandHistory.execute(command)
-					}
+					editor.applyTextChangeFromCanvas(nodeId, content)
 				},
 				onNodeRectsUpdated(rects: Record<string, NodeRect>) {
-					editor.store.getState().setNodeRectsCache(rects)
+					editor.setNodeRectsCache(rects)
 				},
 			},
 		})
 
 		canvasConnection.promise.then((child) => {
 			canvasRefLatest.current = child
-			editor.canvas.setCanvas(child)
-			editor.syncToCanvas()
+			editor.attachCanvas(child)
 		})
 
-		// store 변경 시 Canvas에 동기화 (nodeRectsCache 변경은 무시)
-		const unsubscribe = editor.store.subscribe(
-			(s) => [s.document, s.currentPageId, s.codeComponents, s.zoom, s.panX, s.panY, s.selection, s.activeTool] as const,
-			() => editor.syncToCanvas(),
-			{ equalityFn: shallow },
-		)
+		const unsubscribe = editor.subscribeCanvasSync()
 
 		return () => {
 			iframe.src = "about:blank"
 			unsubscribe()
 			canvasConnection.destroy()
-			editor.canvas.setCanvas(null)
+			editor.detachCanvas()
 		}
 	}, [editor])
 

@@ -16,6 +16,36 @@ import { createStore } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
 
+interface NodePageContext {
+	pageId?: string
+}
+
+type EditorStoreState = Omit<
+	EditorStore,
+	| "updateNode"
+	| "addNode"
+	| "removeNode"
+	| "moveNode"
+	| "resizeNode"
+	| "reorderNode"
+	| "reparentNode"
+	| "toggleVisibility"
+	| "toggleLocked"
+	| "findNode"
+> & {
+	updateNode: (id: string, updates: Partial<SceneNode>, context?: NodePageContext) => void
+	addNode: (parentId: string, node: SceneNode, index?: number, context?: NodePageContext) => void
+	removeNode: (id: string, context?: NodePageContext) => void
+	moveNode: (id: string, position: Position, context?: NodePageContext) => void
+	resizeNode: (id: string, size: Size, context?: NodePageContext) => void
+	reorderNode: (parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) => void
+	reparentNode: (sourceId: string, newParentId: string, context?: NodePageContext) => void
+	toggleVisibility: (id: string, context?: NodePageContext) => void
+	toggleLocked: (id: string, context?: NodePageContext) => void
+	findNode: (id: string, context?: NodePageContext) => SceneNode | null
+	findNodeLocation: (id: string, context?: NodePageContext) => { parentId: string; index: number } | null
+}
+
 // ── Read-only 트리 헬퍼 ──
 
 export function findNode(parent: PageNode | SceneNode, id: string): SceneNode | null {
@@ -43,6 +73,49 @@ function findParent(parent: PageNode | SceneNode, id: string): PageNode | SceneN
 function getChildrenOf(node: PageNode | SceneNode): SceneNode[] | null {
 	if ("children" in node && Array.isArray(node.children)) return node.children
 	return null
+}
+
+function findPage(document: DocumentNode, pageId: string) {
+	return document.children.find((page) => page.id === pageId) ?? null
+}
+
+function resolvePage(document: DocumentNode, currentPageId: string, context?: NodePageContext) {
+	return findPage(document, context?.pageId ?? currentPageId)
+}
+
+function findLocationInTree(nodes: SceneNode[], targetId: string): { parentId: string; index: number } | null {
+	for (const node of nodes) {
+		if (Array.isArray(node.children)) {
+			const index = node.children.findIndex((child) => child.id === targetId)
+			if (index !== -1) {
+				return { parentId: node.id, index }
+			}
+
+			const found = findLocationInTree(node.children, targetId)
+			if (found) return found
+		}
+	}
+
+	return null
+}
+
+function findNodeLocationInPage(page: PageNode, id: string): { parentId: string; index: number } | null {
+	const pageChildIndex = page.children.findIndex((child) => child.id === id)
+	if (pageChildIndex !== -1) {
+		return { parentId: page.id, index: pageChildIndex }
+	}
+
+	return findLocationInTree(page.children, id)
+}
+
+function collectNodeIds(node: SceneNode): string[] {
+	const ids = [node.id]
+	if (Array.isArray(node.children)) {
+		for (const child of node.children) {
+			ids.push(...collectNodeIds(child))
+		}
+	}
+	return ids
 }
 
 function cloneNodeWithNewIds(node: SceneNode): SceneNode {
@@ -132,7 +205,7 @@ const initialDocument: DocumentNode = {
  * 에디터 스토어
  */
 export function createEditorStore() {
-	return createStore<EditorStore>()(
+	return createStore<EditorStoreState>()(
 		subscribeWithSelector(
 			immer((set, get) => ({
 				// 초기 상태
@@ -149,9 +222,9 @@ export function createEditorStore() {
 				nodeRectsCache: {},
 
 				// 노드 액션
-				updateNode(id: string, updates: Partial<SceneNode>) {
+				updateNode(id: string, updates: Partial<SceneNode>, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const node = findNode(page, id)
@@ -161,9 +234,9 @@ export function createEditorStore() {
 					})
 				},
 
-				addNode(parentId: string, node: SceneNode, index?: number) {
+				addNode(parentId: string, node: SceneNode, index?: number, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const parent = parentId === page.id ? page : findNode(page, parentId)
@@ -177,9 +250,9 @@ export function createEditorStore() {
 					})
 				},
 
-				removeNode(id: string) {
+				removeNode(id: string, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const parent = findParent(page, id)
@@ -188,16 +261,20 @@ export function createEditorStore() {
 						const children = getChildrenOf(parent)
 						if (!children) return
 
-						const idx = children.findIndex((c) => c.id === id)
-						if (idx !== -1) children.splice(idx, 1)
+						const idx = children.findIndex((child) => child.id === id)
+						if (idx === -1) return
 
-						state.selection = state.selection.filter((s) => s !== id)
+						const removedNode = children[idx]
+						const removedIds = collectNodeIds(removedNode)
+						children.splice(idx, 1)
+
+						state.selection = state.selection.filter((selectionId) => !removedIds.includes(selectionId))
 					})
 				},
 
-				moveNode(id: string, position: Position) {
+				moveNode(id: string, position: Position, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const node = findNode(page, id)
@@ -208,9 +285,9 @@ export function createEditorStore() {
 					})
 				},
 
-				resizeNode(id: string, size: Size) {
+				resizeNode(id: string, size: Size, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const node = findNode(page, id)
@@ -260,9 +337,9 @@ export function createEditorStore() {
 					set({ panX, panY })
 				},
 
-				reorderNode(parentId: string, fromIndex: number, toIndex: number) {
+				reorderNode(parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const parent = parentId === page.id ? page : findNode(page, parentId)
@@ -296,9 +373,9 @@ export function createEditorStore() {
 					}
 				},
 
-				reparentNode(sourceId: string, newParentId: string) {
+				reparentNode(sourceId: string, newParentId: string, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const sourceNode = findNode(page, sourceId)
@@ -332,9 +409,9 @@ export function createEditorStore() {
 					})
 				},
 
-				toggleVisibility(id: string) {
+				toggleVisibility(id: string, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const node = findNode(page, id)
@@ -344,9 +421,9 @@ export function createEditorStore() {
 					})
 				},
 
-				toggleLocked(id: string) {
+				toggleLocked(id: string, context?: NodePageContext) {
 					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
+						const page = resolvePage(state.document, state.currentPageId, context)
 						if (!page) return
 
 						const node = findNode(page, id)
@@ -554,10 +631,16 @@ export function createEditorStore() {
 				},
 
 				// 유틸리티 메서드
-				findNode(id: string): SceneNode | null {
-					const page = get().document.children.find((p) => p.id === get().currentPageId)
+				findNode(id: string, context?: NodePageContext): SceneNode | null {
+					const page = resolvePage(get().document, get().currentPageId, context)
 					if (!page) return null
 					return findNode(page, id)
+				},
+
+				findNodeLocation(id: string, context?: NodePageContext) {
+					const page = resolvePage(get().document, get().currentPageId, context)
+					if (!page) return null
+					return findNodeLocationInPage(page, id)
 				},
 			})),
 		),

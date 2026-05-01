@@ -105,7 +105,6 @@ immer 미들웨어로 불변 업데이트를 간결하게 처리하고, `subscri
 Shell                              Canvas
   │                                  │
   │  ──── syncState() ──────────▶   │  상태 전달
-  │  ──── hitTest(x, y) ───────▶   │  → nodeId (RPC)
   │  ──── getNodeRect(id) ─────▶   │  → Rect (RPC)
   │  ──── getNodeRects() ──────▶   │  → 전체 Rect 맵 (RPC)
   │                                  │
@@ -116,9 +115,10 @@ Shell                              Canvas
 
 **원칙**:
 
-- Canvas는 이벤트를 수신하지 않으며, Shell의 RPC 질의에만 응답
+- Canvas는 이벤트를 수신하지 않으며, rect 측정/텍스트 변경 같은 브리지 요청에만 응답
 - Canvas는 상태를 직접 변경하지 않음
 - Shell이 상태를 업데이트한 뒤 `syncState()`로 동기화
+- hit test 판정은 Shell이 `nodeRectsCache`와 문서 트리를 이용해 수행
 - 단방향 데이터 흐름
 
 ### 노드 위치 모델
@@ -135,12 +135,12 @@ Shell                              Canvas
 브라우저 포인터/키보드 이벤트
      │  (canvas-event-target에서 캡처)
      ▼
-EditorService
+Editor
      │
      ▼
 포인터 상태 머신 (XState)
      │
-     ├── hitTest RPC → Canvas iframe → 결과 반환
+     ├── Shell hitTest → nodeRectsCache + document tree
      │
      ├── 상태에 따라 분기
      │     ├── 키보드 → 키바인딩 매칭 → 단축키 실행
@@ -171,21 +171,22 @@ idle ──POINTER_DOWN──▶ hitTesting ──HIT_TEST_DONE──▶ active
                       → doubleClick             → idle
 ```
 
-- **hitTesting**: 비동기 `hitTest` RPC 결과를 기다리는 중간 상태
+- **hitTesting**: 포인터 입력을 현재 hit test 결과로 정규화하는 중간 상태
 - **pending → dragging**: threshold 초과 시 드래그로 전환
 - **pending → clicking**: threshold 미만에서 POINTER_UP 시 클릭 처리
 - **clicking**: 더블클릭 판정 (타이머 기반)
 - **resizing**: 리사이즈 핸들에서 시작된 경우 hitTest 없이 바로 진입
 
-### EditorService
+### Editor
 
 모든 서브시스템을 소유하는 중앙 조율자. React Context로 제공된다.
 
-- 스토어, 명령어 히스토리, 도구 레지스트리, 단축키 레지스트리, 키바인딩 레지스트리, 포인터 상태 머신을 소유
-- Canvas RPC 연결 관리 (`setCanvas()`, `hitTest()`, `getNodeRect()`, `syncToCanvas()`)
+- 스토어, 명령어 히스토리, 액션 레지스트리, 도구 레지스트리, 키바인딩 레지스트리, CanvasBridge, 포인터 상태 머신을 소유
+- Canvas RPC 연결 관리 (`attachCanvas()`, `detachCanvas()`, `subscribeCanvasSync()`, `syncToCanvas()`)
+- Shell hit test와 overlay geometry 동기화를 위한 API 제공 (`setNodeRectsCache()`, `hitTestNodeId()`)
 - 포인터/키보드 이벤트를 상태 머신에 전달하는 공개 메서드 제공
 
-**참조**: `editor-shell/src/services/EditorService.ts`
+**참조**: `editor-shell/src/services/Editor.ts`
 
 ### 도구 시스템 (Strategy 패턴)
 

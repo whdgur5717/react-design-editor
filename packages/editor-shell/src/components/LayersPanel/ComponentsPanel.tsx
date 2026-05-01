@@ -20,10 +20,9 @@ export function ComponentsPanel() {
 	const [, setUrlState] = useView()
 	const editor = useEditor()
 	const codeComponents = useEditorStore((state) => state.codeComponents)
-	const currentPageId = useEditorStore((state) => state.currentPageId)
 
 	const handleNewComponent = () => {
-		const id = editor.store.getState().addCodeComponent("New Component", DEFAULT_SOURCE)
+		const id = editor.createCodeComponent("New Component", DEFAULT_SOURCE)
 		setUrlState({ edit: id })
 	}
 
@@ -33,13 +32,13 @@ export function ComponentsPanel() {
 
 	const handleAddInstance = (e: React.MouseEvent, componentId: string) => {
 		e.stopPropagation()
-		editor.store.getState().createInstance(componentId, currentPageId)
+		editor.addCodeComponentInstanceToCurrentPage(componentId)
 		setUrlState({ edit: null })
 	}
 
 	const handleRemoveComponent = (e: React.MouseEvent, id: string) => {
 		e.stopPropagation()
-		editor.store.getState().removeCodeComponent(id)
+		editor.removeCodeComponent(id)
 	}
 
 	return (
@@ -47,6 +46,7 @@ export function ComponentsPanel() {
 			<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px" }}>
 				<span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", color: "#999" }}>Code Components</span>
 				<button
+					type="button"
 					onClick={handleNewComponent}
 					style={{
 						background: "none",
@@ -68,30 +68,38 @@ export function ComponentsPanel() {
 				{codeComponents.map((comp) => (
 					<div
 						key={comp.id}
-						onClick={() => handleEditComponent(comp.id)}
 						style={{
 							display: "flex",
 							alignItems: "center",
 							justifyContent: "space-between",
 							padding: "6px 8px",
-							cursor: "pointer",
 							borderRadius: 4,
 							fontSize: 12,
 						}}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.backgroundColor = "#f0f0f0"
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.backgroundColor = "transparent"
-						}}
 					>
-						<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-							<span style={{ color: comp.compiledCode ? "#0d99ff" : "#bbb" }}>{"<>"}</span>
-							{comp.name}
-							{comp.compilationError && <span style={{ color: "#f44" }}>!</span>}
-						</span>
+						<button
+							type="button"
+							onClick={() => handleEditComponent(comp.id)}
+							style={{
+								background: "none",
+								border: "none",
+								padding: 0,
+								margin: 0,
+								cursor: "pointer",
+								font: "inherit",
+								color: "inherit",
+							}}
+							title="Edit component"
+						>
+							<span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+								<span style={{ color: comp.compiledCode ? "#0d99ff" : "#bbb" }}>{"<>"}</span>
+								{comp.name}
+								{comp.compilationError && <span style={{ color: "#f44" }}>!</span>}
+							</span>
+						</button>
 						<span style={{ display: "flex", gap: 4 }}>
 							<button
+								type="button"
 								onClick={(e) => handleAddInstance(e, comp.id)}
 								disabled={!comp.compiledCode}
 								style={{
@@ -107,6 +115,7 @@ export function ComponentsPanel() {
 								+
 							</button>
 							<button
+								type="button"
 								onClick={(e) => handleRemoveComponent(e, comp.id)}
 								style={{
 									background: "none",

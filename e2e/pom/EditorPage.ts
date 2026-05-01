@@ -11,8 +11,8 @@ export class EditorPage {
 
 	// ── Lifecycle ──
 
-	async goto() {
-		await this.page.goto("/")
+	async goto(path = "/") {
+		await this.page.goto(path)
 	}
 
 	async waitForReady() {
@@ -33,6 +33,11 @@ export class EditorPage {
 		const box = (await this.overlay.boundingBox())!
 		await this.page.mouse.move(box.x + to.x, box.y + to.y, { steps })
 		await this.page.mouse.up()
+	}
+
+	async panCanvas(deltaX: number, deltaY: number, position = { x: 330, y: 150 }) {
+		await this.overlay.hover({ position })
+		await this.page.mouse.wheel(deltaX, deltaY)
 	}
 
 	// ── Resize ──
@@ -63,31 +68,31 @@ export class EditorPage {
 	// ── Toolbar ──
 
 	toolButton(name: string) {
-		return this.page.locator(`.toolbar-button[title="${name}"]`)
+		return this.page.getByTitle(name)
 	}
 
 	// ── Properties panel ──
 
 	get positionX() {
-		return this.page.locator('[data-testid="position-x"]')
+		return this.page.getByTestId("position-x")
 	}
 	get positionY() {
-		return this.page.locator('[data-testid="position-y"]')
+		return this.page.getByTestId("position-y")
 	}
 	get propW() {
-		return this.page.locator('[data-testid="style-width"]')
+		return this.page.getByTestId("style-width")
 	}
 	get propH() {
-		return this.page.locator('[data-testid="style-height"]')
+		return this.page.getByTestId("style-height")
 	}
 	get propFill() {
-		return this.page.locator('[data-testid="style-backgroundColor"]')
+		return this.page.getByTestId("style-backgroundColor")
 	}
 	get propertiesEmpty() {
-		return this.page.locator('[data-testid="properties-empty"]')
+		return this.page.getByTestId("properties-empty")
 	}
 	get designTab() {
-		return this.page.locator('[data-testid="design-tab"]')
+		return this.page.getByTestId("design-tab")
 	}
 	get selectionBorder() {
 		return this.page.locator(".selection-border")

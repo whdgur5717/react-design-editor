@@ -12,10 +12,11 @@ import { Toolbar } from "./Toolbar"
 export function CanvasView() {
 	const editor = useEditor()
 	const [{ edit: editingComponentId }] = useView()
+	const eventTargetRef = useRef<HTMLDivElement>(null)
 	const overlayRef = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {
-		const eventTarget = document.getElementById("canvas-event-target")
+		const eventTarget = eventTargetRef.current
 		if (!eventTarget) return
 
 		const showOverlay = debounce(() => {
@@ -95,7 +96,7 @@ export function CanvasView() {
 	return (
 		<div className="app">
 			<div>
-				<div id="canvas-event-target" className="canvas-event-target">
+				<div ref={eventTargetRef} id="canvas-event-target" className="canvas-event-target">
 					<div className="canvas-area" />
 					<div ref={overlayRef}>
 						<ToolManagerOverlay />

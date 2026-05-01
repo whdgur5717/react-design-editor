@@ -1,7 +1,6 @@
 import { clamp } from "es-toolkit"
 import { assign, setup } from "xstate"
 
-import { ResizeNodeCommand } from "../commands"
 import type { Editor } from "../services/Editor"
 import { screenToData } from "../utils/nodePosition"
 
@@ -99,11 +98,10 @@ interface PointerContext {
 
 const DRAG_THRESHOLD = 8
 const DOUBLE_CLICK_MS = 300
-
 // ── Machine factory ──
 
 export function createPointerMachine(editor: Editor) {
-	const { toolRegistry, actionRegistry, keybindingRegistry, canvas } = editor
+	const { toolRegistry, actionRegistry, keybindingRegistry } = editor
 
 	return setup({
 		types: {
@@ -117,24 +115,21 @@ export function createPointerMachine(editor: Editor) {
 			},
 
 			updateHover: (_, params: { clientX: number; clientY: number }) => {
-				canvas.hitTest(params.clientX, params.clientY).then((nodeId) => {
-					editor.setHoveredId(nodeId)
-				})
+				editor.setHoveredId(editor.hitTestNodeId(params.clientX, params.clientY))
 			},
 
 			dispatchHitTest: ({ self }, params: { event: PointerEvent_ }) => {
 				const { clientX, clientY, pointerId, shiftKey, metaKey, target } = params.event
-				canvas.hitTest(clientX, clientY).then((nodeId) => {
-					self.send({
-						type: "HIT_TEST_DONE",
-						nodeId,
-						clientX,
-						clientY,
-						pointerId,
-						shiftKey,
-						metaKey,
-						target,
-					})
+				const nodeId = editor.hitTestNodeId(clientX, clientY)
+				self.send({
+					type: "HIT_TEST_DONE",
+					nodeId,
+					clientX,
+					clientY,
+					pointerId,
+					shiftKey,
+					metaKey,
+					target,
 				})
 			},
 
@@ -152,9 +147,7 @@ export function createPointerMachine(editor: Editor) {
 				const dy = (params.clientY - context.startY) / zoom
 				editor.setDragPreview({ nodeId: context.nodeId, dx, dy })
 
-				canvas.hitTest(params.clientX, params.clientY).then((nodeId) => {
-					self.send({ type: "UPDATE_OVER_NODE", nodeId })
-				})
+				self.send({ type: "UPDATE_OVER_NODE", nodeId: editor.hitTestNodeId(params.clientX, params.clientY) })
 			},
 
 			commitDrag: ({ context }, params: { clientX: number; clientY: number }) => {
@@ -193,9 +186,8 @@ export function createPointerMachine(editor: Editor) {
 
 				const from = { width: node.style?.width, height: node.style?.height }
 				const to = { width, height }
-				const receiver = editor.getReceiver()
 				const mergeKey = `resize:${context.nodeId}:${context.resizeSessionId}`
-				editor.executeCommand(new ResizeNodeCommand(receiver, context.nodeId, from, to, mergeKey))
+				editor.resizeNode(context.nodeId, from, to, mergeKey)
 			},
 
 			singleClick: ({ context }) => {
@@ -229,6 +221,7 @@ export function createPointerMachine(editor: Editor) {
 					return
 				}
 				if (target.tagName === "IFRAME") return
+				if (shouldPreserveNativeClipboard(target, key, metaKey, ctrlKey)) return
 
 				const payload = { key, code, shiftKey, ctrlKey, metaKey, altKey }
 				const actionId = keybindingRegistry.match(payload)
@@ -241,7 +234,8 @@ export function createPointerMachine(editor: Editor) {
 			},
 
 			handleWheel: (_, params: { event: WheelEvent_ }) => {
-				const { zoom, panX, panY } = editor.store.getState()
+				const zoom = editor.getZoom()
+				const { x: panX, y: panY } = editor.getPan()
 
 				if (params.event.ctrlKey || params.event.metaKey) {
 					// 줌: 마우스 포인터 기준
@@ -249,11 +243,11 @@ export function createPointerMachine(editor: Editor) {
 					const ratio = newZoom / zoom
 					const newPanX = params.event.clientX - (params.event.clientX - panX) * ratio
 					const newPanY = params.event.clientY - (params.event.clientY - panY) * ratio
-					editor.store.getState().setZoom(newZoom)
-					editor.store.getState().setPan(newPanX, newPanY)
+					editor.setZoom(newZoom)
+					editor.setPan(newPanX, newPanY)
 				} else {
 					// 팬
-					editor.store.getState().setPan(panX - params.event.deltaX, panY - params.event.deltaY)
+					editor.setPan(panX - params.event.deltaX, panY - params.event.deltaY)
 				}
 			},
 
@@ -365,7 +359,6 @@ export function createPointerMachine(editor: Editor) {
 				},
 			},
 
-			// async hitTest 결과를 기다리는 중간 상태
 			hitTesting: {
 				on: {
 					HIT_TEST_DONE: {
@@ -478,4 +471,13 @@ export function createPointerMachine(editor: Editor) {
 			},
 		},
 	})
+}
+function shouldPreserveNativeClipboard(target: HTMLElement, key: string, metaKey: boolean, ctrlKey: boolean) {
+	const isClipboardShortcut = (metaKey || ctrlKey) && ["c", "x", "v"].includes(key.toLowerCase())
+	if (!isClipboardShortcut) return false
+
+	const selection = window.getSelection()?.toString().trim()
+	if (!selection) return false
+
+	return !target.closest("#canvas-event-target")
 }

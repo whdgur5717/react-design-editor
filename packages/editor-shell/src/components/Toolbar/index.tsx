@@ -26,22 +26,23 @@ export function Toolbar() {
 	)
 
 	const { canUndo, canRedo } = useSyncExternalStore(
-		(listener) => editor.commandHistory.subscribe(listener),
-		() => editor.commandHistory.getSnapshot(),
+		(listener) => editor.subscribeHistory(listener),
+		() => editor.getHistorySnapshot(),
 	)
 
 	return (
 		<div className="toolbar">
 			<div className="toolbar-left">
-				<button className="toolbar-button" onClick={() => editor.commandHistory.undo()} disabled={!canUndo} title="Undo">
+				<button type="button" className="toolbar-button" onClick={() => editor.undo()} disabled={!canUndo} title="Undo">
 					↶
 				</button>
-				<button className="toolbar-button" onClick={() => editor.commandHistory.redo()} disabled={!canRedo} title="Redo">
+				<button type="button" className="toolbar-button" onClick={() => editor.redo()} disabled={!canRedo} title="Redo">
 					↷
 				</button>
 				<div className="toolbar-separator" />
 				{tools.map((tool) => (
 					<button
+						type="button"
 						key={tool.id}
 						className={`toolbar-button ${activeTool === tool.id ? "active" : ""}`}
 						onClick={() => setActiveTool(tool.id)}
@@ -52,11 +53,11 @@ export function Toolbar() {
 				))}
 			</div>
 			<div className="toolbar-right">
-				<button className="toolbar-button" onClick={() => setZoom(zoom - 0.1)} title="Zoom Out">
+				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom - 0.1)} title="Zoom Out">
 					−
 				</button>
 				<span className="zoom-level">{Math.round(zoom * 100)}%</span>
-				<button className="toolbar-button" onClick={() => setZoom(zoom + 0.1)} title="Zoom In">
+				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom + 0.1)} title="Zoom In">
 					+
 				</button>
 			</div>

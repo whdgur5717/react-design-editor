@@ -1,6 +1,5 @@
 import type { ClickPayload } from "@design-editor/core"
 
-import { AddNodeCommand } from "../commands"
 import { createTextNode } from "./nodeFactory"
 import { BaseTool } from "./types"
 
@@ -14,10 +13,7 @@ export class TextTool extends BaseTool {
 	override onClick(_nodeId: string | null, payload: ClickPayload): void {
 		const node = createTextNode(payload.x, payload.y, 150)
 		const pageId = this.service.getCurrentPageId()
-		const receiver = this.service.getReceiver()
-
-		const command = new AddNodeCommand(receiver, pageId, node)
-		this.service.executeCommand(command)
+		this.service.executeAddNode(pageId, node)
 
 		this.service.setSelection([node.id])
 		this.service.setActiveTool("select")

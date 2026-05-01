@@ -74,19 +74,14 @@ export function getNodePageRectHybrid(
 	panY = 0,
 ): Rect | null {
 	if (isRootNode(nodeId, page)) {
-		const dataRect = getNodePageRect(nodeId, page)
-		if (!dataRect) return null
-
-		if (dataRect.width === 0 || dataRect.height === 0) {
-			const cached = cache[nodeId]
-			if (cached) {
-				// 캐시는 screen space이므로 zoom으로 나눠 page space로 변환
-				if (dataRect.width === 0) dataRect.width = cached.width / zoom
-				if (dataRect.height === 0) dataRect.height = cached.height / zoom
-			}
+		const cached = cache[nodeId]
+		if (!cached) return null
+		return {
+			x: (cached.x - panX) / zoom,
+			y: (cached.y - panY) / zoom,
+			width: cached.width / zoom,
+			height: cached.height / zoom,
 		}
-
-		return dataRect
 	}
 
 	const cached = cache[nodeId]

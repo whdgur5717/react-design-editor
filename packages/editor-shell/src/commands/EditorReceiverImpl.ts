@@ -2,7 +2,7 @@ import type { Position, SceneNode, Size } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 import type { EditorStoreApi } from "../store/editor"
-import type { EditorReceiver, InstanceOverrides } from "./types"
+import type { EditorReceiver, InstanceOverrides, NodePageContext } from "./types"
 
 /**
  * EditorReceiverImpl - EditorReceiver 구현체
@@ -13,40 +13,40 @@ export class EditorReceiverImpl implements EditorReceiver {
 
 	// ========== 노드 액션 ==========
 
-	updateNode(id: string, updates: Partial<SceneNode>) {
-		this.store.getState().updateNode(id, updates)
+	updateNode(id: string, updates: Partial<SceneNode>, context?: NodePageContext) {
+		this.store.getState().updateNode(id, updates, context)
 	}
 
-	addNode(parentId: string, node: SceneNode, index?: number) {
-		this.store.getState().addNode(parentId, node, index)
+	addNode(parentId: string, node: SceneNode, index?: number, context?: NodePageContext) {
+		this.store.getState().addNode(parentId, node, index, context)
 	}
 
-	removeNode(id: string) {
-		this.store.getState().removeNode(id)
+	removeNode(id: string, context?: NodePageContext) {
+		this.store.getState().removeNode(id, context)
 	}
 
-	moveNode(id: string, position: Position) {
-		this.store.getState().moveNode(id, position)
+	moveNode(id: string, position: Position, context?: NodePageContext) {
+		this.store.getState().moveNode(id, position, context)
 	}
 
-	resizeNode(id: string, size: Size) {
-		this.store.getState().resizeNode(id, size)
+	resizeNode(id: string, size: Size, context?: NodePageContext) {
+		this.store.getState().resizeNode(id, size, context)
 	}
 
-	reorderNode(parentId: string, fromIndex: number, toIndex: number) {
-		this.store.getState().reorderNode(parentId, fromIndex, toIndex)
+	reorderNode(parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) {
+		this.store.getState().reorderNode(parentId, fromIndex, toIndex, context)
 	}
 
-	reparentNode(sourceId: string, newParentId: string) {
-		this.store.getState().reparentNode(sourceId, newParentId)
+	reparentNode(sourceId: string, newParentId: string, context?: NodePageContext) {
+		this.store.getState().reparentNode(sourceId, newParentId, context)
 	}
 
-	toggleVisibility(id: string) {
-		this.store.getState().toggleVisibility(id)
+	toggleVisibility(id: string, context?: NodePageContext) {
+		this.store.getState().toggleVisibility(id, context)
 	}
 
-	toggleLocked(id: string) {
-		this.store.getState().toggleLocked(id)
+	toggleLocked(id: string, context?: NodePageContext) {
+		this.store.getState().toggleLocked(id, context)
 	}
 
 	duplicateNode(id: string) {
@@ -91,8 +91,8 @@ export class EditorReceiverImpl implements EditorReceiver {
 
 	// ========== 조회 메서드 ==========
 
-	findNode(id: string) {
-		return this.store.getState().findNode(id)
+	findNode(id: string, context?: NodePageContext) {
+		return this.store.getState().findNode(id, context)
 	}
 
 	getCurrentPageId() {
@@ -104,18 +104,8 @@ export class EditorReceiverImpl implements EditorReceiver {
 		return state.document.children.find((p) => p.id === state.currentPageId) ?? null
 	}
 
-	findNodeLocation(id: string) {
-		const page = this.getCurrentPage()
-		if (!page) return null
-
-		// 페이지의 직접 자식인지 확인
-		const pageChildIndex = page.children.findIndex((child) => child.id === id)
-		if (pageChildIndex !== -1) {
-			return { parentId: page.id, index: pageChildIndex }
-		}
-
-		// 트리에서 부모 찾기
-		return this.findLocationInTree(page.children, id)
+	findNodeLocation(id: string, context?: NodePageContext) {
+		return this.store.getState().findNodeLocation(id, context)
 	}
 
 	findPage(pageId: string) {
@@ -131,19 +121,4 @@ export class EditorReceiverImpl implements EditorReceiver {
 	}
 
 	// ========== Private 헬퍼 ==========
-
-	private findLocationInTree(nodes: SceneNode[], targetId: string): { parentId: string; index: number } | null {
-		for (const node of nodes) {
-			if ("children" in node && Array.isArray(node.children)) {
-				const index = node.children.findIndex((child) => child.id === targetId)
-				if (index !== -1) {
-					return { parentId: node.id, index }
-				}
-
-				const found = this.findLocationInTree(node.children, targetId)
-				if (found) return found
-			}
-		}
-		return null
-	}
 }

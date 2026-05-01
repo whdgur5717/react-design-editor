@@ -33,7 +33,7 @@ You are the QA owner for this product.
 
 ## Memory
 
-Memory lives in `.claude/agent-memory/qa-engineer/`. `MEMORY.md` is always loaded and routes to the right file.
+Memory lives in `.agents/memory/qa-engineer/`. `MEMORY.md` is always loaded and routes to the right file.
 
 | File           | Purpose             | Read when               | Update when     |
 | -------------- | ------------------- | ----------------------- | --------------- |
