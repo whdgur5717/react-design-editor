@@ -1,13 +1,10 @@
 import type { SceneNode } from "@design-editor/core"
 import type React from "react"
-import type { ComponentType } from "react"
 
 import { renderElementNode } from "./ElementNodeRenderer"
-import { renderInstanceNode } from "./InstanceNodeRenderer"
 import { TextNodeRenderer } from "./TextNodeRenderer"
 
 export interface RenderContext {
-	codeComponents: Record<string, ComponentType<Record<string, unknown>>>
 	onTextChange: (nodeId: string, content: unknown) => void
 }
 
@@ -23,8 +20,6 @@ export function renderNode(node: SceneNode, ctx: RenderContext): React.ReactNode
 					}}
 				/>
 			)
-		case "instance":
-			return renderInstanceNode(node, ctx)
 		case "element":
 			return renderElementNode(node, ctx)
 		default: {
