@@ -1,12 +1,23 @@
-import type { EditorStore } from "@design-editor/core"
-import { createContext, useContext } from "react"
+import { createContext, type PropsWithChildren, useContext, useEffect } from "react"
 import { useStore } from "zustand"
+import { useShallow } from "zustand/react/shallow"
 
 import type { Editor } from "./Editor"
 
 const EditorContext = createContext<Editor | null>(null)
 
-export const EditorProvider = EditorContext.Provider
+interface EditorProviderProps {
+	editor: Editor
+}
+
+export function EditorProvider({ editor, children }: PropsWithChildren<EditorProviderProps>) {
+	useEffect(() => {
+		editor.start()
+		return () => editor.dispose()
+	}, [editor])
+
+	return <EditorContext.Provider value={editor}>{children}</EditorContext.Provider>
+}
 
 export function useEditor() {
 	const editor = useContext(EditorContext)
@@ -14,7 +25,12 @@ export function useEditor() {
 	return editor
 }
 
-export function useEditorStore<T>(selector: (state: EditorStore) => T): T {
+type EditorStateSelector<T> = (editor: Editor) => T
+
+export function useEditorState<T>(selector: EditorStateSelector<T>): T {
 	const editor = useEditor()
-	return useStore(editor.store, selector)
+	return useStore(
+		editor.store,
+		useShallow(() => selector(editor)),
+	)
 }

@@ -2,7 +2,7 @@ import type { Position, SceneNode, Size } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 import type { EditorStoreApi } from "../store/editor"
-import type { EditorReceiver, InstanceOverrides, NodePageContext } from "./types"
+import type { EditorReceiver, NodePageContext } from "./types"
 
 /**
  * EditorReceiverImpl - EditorReceiver 구현체
@@ -53,26 +53,8 @@ export class EditorReceiverImpl implements EditorReceiver {
 		return this.store.getState().duplicateNode(id)
 	}
 
-	// ========== 컴포넌트 액션 ==========
-
-	createInstance(componentId: string, parentId: string) {
-		return this.store.getState().createInstance(componentId, parentId)
-	}
-
-	setInstanceOverride(instanceId: string, targetNodeId: string, overrides: InstanceOverrides) {
-		this.store.getState().setInstanceOverride(instanceId, targetNodeId, overrides)
-	}
-
-	resetInstanceOverrides(instanceId: string) {
-		this.store.getState().resetInstanceOverrides(instanceId)
-	}
-
 	updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>) {
 		this.store.getState().updateNodeStyle(id, styleUpdates)
-	}
-
-	setInstancePropValues(instanceId: string, propValues: Record<string, unknown>) {
-		this.store.getState().setInstancePropValues(instanceId, propValues)
 	}
 
 	// ========== 페이지 액션 ==========

@@ -479,5 +479,5 @@ function shouldPreserveNativeClipboard(target: HTMLElement, key: string, metaKey
 	const selection = window.getSelection()?.toString().trim()
 	if (!selection) return false
 
-	return !target.closest("#canvas-event-target")
+	return !target.closest("[data-design-editor-event-target]")
 }
