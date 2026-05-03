@@ -3,6 +3,12 @@
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
+	"exports": {
+		".": {
+			"types": "./src/index.tsx",
+			"import": "./src/index.tsx"
+		}
+	},
 	"scripts": {
 		"dev": "vite --port 3001",
 		"build": "vite build",

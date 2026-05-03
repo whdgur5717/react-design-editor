@@ -1,4 +1,4 @@
-import "./App.css"
+import "./shell.css"
 
 import { NuqsAdapter } from "nuqs/adapters/react"
 import { StrictMode } from "react"
