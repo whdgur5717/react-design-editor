@@ -1,0 +1,63 @@
+{
+	"name": "@design-editor/sdk",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./createEditor": {
+			"types": "./src/createEditor/index.tsx",
+			"import": "./src/createEditor/index.tsx"
+		},
+		"./EditorProvider": {
+			"types": "./src/EditorProvider/index.tsx",
+			"import": "./src/EditorProvider/index.tsx"
+		},
+		"./EditorRoot": {
+			"types": "./src/EditorRoot/index.tsx",
+			"import": "./src/EditorRoot/index.tsx"
+		},
+		"./styles.css": "./src/styles/index.css",
+		"./EditorCanvas": {
+			"types": "./src/EditorCanvas/index.tsx",
+			"import": "./src/EditorCanvas/index.tsx"
+		},
+		"./Toolbar": {
+			"types": "./src/Toolbar/index.tsx",
+			"import": "./src/Toolbar/index.tsx"
+		},
+		"./LayersPanel": {
+			"types": "./src/LayersPanel/index.tsx",
+			"import": "./src/LayersPanel/index.tsx"
+		},
+		"./PropertiesPanel": {
+			"types": "./src/PropertiesPanel/index.tsx",
+			"import": "./src/PropertiesPanel/index.tsx"
+		},
+		"./useEditor": {
+			"types": "./src/useEditor/index.tsx",
+			"import": "./src/useEditor/index.tsx"
+		}
+	},
+	"scripts": {
+		"build": "vite build && vite build --config vite.canvas.config.ts",
+		"lint": "eslint --fix",
+		"type-check": "tsgo --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@design-editor/canvas": "workspace:*",
+		"@design-editor/core": "workspace:*",
+		"@design-editor/shell": "workspace:*",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@design-editor/eslint-config": "workspace:*",
+		"@design-editor/tsconfig": "workspace:*",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^4.3.0",
+		"eslint-plugin-react": "^7.37.5",
+		"vite": "^6.0.0"
+	}
+}

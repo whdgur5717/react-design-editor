@@ -1,0 +1,11 @@
+.de-editor-root {
+	grid-template-areas:
+		"toolbar toolbar toolbar"
+		"layers canvas properties";
+	grid-template-columns: 260px minmax(0, 1fr) 260px;
+	grid-template-rows: 48px minmax(0, 1fr);
+}
+
+.de-editor-canvas-host {
+	grid-area: canvas;
+}
