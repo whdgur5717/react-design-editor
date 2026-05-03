@@ -1,6 +1,4 @@
-import { useShallow } from "zustand/react/shallow"
-
-import { useEditorStore } from "../../services/EditorContext"
+import { useEditorState } from "../../services/EditorContext"
 import { getNodePageRectHybrid, type Rect } from "../../utils/nodePosition"
 import { DragPreview } from "./DragPreview"
 import { HoverHighlight } from "./HoverHighlight"
@@ -8,18 +6,19 @@ import { ResizeHandles } from "./ResizeHandles"
 import { SelectionOverlay } from "./SelectionOverlay"
 
 export function ToolManagerOverlay() {
-	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache } = useEditorStore(
-		useShallow((s) => ({
-			selection: s.selection,
-			hoveredId: s.hoveredId,
-			zoom: s.zoom,
-			panX: s.panX,
-			panY: s.panY,
-			dragPreview: s.dragPreview,
-			nodeRectsCache: s.nodeRectsCache,
-		})),
-	)
-	const page = useEditorStore((s) => s.document.children.find((p) => p.id === s.currentPageId))
+	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache, page } = useEditorState((editor) => {
+		const pan = editor.getPan()
+		return {
+			selection: editor.getSelection(),
+			hoveredId: editor.getHoveredId(),
+			zoom: editor.getZoom(),
+			panX: pan.x,
+			panY: pan.y,
+			dragPreview: editor.getDragPreview(),
+			nodeRectsCache: editor.getNodeRectsCache(),
+			page: editor.getCurrentPage(),
+		}
+	})
 
 	if (!page) return null
 
@@ -39,7 +38,7 @@ export function ToolManagerOverlay() {
 	return (
 		<div
 			style={{
-				position: "fixed",
+				position: "absolute",
 				top: 0,
 				left: 0,
 				width: 0,

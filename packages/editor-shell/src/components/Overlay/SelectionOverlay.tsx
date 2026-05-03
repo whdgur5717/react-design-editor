@@ -10,6 +10,7 @@ export function SelectionOverlay({ rects, zoom }: SelectionOverlayProps) {
 				<div
 					key={nodeId}
 					className="selection-border"
+					data-testid={`selection-border-${nodeId}`}
 					style={{
 						position: "absolute",
 						left: 0,
