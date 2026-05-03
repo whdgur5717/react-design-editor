@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core"
 
-import type { ElementNode, InstanceNode, SceneNode, TextNode } from "../types/node"
+import type { ElementNode, SceneNode, TextNode } from "../types/node"
 
 /**
  * Codegen 출력 옵션
@@ -62,26 +62,12 @@ function serializeTextNode(node: TextNode, options: Required<SerializeOptions>, 
 	return `${currentIndent}${text}`
 }
 
-function serializeInstanceNode(node: InstanceNode, options: Required<SerializeOptions>, depth: number): string {
-	const currentIndent = options.indent.repeat(depth)
-	const componentName = node.componentId
-
-	if (!node.propValues || Object.keys(node.propValues).length === 0) {
-		return `${currentIndent}<${componentName} />`
-	}
-
-	const propsStr = serializeProps(node.propValues)
-	return `${currentIndent}<${componentName} ${propsStr} />`
-}
-
 function serializeSceneNode(node: SceneNode, options: Required<SerializeOptions>, depth: number): string {
 	switch (node.type) {
 		case "element":
 			return serializeElementNode(node, options, depth)
 		case "text":
 			return serializeTextNode(node, options, depth)
-		case "instance":
-			return serializeInstanceNode(node, options, depth)
 		default: {
 			const _exhaustive: never = node
 			return _exhaustive

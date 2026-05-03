@@ -1,9 +1,7 @@
 import type {
-	CodeComponentDefinition,
 	DocumentNode,
 	EditorStore,
 	EditorTool,
-	InstanceNode,
 	NodeRect,
 	PageNode,
 	Position,
@@ -211,7 +209,6 @@ export function createEditorStore() {
 				// 초기 상태
 				document: initialDocument,
 				currentPageId: initialPageId,
-				codeComponents: [],
 				selection: [],
 				hoveredId: null,
 				activeTool: "select",
@@ -460,69 +457,6 @@ export function createEditorStore() {
 					return cloned.id
 				},
 
-				createInstance(componentId: string, parentId: string) {
-					const state = get()
-					const codeComponent = state.codeComponents.find((c) => c.id === componentId)
-
-					if (!codeComponent) return null
-
-					const instanceId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-					const instance: InstanceNode = {
-						id: instanceId,
-						type: "instance",
-						componentId,
-						x: 100,
-						y: 100,
-					}
-
-					const defaultProps: Record<string, unknown> = {}
-					for (const [key, control] of Object.entries(codeComponent.propertyControls)) {
-						if (control.defaultValue !== undefined) {
-							defaultProps[key] = control.defaultValue
-						}
-					}
-					if (Object.keys(defaultProps).length > 0) {
-						instance.propValues = defaultProps
-					}
-
-					state.addNode(parentId, instance)
-					state.setSelection([instanceId])
-
-					return instanceId
-				},
-
-				setInstanceOverride(
-					instanceId: string,
-					targetNodeId: string,
-					overrides: { props?: Record<string, unknown>; style?: CSSProperties; children?: string },
-				) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-
-						if (!node.overrides) node.overrides = {}
-						node.overrides[targetNodeId] = {
-							...node.overrides[targetNodeId],
-							...overrides,
-						}
-					})
-				},
-
-				resetInstanceOverrides(instanceId: string) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-
-						node.overrides = undefined
-					})
-				},
-
 				// 페이지 액션
 				setCurrentPage(pageId: string) {
 					set((state) => {
@@ -564,52 +498,6 @@ export function createEditorStore() {
 					set((state) => {
 						const page = state.document.children.find((p) => p.id === pageId)
 						if (page) page.name = name
-					})
-				},
-
-				// 코드 컴포넌트 액션
-				addCodeComponent(name: string, source: string): string {
-					const id = `code-comp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-					set((state) => {
-						state.codeComponents.push({
-							id,
-							name,
-							source,
-							compiledCode: null,
-							propertyControls: {},
-							compilationError: null,
-						} satisfies CodeComponentDefinition)
-					})
-					return id
-				},
-
-				updateCodeComponent(
-					id: string,
-					updates: Partial<
-						Pick<CodeComponentDefinition, "source" | "compiledCode" | "propertyControls" | "compilationError" | "name">
-					>,
-				) {
-					set((state) => {
-						const comp = state.codeComponents.find((c) => c.id === id)
-						if (!comp) return
-						Object.assign(comp, updates)
-					})
-				},
-
-				removeCodeComponent(id: string) {
-					set((state) => {
-						const idx = state.codeComponents.findIndex((c) => c.id === id)
-						if (idx !== -1) state.codeComponents.splice(idx, 1)
-					})
-				},
-
-				setInstancePropValues(instanceId: string, propValues: Record<string, unknown>) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-						node.propValues = propValues
 					})
 				},
 

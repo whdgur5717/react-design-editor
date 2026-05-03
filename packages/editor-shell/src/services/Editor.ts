@@ -18,7 +18,6 @@ import { TextTool } from "../tools/TextTool"
 import { ToolRegistry } from "../tools/ToolRegistry"
 import { ToolServiceImpl } from "../tools/ToolServiceImpl"
 import { ApplyCanvasTextChangeUsecase } from "../usecases/ApplyCanvasTextChangeUsecase"
-import { CodeComponentUsecase } from "../usecases/CodeComponentUsecase"
 import { DeleteSelectionUsecase } from "../usecases/DeleteSelectionUsecase"
 import { DuplicateSelectionUsecase } from "../usecases/DuplicateSelectionUsecase"
 import { NodePropertyUsecase } from "../usecases/NodePropertyUsecase"
@@ -40,7 +39,6 @@ export class Editor {
 	private duplicateSelection: DuplicateSelectionUsecase
 	private selectAll: SelectAllUsecase
 	private applyCanvasTextChange: ApplyCanvasTextChangeUsecase
-	private codeComponent: CodeComponentUsecase
 	private nodeProperty: NodePropertyUsecase
 
 	constructor() {
@@ -63,7 +61,6 @@ export class Editor {
 		this.duplicateSelection = new DuplicateSelectionUsecase(this.receiver, this.commandHistory)
 		this.selectAll = new SelectAllUsecase(this.receiver)
 		this.applyCanvasTextChange = new ApplyCanvasTextChangeUsecase(this.receiver, this.commandHistory)
-		this.codeComponent = new CodeComponentUsecase(this.store)
 		this.nodeProperty = new NodePropertyUsecase(this.receiver, this.commandHistory)
 
 		// 액션 등록
@@ -173,7 +170,7 @@ export class Editor {
 
 	subscribeCanvasSync() {
 		return this.store.subscribe(
-			(s) => [s.document, s.currentPageId, s.codeComponents, s.zoom, s.panX, s.panY, s.selection, s.activeTool],
+			(s) => [s.document, s.currentPageId, s.zoom, s.panX, s.panY, s.selection, s.activeTool],
 			() => this.syncToCanvas(),
 			{ equalityFn: shallow },
 		)
@@ -185,26 +182,6 @@ export class Editor {
 
 	setNodeRectsCache(rects: Record<string, NodeRect>) {
 		this.store.getState().setNodeRectsCache(rects)
-	}
-
-	createCodeComponent(name: string, source: string) {
-		return this.codeComponent.create(name, source)
-	}
-
-	renameCodeComponent(id: string, name: string) {
-		this.codeComponent.rename(id, name)
-	}
-
-	updateCodeComponent(id: string, updates: Parameters<CodeComponentUsecase["update"]>[1]) {
-		this.codeComponent.update(id, updates)
-	}
-
-	removeCodeComponent(id: string) {
-		this.codeComponent.remove(id)
-	}
-
-	addCodeComponentInstanceToCurrentPage(componentId: string) {
-		return this.codeComponent.addInstanceToCurrentPage(componentId)
 	}
 
 	updateNodeStyleProperty(
@@ -219,19 +196,8 @@ export class Editor {
 		this.nodeProperty.updatePosition(nodeId, position)
 	}
 
-	updateInstancePropValues(nodeId: string, propValues: Parameters<NodePropertyUsecase["updatePropValues"]>[1]) {
-		this.nodeProperty.updatePropValues(nodeId, propValues)
-	}
-
 	syncToCanvas() {
 		const state = this.store.getState()
-
-		const codeComponentSources: Record<string, string> = {}
-		for (const cc of state.codeComponents) {
-			if (cc.compiledCode) {
-				codeComponentSources[cc.id] = cc.compiledCode
-			}
-		}
 
 		this.canvas.syncState({
 			document: state.document,
@@ -242,7 +208,6 @@ export class Editor {
 			selection: state.selection,
 			activeTool: state.activeTool,
 			cursor: this.toolRegistry.getActiveTool()?.cursor ?? "default",
-			codeComponentSources,
 		})
 	}
 
@@ -277,8 +242,20 @@ export class Editor {
 		return this.store.getState().selection
 	}
 
+	getHoveredId() {
+		return this.store.getState().hoveredId
+	}
+
 	getActiveTool(): EditorTool {
 		return this.store.getState().activeTool
+	}
+
+	getDragPreview() {
+		return this.store.getState().dragPreview
+	}
+
+	getNodeRectsCache() {
+		return this.store.getState().nodeRectsCache
 	}
 
 	getNodeRenderedRect(nodeId: string): NodeRect | null {
@@ -315,7 +292,7 @@ export class Editor {
 	}
 
 	setActiveTool(tool: EditorTool) {
-		this.store.getState().setActiveTool(tool)
+		this.toolRegistry.setActiveTool(tool)
 	}
 
 	setDragPreview(preview: { nodeId: string; dx: number; dy: number } | null) {
@@ -328,6 +305,18 @@ export class Editor {
 
 	setZoom(zoom: number) {
 		this.store.getState().setZoom(zoom)
+	}
+
+	reorderNode(parentId: string, fromIndex: number, toIndex: number) {
+		this.receiver.reorderNode(parentId, fromIndex, toIndex)
+	}
+
+	toggleVisibility(id: string) {
+		this.receiver.toggleVisibility(id)
+	}
+
+	toggleLocked(id: string) {
+		this.receiver.toggleLocked(id)
 	}
 
 	// ── Command 실행 ──

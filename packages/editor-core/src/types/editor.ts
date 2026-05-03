@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 
-import type { CodeComponentDefinition, DocumentNode, Position, SceneNode, Size } from "./node"
+import type { DocumentNode, Position, SceneNode, Size } from "./node"
 import type { NodeRect } from "./protocol"
 
 /**
@@ -17,9 +17,6 @@ export interface EditorState {
 
 	/** 현재 페이지 ID */
 	currentPageId: string
-
-	/** 코드 컴포넌트 정의 목록 */
-	codeComponents: CodeComponentDefinition[]
 
 	/** 선택된 노드 ID 목록 */
 	selection: string[]
@@ -101,19 +98,6 @@ export interface EditorActions {
 	/** 노드 복제 */
 	duplicateNode: (id: string) => string | null
 
-	/** 컴포넌트 인스턴스 생성 */
-	createInstance: (componentId: string, parentId: string) => string | null
-
-	/** 인스턴스 오버라이드 설정 */
-	setInstanceOverride: (
-		instanceId: string,
-		targetNodeId: string,
-		overrides: { props?: Record<string, unknown>; style?: Record<string, unknown>; children?: string },
-	) => void
-
-	/** 인스턴스 오버라이드 리셋 */
-	resetInstanceOverrides: (instanceId: string) => void
-
 	/** 페이지 변경 */
 	setCurrentPage: (pageId: string) => void
 
@@ -134,23 +118,6 @@ export interface EditorActions {
 
 	/** 노드 렌더링 rect 캐시 설정 */
 	setNodeRectsCache: (rects: Record<string, NodeRect>) => void
-
-	/** 코드 컴포넌트 추가 */
-	addCodeComponent: (name: string, source: string) => string
-
-	/** 코드 컴포넌트 업데이트 */
-	updateCodeComponent: (
-		id: string,
-		updates: Partial<
-			Pick<CodeComponentDefinition, "source" | "compiledCode" | "propertyControls" | "compilationError" | "name">
-		>,
-	) => void
-
-	/** 코드 컴포넌트 삭제 */
-	removeCodeComponent: (id: string) => void
-
-	/** 코드 컴포넌트 인스턴스의 prop 값 설정 */
-	setInstancePropValues: (instanceId: string, propValues: Record<string, unknown>) => void
 
 	/** 노드 스타일 개별 속성 업데이트 */
 	updateNodeStyle: (id: string, styleUpdates: Partial<CSSProperties>) => void
