@@ -1,14 +1,11 @@
 import { useState } from "react"
 
-import { useEditorStore } from "../../services/EditorContext"
+import { useEditorState } from "../../services/EditorContext"
 import { LayerChildren } from "./LayerChildren"
 
 export function LayersPanelContent() {
-	const document = useEditorStore((state) => state.document)
-	const currentPageId = useEditorStore((state) => state.currentPageId)
+	const currentPage = useEditorState((editor) => editor.getCurrentPage())
 	const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
-
-	const currentPage = document.children.find((p) => p.id === currentPageId)
 
 	const toggleCollapse = (id: string) => {
 		setCollapsedIds((prev) => {

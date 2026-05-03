@@ -19,12 +19,5 @@ export function useNodeProperty(nodeId: string) {
 		[editor, nodeId],
 	)
 
-	const updatePropValues = useCallback(
-		(propValues: Record<string, unknown>) => {
-			editor.updateInstancePropValues(nodeId, propValues)
-		},
-		[editor, nodeId],
-	)
-
-	return { updateStyle, updatePosition, updatePropValues }
+	return { updateStyle, updatePosition }
 }

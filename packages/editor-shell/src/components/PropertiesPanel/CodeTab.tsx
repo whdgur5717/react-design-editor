@@ -6,15 +6,6 @@ export function CodeTab({ node }: { node: SceneNode }) {
 	const [showFull, setShowFull] = useState(false)
 	const [copied, setCopied] = useState(false)
 
-	// InstanceNode는 코드 생성 불가
-	if (node.type === "instance") {
-		return (
-			<div className="code-tab">
-				<div className="empty-state">Instance nodes cannot be exported to code directly</div>
-			</div>
-		)
-	}
-
 	// TextNode는 코드 생성 미지원 (추후 구현)
 	if (node.type === "text") {
 		return (

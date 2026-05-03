@@ -10,7 +10,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
-import { useEditorStore } from "../../services/EditorContext"
+import { useEditor } from "../../services/EditorContext"
 import { SortableLayerItem } from "./SortableLayerItem"
 
 interface LayerChildrenProps {
@@ -22,7 +22,7 @@ interface LayerChildrenProps {
 }
 
 export function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCollapse }: LayerChildrenProps) {
-	const reorderNode = useEditorStore((state) => state.reorderNode)
+	const editor = useEditor()
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -43,7 +43,7 @@ export function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCo
 		const newIndex = nodes.findIndex((c) => c.id === over.id)
 
 		if (oldIndex !== -1 && newIndex !== -1) {
-			reorderNode(parentId, oldIndex, newIndex)
+			editor.reorderNode(parentId, oldIndex, newIndex)
 		}
 	}
 

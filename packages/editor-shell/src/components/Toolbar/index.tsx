@@ -1,10 +1,7 @@
-import "./Toolbar.css"
-
 import type { EditorTool } from "@design-editor/core"
 import { useSyncExternalStore } from "react"
-import { useShallow } from "zustand/react/shallow"
 
-import { useEditor, useEditorStore } from "../../services/EditorContext"
+import { useEditorState } from "../../services/EditorContext"
 
 const tools: { id: EditorTool; label: string; icon: string }[] = [
 	{ id: "select", label: "Select", icon: "↖" },
@@ -14,16 +11,11 @@ const tools: { id: EditorTool; label: string; icon: string }[] = [
 ]
 
 export function Toolbar() {
-	const editor = useEditor()
-
-	const { activeTool, setActiveTool, zoom, setZoom } = useEditorStore(
-		useShallow((state) => ({
-			activeTool: state.activeTool,
-			setActiveTool: state.setActiveTool,
-			zoom: state.zoom,
-			setZoom: state.setZoom,
-		})),
-	)
+	const { editor, activeTool, zoom } = useEditorState((editor) => ({
+		editor,
+		activeTool: editor.getActiveTool(),
+		zoom: editor.getZoom(),
+	}))
 
 	const { canUndo, canRedo } = useSyncExternalStore(
 		(listener) => editor.subscribeHistory(listener),
@@ -45,7 +37,7 @@ export function Toolbar() {
 						type="button"
 						key={tool.id}
 						className={`toolbar-button ${activeTool === tool.id ? "active" : ""}`}
-						onClick={() => setActiveTool(tool.id)}
+						onClick={() => editor.setActiveTool(tool.id)}
 						title={tool.label}
 					>
 						{tool.icon}
@@ -53,11 +45,11 @@ export function Toolbar() {
 				))}
 			</div>
 			<div className="toolbar-right">
-				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom - 0.1)} title="Zoom Out">
+				<button type="button" className="toolbar-button" onClick={() => editor.setZoom(zoom - 0.1)} title="Zoom Out">
 					−
 				</button>
 				<span className="zoom-level">{Math.round(zoom * 100)}%</span>
-				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom + 0.1)} title="Zoom In">
+				<button type="button" className="toolbar-button" onClick={() => editor.setZoom(zoom + 0.1)} title="Zoom In">
 					+
 				</button>
 			</div>
