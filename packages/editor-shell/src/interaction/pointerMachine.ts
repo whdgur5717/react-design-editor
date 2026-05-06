@@ -51,17 +51,6 @@ type WheelEvent_ = {
 	metaKey: boolean
 }
 
-type HitTestDoneEvent = {
-	type: "HIT_TEST_DONE"
-	nodeId: string | null
-	clientX: number
-	clientY: number
-	pointerId: number
-	shiftKey: boolean
-	metaKey: boolean
-	target: HTMLElement
-}
-
 type UpdateOverNodeEvent = {
 	type: "UPDATE_OVER_NODE"
 	nodeId: string | null
@@ -73,7 +62,6 @@ type PointerMachineEvent =
 	| PointerUpEvent
 	| KeyDownEvent
 	| WheelEvent_
-	| HitTestDoneEvent
 	| UpdateOverNodeEvent
 
 // ── Context ──
@@ -116,21 +104,6 @@ export function createPointerMachine(editor: Editor) {
 
 			updateHover: (_, params: { clientX: number; clientY: number }) => {
 				editor.setHoveredId(editor.hitTestNodeId(params.clientX, params.clientY))
-			},
-
-			dispatchHitTest: ({ self }, params: { event: PointerEvent_ }) => {
-				const { clientX, clientY, pointerId, shiftKey, metaKey, target } = params.event
-				const nodeId = editor.hitTestNodeId(clientX, clientY)
-				self.send({
-					type: "HIT_TEST_DONE",
-					nodeId,
-					clientX,
-					clientY,
-					pointerId,
-					shiftKey,
-					metaKey,
-					target,
-				})
 			},
 
 			initDrag: ({ context }) => {
@@ -220,7 +193,6 @@ export function createPointerMachine(editor: Editor) {
 				if (target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
 					return
 				}
-				if (target.tagName === "IFRAME") return
 				if (shouldPreserveNativeClipboard(target, key, metaKey, ctrlKey)) return
 
 				const payload = { key, code, shiftKey, ctrlKey, metaKey, altKey }
@@ -344,34 +316,27 @@ export function createPointerMachine(editor: Editor) {
 							}),
 						},
 						{
-							target: "hitTesting",
-							actions: [{ type: "dispatchHitTest", params: ({ event }) => ({ event }) }],
+							target: "active.pending",
+							actions: assign(({ event }) => {
+								event.target.setPointerCapture(event.pointerId)
+								return {
+									startX: event.clientX,
+									startY: event.clientY,
+									nodeId: editor.hitTestNodeId(event.clientX, event.clientY),
+									pointerId: event.pointerId,
+									shiftKey: event.shiftKey,
+									metaKey: event.metaKey,
+									target: event.target,
+									initialNodePosition: { x: 0, y: 0 },
+									lastOverNodeId: null,
+									startWidth: 0,
+									startHeight: 0,
+									resizeHandle: "",
+									resizeSessionId: "",
+								}
+							}),
 						},
 					],
-				},
-			},
-
-			hitTesting: {
-				on: {
-					HIT_TEST_DONE: {
-						target: "active.pending",
-						actions: assign(({ event }) => {
-							event.target.setPointerCapture(event.pointerId)
-							return {
-								startX: event.clientX,
-								startY: event.clientY,
-								nodeId: event.nodeId,
-								pointerId: event.pointerId,
-								shiftKey: event.shiftKey,
-								metaKey: event.metaKey,
-								target: event.target,
-								initialNodePosition: { x: 0, y: 0 },
-								startWidth: 0,
-								startHeight: 0,
-								resizeHandle: "",
-							}
-						}),
-					},
 				},
 			},
 
