@@ -17,31 +17,28 @@ editor-shell/
 |- src/hooks/        # view and draft helpers
 |- src/interaction/  # pointer state machine
 |- src/keybindings/  # keyboard mapping registry and defaults
-|- src/services/     # Editor facade, CanvasBridge, ClipboardRuntime, compiler, context
+|- src/services/     # Editor facade, ClipboardRuntime, compiler, context
 |- src/store/        # Zustand store and tree mutation helpers
 `- src/tools/        # active tool implementations and contracts
 ```
 
 ## WHERE TO LOOK
 
-| Task                          | Location                         | Notes                                |
-| ----------------------------- | -------------------------------- | ------------------------------------ |
-| Shell entry and canvas sync   | `src/`                           | Shell owns iframe lifecycle and sync |
-| State and long-lived services | `src/services/`, `src/store/`    | Source of truth lives here           |
-| Interaction flow              | `src/interaction/`, `src/tools/` | Input handling and tool behavior     |
-| UI chrome                     | `src/components/`                | Panels, overlays, toolbar            |
-| State-changing behavior       | `src/commands/`                  | Mutation layer                       |
-| Boundary and naming rules     | `ARCHITECTURE-GUIDE.md`          | Editor/usecase/runtime conventions   |
+| Task                          | Location                         | Notes                              |
+| ----------------------------- | -------------------------------- | ---------------------------------- |
+| State and long-lived services | `src/services/`, `src/store/`    | Source of truth lives here         |
+| Interaction flow              | `src/interaction/`, `src/tools/` | Input handling and tool behavior   |
+| UI chrome                     | `src/components/`                | Panels, overlays, toolbar          |
+| State-changing behavior       | `src/commands/`                  | Mutation layer                     |
+| Boundary and naming rules     | `ARCHITECTURE-GUIDE.md`          | Editor/usecase/runtime conventions |
 
 ## CONVENTIONS
 
-- Shell store is the single source of truth; Canvas only mirrors via `syncState()`
 - UI-originated document changes should become commands unless the existing architecture already models them as store-only view state
 - Preserve the split between state, mutation, interaction, and UI layers
 
 ## ANTI-PATTERNS
 
-- Do not call Canvas DOM directly from random components; go through the existing bridge and sync flow
 - Do not add ad hoc mutation logic inside panels when a command belongs in `src/commands/`
 - Do not mix state ownership into render-only UI
 
