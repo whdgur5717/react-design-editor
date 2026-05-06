@@ -5,46 +5,11 @@
 
 @layer reset, base, tokens, recipes, utilities;
 
-.app {
-	--editor-toolbar-height: 48px;
-	--editor-left-panel-width: 260px;
-	--editor-right-panel-width: 260px;
-	display: grid;
-	grid-template-areas:
-		"toolbar toolbar toolbar"
-		"layers canvas properties";
-	grid-template-columns: var(--editor-left-panel-width, 260px) minmax(0, 1fr) var(--editor-right-panel-width, 260px);
-	grid-template-rows: var(--editor-toolbar-height, 48px) minmax(0, 1fr);
-	width: 100%;
-	height: 100vh;
-	overflow: hidden;
-	color: #1a1a1a;
-	background: #f5f5f5;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	overscroll-behavior: none;
-}
-
-.app,
-.app *,
-.app *::before,
-.app *::after {
-	box-sizing: border-box;
-}
-
 .canvas-interaction-surface {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
 	pointer-events: none;
-}
-
-.canvas-host {
-	grid-area: canvas;
-	position: relative;
-	min-width: 0;
-	min-height: 0;
-	overflow: hidden;
-	background: #f5f5f5;
 }
 
 .canvas-event-target {
