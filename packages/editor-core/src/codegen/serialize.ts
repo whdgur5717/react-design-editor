@@ -18,7 +18,7 @@ const DEFAULT_OPTIONS: Required<SerializeOptions> = {
 }
 
 /**
- * CSSProperties를 inline style 문자열로 변환
+ * node style을 inline style 문자열로 변환
  */
 function serializeStyle(style: Record<string, unknown>): string {
 	const entries = Object.entries(style).filter(([, value]) => value !== undefined)

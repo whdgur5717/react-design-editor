@@ -1,6 +1,4 @@
-import type { CSSProperties } from "react"
-
-import type { DocumentNode, Position, SceneNode, Size } from "./node"
+import type { DocumentNode, NodeStyle, Position, SceneNode, Size } from "./node"
 import type { NodeRect } from "./protocol"
 
 /**
@@ -132,7 +130,7 @@ export interface EditorActions {
 	setNodeRectsCache: (rects: Record<string, NodeRect>) => void
 
 	/** 노드 스타일 개별 속성 업데이트 */
-	updateNodeStyle: (id: string, styleUpdates: Partial<CSSProperties>) => void
+	updateNodeStyle: (id: string, styleUpdates: Partial<NodeStyle>) => void
 }
 
 /**

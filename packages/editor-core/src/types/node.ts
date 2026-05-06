@@ -1,5 +1,7 @@
 import type { JSONContent } from "@tiptap/core"
-import type { CSSProperties } from "react"
+import type { Properties } from "csstype"
+
+export type NodeStyle = Properties<string | number>
 
 /**
  * 모든 SceneNode의 공통 필드
@@ -8,7 +10,7 @@ export interface BaseNode {
 	id: string
 	x?: number
 	y?: number
-	style?: CSSProperties
+	style?: NodeStyle
 	visible?: boolean
 	locked?: boolean
 	children?: SceneNode[]
@@ -69,7 +71,7 @@ export interface Position {
 /**
  * 노드 크기 정보
  */
-export type Size = Pick<CSSProperties, "width" | "height">
+export type Size = Pick<NodeStyle, "width" | "height">
 
 /**
  * 노드 바운딩 박스

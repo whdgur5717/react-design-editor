@@ -2,7 +2,7 @@ import { z } from "zod"
 
 /**
  * CSS 스타일 스키마 (주요 속성들)
- * 전체 CSSProperties를 검증하진 않고, 자주 사용되는 속성들만 정의
+ * 전체 NodeStyle을 검증하진 않고, 자주 사용되는 속성들만 정의
  */
 export const styleSchema = z.record(z.string(), z.unknown())
 
