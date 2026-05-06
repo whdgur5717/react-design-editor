@@ -61,40 +61,8 @@ export function isRootNode(nodeId: string, page: PageNode): boolean {
 	return page.children.some((c) => c.id === nodeId)
 }
 
-/**
- * 노드의 위치와 크기를 page space로 반환.
- * 루트 노드는 데이터에서 직접 계산, 비루트 노드는 Canvas가 측정한 캐시를 역변환해서 구한다.
- */
-export function getNodePageRectHybrid(
-	nodeId: string,
-	zoom: number,
-	page: PageNode,
-	cache: Record<string, NodeRect>,
-	panX = 0,
-	panY = 0,
-): Rect | null {
-	if (isRootNode(nodeId, page)) {
-		const cached = cache[nodeId]
-		if (!cached) return null
-		return {
-			x: (cached.x - panX) / zoom,
-			y: (cached.y - panY) / zoom,
-			width: cached.width / zoom,
-			height: cached.height / zoom,
-		}
-	}
-
-	const cached = cache[nodeId]
-	if (!cached) return null
-
-	// 캐시는 getBoundingClientRect() 값이라 zoom/pan이 적용돼있음.
-	// page space로 복원: pan 빼고 zoom으로 나눈다.
-	return {
-		x: (cached.x - panX) / zoom,
-		y: (cached.y - panY) / zoom,
-		width: cached.width / zoom,
-		height: cached.height / zoom,
-	}
+export function getCachedNodePageRect(nodeId: string, cache: Record<string, NodeRect>): Rect | null {
+	return cache[nodeId] ?? null
 }
 
 // ── 로컬 헬퍼 ──

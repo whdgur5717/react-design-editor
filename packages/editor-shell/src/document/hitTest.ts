@@ -1,6 +1,6 @@
 import type { NodeRect, PageNode, SceneNode } from "@design-editor/core"
 
-import { getNodePageRectHybrid } from "../utils/nodePosition"
+import { getCachedNodePageRect, screenToData } from "../utils/nodePosition"
 
 export function hitTestNodeIdInPage(
 	page: PageNode,
@@ -13,18 +13,13 @@ export function hitTestNodeIdInPage(
 ): string | null {
 	const orderedIds: string[] = []
 	collectIdsInRenderOrder(page.children, orderedIds)
+	const point = screenToData(clientX, clientY, zoom, panX, panY)
 
 	for (let i = orderedIds.length - 1; i >= 0; i--) {
 		const id = orderedIds[i]
-		const rect = getNodePageRectHybrid(id, zoom, page, cache, panX, panY)
+		const rect = getCachedNodePageRect(id, cache)
 		if (!rect) continue
-		const screenRect = {
-			x: rect.x * zoom + panX,
-			y: rect.y * zoom + panY,
-			width: rect.width * zoom,
-			height: rect.height * zoom,
-		}
-		if (containsPoint(screenRect, clientX, clientY)) return id
+		if (containsPoint(rect, point.x, point.y)) return id
 	}
 
 	return null

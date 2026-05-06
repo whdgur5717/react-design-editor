@@ -5,6 +5,7 @@ import { Color } from "@tiptap/extension-color"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import { useLayoutEffect } from "react"
 
 const EscapeBlur = Extension.create({
 	name: "escapeBlur",
@@ -34,5 +35,13 @@ export function TextNodeRenderer({ node, onContentChange }: TextNodeRendererProp
 		},
 	})
 
-	return <EditorContent editor={editor} />
+	useLayoutEffect(() => {
+		editor?.view.updateRoot()
+	}, [editor])
+
+	return (
+		<div style={node.style}>
+			<EditorContent editor={editor} />
+		</div>
+	)
 }

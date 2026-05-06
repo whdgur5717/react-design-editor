@@ -1,20 +1,17 @@
-import type { NodeRect, PageNode } from "@design-editor/core"
+import type { NodeRect } from "@design-editor/core"
 
-import { getNodePageRectHybrid } from "../../utils/nodePosition"
+import { getCachedNodePageRect } from "../../utils/nodePosition"
 
 interface DragPreviewProps {
 	nodeId: string
 	dx: number
 	dy: number
 	zoom: number
-	page: PageNode
 	nodeRectsCache: Record<string, NodeRect>
-	panX: number
-	panY: number
 }
 
-export function DragPreview({ nodeId, dx, dy, zoom, page, nodeRectsCache, panX, panY }: DragPreviewProps) {
-	const rect = getNodePageRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
+export function DragPreview({ nodeId, dx, dy, zoom, nodeRectsCache }: DragPreviewProps) {
+	const rect = getCachedNodePageRect(nodeId, nodeRectsCache)
 	if (!rect) return null
 
 	return (

@@ -164,9 +164,6 @@ importers:
       es-toolkit:
         specifier: ^1.43.0
         version: 1.43.0
-      penpal:
-        specifier: ^6.2.0
-        version: 6.2.2
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -263,9 +260,6 @@ importers:
       nuqs:
         specifier: ^2.4.3
         version: 2.8.9(react-router-dom@7.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      penpal:
-        specifier: ^6.2.0
-        version: 6.2.2
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -315,6 +309,9 @@ importers:
       '@design-editor/canvas':
         specifier: workspace:*
         version: link:../editor-canvas
+      '@design-editor/components':
+        specifier: workspace:*
+        version: link:../editor-components
       '@design-editor/core':
         specifier: workspace:*
         version: link:../editor-core
@@ -3257,9 +3254,6 @@ packages:
 
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
-
-  penpal@6.2.2:
-    resolution: {integrity: sha512-RQD7hTx14/LY7QoS3tQYO3/fzVtwvZI+JeS5udgsu7FPaEDjlvfK9HBcme9/ipzSPKnrxSgacI9PI7154W62YQ==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -7354,8 +7348,6 @@ snapshots:
   path-parse@1.0.7: {}
 
   pathe@2.0.3: {}
-
-  penpal@6.2.2: {}
 
   picocolors@1.1.1: {}
 

@@ -3,10 +3,13 @@ import react from "@vitejs/plugin-react"
 
 export default defineConfig({
 	plugins: [react()],
-	server: {
-		port: 3001,
-	},
 	build: {
-		outDir: "dist",
+		lib: {
+			entry: "src/index.tsx",
+			formats: ["es"],
+		},
+		rollupOptions: {
+			external: ["react", "react-dom", "react-dom/client"],
+		},
 	},
 })

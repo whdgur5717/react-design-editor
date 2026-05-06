@@ -1,29 +1,125 @@
-import { CanvasInteractionSurface, connectEditorFrame, useEditor } from "@design-editor/shell"
-import { useEffect, useRef } from "react"
+import { CanvasSurface, defaultCanvasStyles } from "@design-editor/canvas"
+import { CanvasInteractionSurface, useEditor, useEditorState } from "@design-editor/shell"
+import type { ReactNode } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 
-const canvasFrameSrc = new URL("canvas.html", import.meta.url).href
+import { getRegisteredComponentStyles, resolveRegisteredComponent } from "../createEditor/componentRegistration"
+import { Portal } from "./portal"
 
-export function EditorCanvas() {
+export interface CanvasRenderEnvironment {
+	shadowRoot: ShadowRoot
+	mountElement: HTMLElement
+}
+
+interface CanvasShadowDom extends CanvasRenderEnvironment {
+	componentStyleElement: HTMLStyleElement
+}
+
+export interface EditorCanvasProps {
+	renderCanvasProviders?: (children: ReactNode, env: CanvasRenderEnvironment) => ReactNode
+}
+
+export function EditorCanvas({ renderCanvasProviders }: EditorCanvasProps = {}) {
 	const editor = useEditor()
-	const iframeRef = useRef<HTMLIFrameElement>(null)
+	const shadowHostRef = useRef<HTMLDivElement>(null)
+	const [shadowEnv, setShadowEnv] = useState<CanvasShadowDom | null>(null)
+	const installedComponentStyleSheetsRef = useRef<CSSStyleSheet[]>([])
 
-	useEffect(() => {
-		const iframe = iframeRef.current
-		if (!iframe) return
-		return connectEditorFrame(editor, iframe)
-	}, [editor])
+	const { page, zoom, panX, panY } = useEditorState((editor) => {
+		const pan = editor.getPan()
+		return {
+			page: editor.getCurrentPage(),
+			zoom: editor.getZoom(),
+			panX: pan.x,
+			panY: pan.y,
+		}
+	})
+
+	useLayoutEffect(function setupCanvasShadowRoot() {
+		const host = shadowHostRef.current
+		if (!host) return
+
+		const shadowRoot = host.shadowRoot ?? host.attachShadow({ mode: "open" })
+		shadowRoot.querySelector("[data-design-editor-canvas-style-container]")?.remove()
+
+		let baseStyleElement = shadowRoot.querySelector<HTMLStyleElement>("style[data-design-editor-canvas-base-styles]")
+		if (!baseStyleElement) {
+			baseStyleElement = document.createElement("style")
+			baseStyleElement.setAttribute("data-design-editor-canvas-base-styles", "")
+		}
+		baseStyleElement.textContent = defaultCanvasStyles
+
+		let componentStyleElement = shadowRoot.querySelector<HTMLStyleElement>(
+			"style[data-design-editor-registered-component-styles]",
+		)
+		if (!componentStyleElement) {
+			componentStyleElement = document.createElement("style")
+			componentStyleElement.setAttribute("data-design-editor-registered-component-styles", "")
+		}
+
+		let mountElement = shadowRoot.querySelector<HTMLElement>("[data-design-editor-canvas-mount]")
+		if (!mountElement) {
+			mountElement = document.createElement("div")
+			mountElement.setAttribute("data-design-editor-canvas-mount", "")
+		}
+
+		shadowRoot.append(baseStyleElement, componentStyleElement, mountElement)
+		setShadowEnv({ shadowRoot, mountElement, componentStyleElement })
+	}, [])
+
+	useLayoutEffect(
+		function applyCanvasShadowStyles() {
+			if (!shadowEnv) return
+			const componentStyles = getRegisteredComponentStyles(editor)
+
+			shadowEnv.componentStyleElement.textContent = componentStyles
+				.flatMap((style) => {
+					if (typeof style === "string") return [style]
+					if ("cssText" in style) return [style.cssText]
+					return []
+				})
+				.join("\n")
+
+			if ("adoptedStyleSheets" in shadowEnv.shadowRoot) {
+				const previousComponentSheets = installedComponentStyleSheetsRef.current
+				const nextComponentSheets =
+					typeof CSSStyleSheet === "undefined"
+						? []
+						: componentStyles.filter((style): style is CSSStyleSheet => style instanceof CSSStyleSheet)
+				const retainedSheets = shadowEnv.shadowRoot.adoptedStyleSheets.filter(
+					(sheet) => !previousComponentSheets.includes(sheet),
+				)
+
+				shadowEnv.shadowRoot.adoptedStyleSheets = [...retainedSheets, ...nextComponentSheets]
+				installedComponentStyleSheetsRef.current = nextComponentSheets
+			}
+		},
+		[editor, shadowEnv],
+	)
+
+	const canvasSurface = (
+		<CanvasSurface
+			page={page}
+			zoom={zoom}
+			panX={panX}
+			panY={panY}
+			onTextChange={(nodeId, content) => editor.applyTextChangeFromCanvas(nodeId, content)}
+			onNodeRectsChange={(rects) => editor.setNodeRectsCache(rects)}
+			resolveComponent={(type) => resolveRegisteredComponent(editor, type)}
+		/>
+	)
 
 	return (
 		<div className="de-editor-canvas-host" data-design-editor-canvas-host="">
-			<iframe
-				ref={iframeRef}
-				className="de-editor-canvas-frame"
-				data-testid="design-editor-canvas-frame"
-				title="Design editor canvas"
-				src={canvasFrameSrc}
-				tabIndex={-1}
-				sandbox="allow-scripts allow-same-origin"
+			<div
+				ref={shadowHostRef}
+				className="de-editor-canvas-result-host"
+				data-design-editor-canvas-shadow-host=""
+				data-testid="design-editor-canvas-shadow-host"
 			/>
+			<Portal container={shadowEnv?.mountElement ?? null}>
+				{shadowEnv ? (renderCanvasProviders ? renderCanvasProviders(canvasSurface, shadowEnv) : canvasSurface) : null}
+			</Portal>
 			<CanvasInteractionSurface />
 		</div>
 	)

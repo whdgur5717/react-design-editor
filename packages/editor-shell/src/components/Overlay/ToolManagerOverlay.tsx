@@ -1,5 +1,5 @@
 import { useEditorState } from "../../services/EditorContext"
-import { getNodePageRectHybrid, type Rect } from "../../utils/nodePosition"
+import { getCachedNodePageRect, type Rect } from "../../utils/nodePosition"
 import { DragPreview } from "./DragPreview"
 import { HoverHighlight } from "./HoverHighlight"
 import { ResizeHandles } from "./ResizeHandles"
@@ -24,14 +24,11 @@ export function ToolManagerOverlay() {
 
 	const selectionRects = new Map<string, Rect>()
 	for (const nodeId of selection) {
-		const rect = getNodePageRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
+		const rect = getCachedNodePageRect(nodeId, nodeRectsCache)
 		if (rect) selectionRects.set(nodeId, rect)
 	}
 
-	const hoverRect =
-		hoveredId && !selection.includes(hoveredId)
-			? getNodePageRectHybrid(hoveredId, zoom, page, nodeRectsCache, panX, panY)
-			: null
+	const hoverRect = hoveredId && !selection.includes(hoveredId) ? getCachedNodePageRect(hoveredId, nodeRectsCache) : null
 
 	const singleSelectedRect = selection.length === 1 ? (selectionRects.get(selection[0]) ?? null) : null
 
@@ -58,10 +55,7 @@ export function ToolManagerOverlay() {
 					dx={dragPreview.dx}
 					dy={dragPreview.dy}
 					zoom={zoom}
-					page={page}
 					nodeRectsCache={nodeRectsCache}
-					panX={panX}
-					panY={panY}
 				/>
 			)}
 		</div>

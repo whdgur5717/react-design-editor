@@ -1,5 +1,3 @@
-import { Editor } from "@design-editor/shell"
-
-export function createEditor() {
-	return new Editor()
-}
+export type { CanvasStyleSource, EditorComponentRegistration } from "./componentRegistration"
+export type { CreateEditorOptions } from "./createEditor"
+export { createEditor } from "./createEditor"

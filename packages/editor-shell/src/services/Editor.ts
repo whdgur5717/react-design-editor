@@ -1,13 +1,11 @@
-import type { CanvasMethods, EditorTool, NodeRect, PageNode, SceneNode, Size } from "@design-editor/core"
-import type { AsyncMethodReturns } from "penpal"
+import type { EditorTool, NodeLocation, NodeRect, PageNode, SceneNode, Size } from "@design-editor/core"
 import { type AnyActor, createActor } from "xstate"
-import { shallow } from "zustand/shallow"
 
 import { ActionRegistry } from "../commands/ActionRegistry"
 import { CommandHistory } from "../commands/CommandHistory"
 import { EditorReceiverImpl } from "../commands/EditorReceiverImpl"
 import { ResizeNodeCommand } from "../commands/node/ResizeNodeCommand"
-import type { Command, NodeLocation } from "../commands/types"
+import type { Command } from "../commands/types"
 import { hitTestNodeIdInPage } from "../document/hitTest"
 import { createPointerMachine } from "../interaction"
 import { KeybindingRegistry } from "../keybindings"
@@ -22,7 +20,6 @@ import { DeleteSelectionUsecase } from "../usecases/DeleteSelectionUsecase"
 import { DuplicateSelectionUsecase } from "../usecases/DuplicateSelectionUsecase"
 import { NodePropertyUsecase } from "../usecases/NodePropertyUsecase"
 import { SelectAllUsecase } from "../usecases/SelectAllUsecase"
-import { CanvasBridge } from "./CanvasBridge"
 import { ClipboardRuntime } from "./ClipboardRuntime"
 
 export class Editor {
@@ -32,7 +29,6 @@ export class Editor {
 	readonly toolRegistry: ToolRegistry
 	readonly actionRegistry: ActionRegistry
 	readonly keybindingRegistry: KeybindingRegistry
-	readonly canvas: CanvasBridge
 	private pointerActor: AnyActor
 	private clipboardRuntime: ClipboardRuntime
 	private deleteSelection: DeleteSelectionUsecase
@@ -48,7 +44,6 @@ export class Editor {
 		this.toolRegistry = new ToolRegistry()
 		this.actionRegistry = new ActionRegistry()
 		this.keybindingRegistry = new KeybindingRegistry(this.store)
-		this.canvas = new CanvasBridge()
 
 		// Tool 초기화
 		const toolService = new ToolServiceImpl(this.store, this.receiver, this.commandHistory)
@@ -157,25 +152,6 @@ export class Editor {
 		})
 	}
 
-	// ── Canvas 동기화 ──
-
-	attachCanvas(ref: AsyncMethodReturns<CanvasMethods>) {
-		this.canvas.setCanvas(ref)
-		this.syncToCanvas()
-	}
-
-	detachCanvas() {
-		this.canvas.setCanvas(null)
-	}
-
-	subscribeCanvasSync() {
-		return this.store.subscribe(
-			(s) => [s.document, s.currentPageId, s.zoom, s.panX, s.panY, s.selection, s.activeTool],
-			() => this.syncToCanvas(),
-			{ equalityFn: shallow },
-		)
-	}
-
 	applyTextChangeFromCanvas(nodeId: string, content: unknown) {
 		this.applyCanvasTextChange.run(nodeId, content)
 	}
@@ -194,21 +170,6 @@ export class Editor {
 
 	updateNodePosition(nodeId: string, position: Parameters<NodePropertyUsecase["updatePosition"]>[1]) {
 		this.nodeProperty.updatePosition(nodeId, position)
-	}
-
-	syncToCanvas() {
-		const state = this.store.getState()
-
-		this.canvas.syncState({
-			document: state.document,
-			currentPageId: state.currentPageId,
-			zoom: state.zoom,
-			panX: state.panX,
-			panY: state.panY,
-			selection: state.selection,
-			activeTool: state.activeTool,
-			cursor: this.toolRegistry.getActiveTool()?.cursor ?? "default",
-		})
 	}
 
 	// ── 읽기 ──

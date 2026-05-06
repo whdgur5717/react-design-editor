@@ -39,13 +39,14 @@
 		}
 	},
 	"scripts": {
-		"build": "vite build && vite build --config vite.canvas.config.ts",
+		"build": "vite build",
 		"lint": "eslint --fix",
 		"type-check": "tsgo --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
 		"@design-editor/canvas": "workspace:*",
+		"@design-editor/components": "workspace:*",
 		"@design-editor/core": "workspace:*",
 		"@design-editor/shell": "workspace:*",
 		"react": "catalog:",

@@ -184,7 +184,7 @@ export function createPointerMachine(editor: Editor) {
 				const node = editor.findNode(context.nodeId)
 				if (!node) return
 
-				const from = { width: node.style?.width, height: node.style?.height }
+				const from = { width: context.startWidth, height: context.startHeight }
 				const to = { width, height }
 				const mergeKey = `resize:${context.nodeId}:${context.resizeSessionId}`
 				editor.resizeNode(context.nodeId, from, to, mergeKey)
@@ -323,17 +323,9 @@ export function createPointerMachine(editor: Editor) {
 								const target = event.target
 								const resizeHandle = target.closest("[data-resize-handle]") as HTMLElement
 								const nodeId = editor.getSelection()[0] ?? null
-								const node = nodeId ? editor.findNode(nodeId) : null
-
-								let width = typeof node?.style?.width === "number" ? node.style.width : 0
-								let height = typeof node?.style?.height === "number" ? node.style.height : 0
-								if (nodeId && (width === 0 || height === 0)) {
-									const rendered = editor.getNodeRenderedRect(nodeId)
-									if (rendered) {
-										if (width === 0) width = rendered.width
-										if (height === 0) height = rendered.height
-									}
-								}
+								const rendered = nodeId ? editor.getNodeRenderedRect(nodeId) : null
+								const width = rendered?.width ?? 0
+								const height = rendered?.height ?? 0
 
 								return {
 									startX: event.clientX,

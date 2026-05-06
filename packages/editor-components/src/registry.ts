@@ -1,4 +1,7 @@
-import type { ComponentType, CSSProperties, ReactNode } from "react"
+import type { ComponentType, CSSProperties } from "react"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ComponentProps = any
 
 /**
  * 컴포넌트 정의
@@ -12,15 +15,6 @@ export interface ComponentDefinition {
 	defaultProps?: Record<string, unknown>
 	/** 기본 스타일 */
 	defaultStyle?: CSSProperties
-}
-
-/**
- * 렌더링 시 전달되는 기본 props
- */
-export interface ComponentProps {
-	style?: CSSProperties
-	children?: ReactNode
-	[key: string]: unknown
 }
 
 /**
