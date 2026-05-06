@@ -14,6 +14,7 @@ import type { CSSProperties } from "react"
 import { createStore } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
+import type { StoreApi } from "zustand/vanilla"
 
 // ── Read-only 트리 헬퍼 ──
 
@@ -173,7 +174,9 @@ const initialDocument: DocumentNode = {
 /**
  * 에디터 스토어
  */
-export function createEditorStore() {
+export type EditorStoreApi = StoreApi<EditorStore>
+
+export function createEditorStore(): EditorStoreApi {
 	return createStore<EditorStore>()(
 		subscribeWithSelector(
 			immer((set, get) => ({
@@ -505,5 +508,3 @@ export function createEditorStore() {
 		),
 	)
 }
-
-export type EditorStoreApi = ReturnType<typeof createEditorStore>

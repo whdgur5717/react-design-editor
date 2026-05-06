@@ -1,6 +1,6 @@
 import { CanvasSurface, defaultCanvasStyles } from "@design-editor/canvas"
 import { CanvasInteractionSurface, useEditor, useEditorState } from "@design-editor/shell"
-import type { ReactNode } from "react"
+import type * as React from "react"
 import { useLayoutEffect, useRef, useState } from "react"
 
 import { getRegisteredComponentStyles, resolveRegisteredComponent } from "../createEditor/componentRegistration"
@@ -16,7 +16,7 @@ interface CanvasShadowDom extends CanvasRenderEnvironment {
 }
 
 export interface EditorCanvasProps {
-	renderCanvasProviders?: (children: ReactNode, env: CanvasRenderEnvironment) => ReactNode
+	renderCanvasProviders?: (children: React.ReactNode, env: CanvasRenderEnvironment) => React.ReactNode
 }
 
 export function EditorCanvas({ renderCanvasProviders }: EditorCanvasProps = {}) {

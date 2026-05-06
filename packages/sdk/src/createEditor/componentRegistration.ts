@@ -1,15 +1,15 @@
 import type { ComponentDefinition, ComponentProps } from "@design-editor/components"
 import { componentRegistry } from "@design-editor/components"
 import type { Editor } from "@design-editor/shell"
-import type { ComponentType, CSSProperties } from "react"
+import type * as React from "react"
 
 export type CanvasStyleSource = string | CSSStyleSheet | { id?: string; cssText: string }
 
 export interface EditorComponentRegistration {
-	component: ComponentType<ComponentProps>
+	component: React.ComponentType<ComponentProps>
 	displayName?: string
 	defaultProps?: Record<string, unknown>
-	defaultStyle?: CSSProperties
+	defaultStyle?: React.CSSProperties
 	styles?: CanvasStyleSource | CanvasStyleSource[]
 }
 

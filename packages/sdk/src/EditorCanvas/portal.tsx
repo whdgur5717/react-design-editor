@@ -1,9 +1,9 @@
-import type { ReactNode } from "react"
+import type * as React from "react"
 import { createPortal } from "react-dom"
 
 export interface PortalProps {
 	container: Element | DocumentFragment | null
-	children: ReactNode
+	children: React.ReactNode
 }
 
 export function Portal({ container, children }: PortalProps) {

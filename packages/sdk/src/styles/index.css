@@ -1,3 +1,5 @@
+@import "@design-editor/shell/style.css";
+
 .de-editor-root {
 	display: grid;
 	width: 100%;

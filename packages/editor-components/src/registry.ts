@@ -1,4 +1,4 @@
-import type { ComponentType, CSSProperties } from "react"
+import type * as React from "react"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ComponentProps = any
@@ -8,13 +8,13 @@ export type ComponentProps = any
  */
 export interface ComponentDefinition {
 	/** 컴포넌트 */
-	component: ComponentType<ComponentProps>
+	component: React.ComponentType<ComponentProps>
 	/** 표시 이름 */
 	displayName: string
 	/** 기본 props */
 	defaultProps?: Record<string, unknown>
 	/** 기본 스타일 */
-	defaultStyle?: CSSProperties
+	defaultStyle?: React.CSSProperties
 }
 
 /**
@@ -54,7 +54,7 @@ class ComponentRegistry {
 	/**
 	 * React 컴포넌트 조회 (렌더링용)
 	 */
-	getComponent(type: string): ComponentType<ComponentProps> | null {
+	getComponent(type: string): React.ComponentType<ComponentProps> | null {
 		const definition = this.components.get(type)
 		return definition?.component ?? null
 	}
@@ -64,7 +64,7 @@ class ComponentRegistry {
 export const componentRegistry = new ComponentRegistry()
 
 /** 컴포넌트 조회 헬퍼 */
-export function getComponent(type: string): ComponentType<ComponentProps> | null {
+export function getComponent(type: string): React.ComponentType<ComponentProps> | null {
 	return componentRegistry.getComponent(type)
 }
 

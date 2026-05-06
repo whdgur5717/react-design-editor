@@ -1,11 +1,11 @@
-import type { CSSProperties, ReactNode } from "react"
+import type * as React from "react"
 
 import { registerComponent } from "../registry"
 
 /**
  * 기본 div 컴포넌트
  */
-function Div({ style, children, ...props }: { style?: CSSProperties; children?: ReactNode }) {
+function Div({ style, children, ...props }: { style?: React.CSSProperties; children?: React.ReactNode }) {
 	return (
 		<div style={style} {...props}>
 			{children}
@@ -25,14 +25,14 @@ function Flex({
 	justify,
 	...props
 }: {
-	style?: CSSProperties
-	children?: ReactNode
+	style?: React.CSSProperties
+	children?: React.ReactNode
 	direction?: "row" | "column"
 	gap?: number
-	align?: CSSProperties["alignItems"]
-	justify?: CSSProperties["justifyContent"]
+	align?: React.CSSProperties["alignItems"]
+	justify?: React.CSSProperties["justifyContent"]
 }) {
-	const flexStyle: CSSProperties = {
+	const flexStyle: React.CSSProperties = {
 		display: "flex",
 		flexDirection: direction,
 		gap,
@@ -51,7 +51,7 @@ function Flex({
 /**
  * Text 컴포넌트
  */
-function Text({ style, children, ...props }: { style?: CSSProperties; children?: ReactNode }) {
+function Text({ style, children, ...props }: { style?: React.CSSProperties; children?: React.ReactNode }) {
 	return (
 		<span style={style} {...props}>
 			{children}
@@ -62,8 +62,8 @@ function Text({ style, children, ...props }: { style?: CSSProperties; children?:
 /**
  * Frame 컴포넌트 (Figma의 Frame과 유사)
  */
-function Frame({ style, children, ...props }: { style?: CSSProperties; children?: ReactNode }) {
-	const frameStyle: CSSProperties = {
+function Frame({ style, children, ...props }: { style?: React.CSSProperties; children?: React.ReactNode }) {
+	const frameStyle: React.CSSProperties = {
 		position: "relative",
 		...style,
 	}
