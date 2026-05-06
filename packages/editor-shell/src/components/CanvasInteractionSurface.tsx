@@ -107,7 +107,6 @@ export function CanvasInteractionSurface() {
 				data-design-editor-event-target=""
 				data-testid="design-editor-event-target"
 			>
-				<div className="canvas-area" />
 				<div ref={overlayRef}>
 					<ToolManagerOverlay />
 				</div>

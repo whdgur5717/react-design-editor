@@ -55,8 +55,3 @@
 	pointer-events: auto;
 	touch-action: none;
 }
-
-.canvas-area {
-	position: absolute;
-	inset: 0;
-}
