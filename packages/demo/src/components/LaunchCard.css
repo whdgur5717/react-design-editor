@@ -1,0 +1,79 @@
+.demo-launch-card {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	border-radius: 8px;
+	background:
+		linear-gradient(135deg, rgba(21, 26, 33, 0.96), rgba(39, 48, 58, 0.92)),
+		linear-gradient(90deg, rgba(238, 117, 87, 0.18), rgba(81, 173, 151, 0.12));
+	color: #f7f1e8;
+	box-shadow: 0 22px 70px rgba(18, 24, 32, 0.26);
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		"Segoe UI",
+		sans-serif;
+}
+
+.demo-launch-card__topline {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0;
+	text-transform: uppercase;
+}
+
+.demo-launch-card__eyebrow {
+	color: #8fd3c1;
+}
+
+.demo-launch-card__status {
+	border: 1px solid rgba(247, 241, 232, 0.22);
+	border-radius: 999px;
+	padding: 6px 10px;
+	color: #f7c97c;
+	background: rgba(255, 255, 255, 0.06);
+}
+
+.demo-launch-card__title {
+	max-width: 390px;
+	margin: 0;
+	font-size: 34px;
+	font-weight: 760;
+	line-height: 1.04;
+	letter-spacing: 0;
+}
+
+.demo-launch-card__rule {
+	width: 100%;
+	height: 8px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.12);
+}
+
+.demo-launch-card__rule::before {
+	display: block;
+	width: 72%;
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, #ee7557, #f7c97c, #51ad97);
+	content: "";
+}
+
+.demo-launch-card__copy {
+	max-width: 410px;
+	color: rgba(247, 241, 232, 0.78);
+	font-size: 15px;
+	line-height: 1.55;
+}
+
+.demo-launch-card__copy .ProseMirror {
+	width: auto;
+	height: auto;
+}

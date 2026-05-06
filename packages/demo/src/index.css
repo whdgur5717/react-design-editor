@@ -6,14 +6,42 @@ body,
 	margin: 0;
 }
 
+body {
+	background: #eef1f1;
+	color: #1d2529;
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		"Segoe UI",
+		sans-serif;
+	overscroll-behavior: none;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
 .de-editor-root {
+	--editor-toolbar-height: 48px;
+	--editor-left-panel-width: 260px;
+	--editor-right-panel-width: 280px;
 	grid-template-areas:
 		"toolbar toolbar toolbar"
 		"layers canvas properties";
-	grid-template-columns: 260px minmax(0, 1fr) 260px;
-	grid-template-rows: 48px minmax(0, 1fr);
+	grid-template-columns: var(--editor-left-panel-width) minmax(0, 1fr) var(--editor-right-panel-width);
+	grid-template-rows: var(--editor-toolbar-height) minmax(0, 1fr);
+	background: #eef1f1;
+	color: #1d2529;
 }
 
 .de-editor-canvas-host {
 	grid-area: canvas;
+	background:
+		linear-gradient(rgba(49, 62, 68, 0.08) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(49, 62, 68, 0.08) 1px, transparent 1px), #eef1f1;
+	background-size: 24px 24px;
 }
