@@ -1,4 +1,4 @@
-import type { PageNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { NodeLocation, NodePageContext, PageNode, Position, SceneNode, Size } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 /**
@@ -16,18 +16,6 @@ export interface Command {
 export interface MergableCommand extends Command {
 	readonly mergeKey: string
 	merge(other: Command): boolean
-}
-
-/**
- * 노드 위치 정보 (부모 내에서의 위치)
- */
-export interface NodeLocation {
-	parentId: string
-	index: number
-}
-
-export interface NodePageContext {
-	pageId?: string
 }
 
 /**

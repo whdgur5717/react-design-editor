@@ -1,8 +1,8 @@
-import type { Position, SceneNode, Size } from "@design-editor/core"
+import type { NodePageContext, Position, SceneNode, Size } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 import type { EditorStoreApi } from "../store/editor"
-import type { EditorReceiver, NodePageContext } from "./types"
+import type { EditorReceiver } from "./types"
 
 /**
  * EditorReceiverImpl - EditorReceiver 구현체

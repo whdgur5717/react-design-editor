@@ -2,6 +2,7 @@ import type {
 	DocumentNode,
 	EditorStore,
 	EditorTool,
+	NodePageContext,
 	NodeRect,
 	PageNode,
 	Position,
@@ -13,36 +14,6 @@ import type { CSSProperties } from "react"
 import { createStore } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
-
-interface NodePageContext {
-	pageId?: string
-}
-
-type EditorStoreState = Omit<
-	EditorStore,
-	| "updateNode"
-	| "addNode"
-	| "removeNode"
-	| "moveNode"
-	| "resizeNode"
-	| "reorderNode"
-	| "reparentNode"
-	| "toggleVisibility"
-	| "toggleLocked"
-	| "findNode"
-> & {
-	updateNode: (id: string, updates: Partial<SceneNode>, context?: NodePageContext) => void
-	addNode: (parentId: string, node: SceneNode, index?: number, context?: NodePageContext) => void
-	removeNode: (id: string, context?: NodePageContext) => void
-	moveNode: (id: string, position: Position, context?: NodePageContext) => void
-	resizeNode: (id: string, size: Size, context?: NodePageContext) => void
-	reorderNode: (parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) => void
-	reparentNode: (sourceId: string, newParentId: string, context?: NodePageContext) => void
-	toggleVisibility: (id: string, context?: NodePageContext) => void
-	toggleLocked: (id: string, context?: NodePageContext) => void
-	findNode: (id: string, context?: NodePageContext) => SceneNode | null
-	findNodeLocation: (id: string, context?: NodePageContext) => { parentId: string; index: number } | null
-}
 
 // ── Read-only 트리 헬퍼 ──
 
@@ -203,7 +174,7 @@ const initialDocument: DocumentNode = {
  * 에디터 스토어
  */
 export function createEditorStore() {
-	return createStore<EditorStoreState>()(
+	return createStore<EditorStore>()(
 		subscribeWithSelector(
 			immer((set, get) => ({
 				// 초기 상태

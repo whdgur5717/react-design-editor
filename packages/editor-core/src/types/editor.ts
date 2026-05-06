@@ -8,6 +8,15 @@ import type { NodeRect } from "./protocol"
  */
 export type EditorTool = "select" | "frame" | "text" | "shape"
 
+export interface NodeLocation {
+	parentId: string
+	index: number
+}
+
+export interface NodePageContext {
+	pageId?: string
+}
+
 /**
  * 에디터 상태
  */
@@ -39,7 +48,7 @@ export interface EditorState {
 	/** 드래그 프리뷰 (Shell 오버레이에서 렌더링) */
 	dragPreview: { nodeId: string; dx: number; dy: number } | null
 
-	/** Canvas에서 push된 노드 렌더링 rect 캐시 */
+	/** 현재 PageNode 기준 노드 박스 캐시 */
 	nodeRectsCache: Record<string, NodeRect>
 }
 
@@ -48,28 +57,28 @@ export interface EditorState {
  */
 export interface EditorActions {
 	/** 노드 업데이트 */
-	updateNode: (id: string, updates: Partial<SceneNode>) => void
+	updateNode: (id: string, updates: Partial<SceneNode>, context?: NodePageContext) => void
 
 	/** 노드 추가 */
-	addNode: (parentId: string, node: SceneNode, index?: number) => void
+	addNode: (parentId: string, node: SceneNode, index?: number, context?: NodePageContext) => void
 
 	/** 노드 삭제 */
-	removeNode: (id: string) => void
+	removeNode: (id: string, context?: NodePageContext) => void
 
 	/** 노드 이동 */
-	moveNode: (id: string, position: Position) => void
+	moveNode: (id: string, position: Position, context?: NodePageContext) => void
 
 	/** 노드 리사이즈 */
-	resizeNode: (id: string, size: Size) => void
+	resizeNode: (id: string, size: Size, context?: NodePageContext) => void
 
 	/** 노드 순서 변경 (같은 부모 내에서) */
-	reorderNode: (parentId: string, fromIndex: number, toIndex: number) => void
+	reorderNode: (parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) => void
 
 	/** 노드 드롭 처리 (위치 이동 또는 reparent) */
 	dropNode: (sourceId: string, targetId: string, delta: { x: number; y: number }) => void
 
 	/** 노드를 다른 부모로 이동 */
-	reparentNode: (sourceId: string, newParentId: string) => void
+	reparentNode: (sourceId: string, newParentId: string, context?: NodePageContext) => void
 
 	/** 선택 변경 */
 	setSelection: (ids: string[]) => void
@@ -90,10 +99,10 @@ export interface EditorActions {
 	setPan: (panX: number, panY: number) => void
 
 	/** 가시성 토글 */
-	toggleVisibility: (id: string) => void
+	toggleVisibility: (id: string, context?: NodePageContext) => void
 
 	/** 잠금 상태 토글 */
-	toggleLocked: (id: string) => void
+	toggleLocked: (id: string, context?: NodePageContext) => void
 
 	/** 노드 복제 */
 	duplicateNode: (id: string) => string | null
@@ -111,12 +120,15 @@ export interface EditorActions {
 	renamePage: (pageId: string, name: string) => void
 
 	/** 노드 찾기 */
-	findNode: (id: string) => SceneNode | null
+	findNode: (id: string, context?: NodePageContext) => SceneNode | null
+
+	/** 노드의 부모와 인덱스 찾기 */
+	findNodeLocation: (id: string, context?: NodePageContext) => NodeLocation | null
 
 	/** 드래그 프리뷰 설정 */
 	setDragPreview: (preview: { nodeId: string; dx: number; dy: number } | null) => void
 
-	/** 노드 렌더링 rect 캐시 설정 */
+	/** 현재 PageNode 기준 노드 박스 캐시 설정 */
 	setNodeRectsCache: (rects: Record<string, NodeRect>) => void
 
 	/** 노드 스타일 개별 속성 업데이트 */
