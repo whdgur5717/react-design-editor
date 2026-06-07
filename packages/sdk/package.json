@@ -8,37 +8,74 @@
 	],
 	"exports": {
 		"./createEditor": {
-			"types": "./dist/createEditor.d.ts",
-			"import": "./dist/createEditor.js"
+			"types": "./src/createEditor/index.tsx",
+			"import": "./src/createEditor/index.tsx"
 		},
 		"./EditorProvider": {
-			"types": "./dist/EditorProvider.d.ts",
-			"import": "./dist/EditorProvider.js"
+			"types": "./src/EditorProvider/index.tsx",
+			"import": "./src/EditorProvider/index.tsx"
 		},
 		"./EditorRoot": {
-			"types": "./dist/EditorRoot.d.ts",
-			"import": "./dist/EditorRoot.js"
+			"types": "./src/EditorRoot/index.tsx",
+			"import": "./src/EditorRoot/index.tsx"
 		},
-		"./styles.css": "./dist/style.css",
+		"./styles.css": "./src/styles/index.css",
 		"./EditorCanvas": {
-			"types": "./dist/EditorCanvas.d.ts",
-			"import": "./dist/EditorCanvas.js"
+			"types": "./src/EditorCanvas/index.tsx",
+			"import": "./src/EditorCanvas/index.tsx"
 		},
 		"./Toolbar": {
-			"types": "./dist/Toolbar.d.ts",
-			"import": "./dist/Toolbar.js"
+			"types": "./src/Toolbar/index.tsx",
+			"import": "./src/Toolbar/index.tsx"
 		},
 		"./LayersPanel": {
-			"types": "./dist/LayersPanel.d.ts",
-			"import": "./dist/LayersPanel.js"
+			"types": "./src/LayersPanel/index.tsx",
+			"import": "./src/LayersPanel/index.tsx"
 		},
 		"./PropertiesPanel": {
-			"types": "./dist/PropertiesPanel.d.ts",
-			"import": "./dist/PropertiesPanel.js"
+			"types": "./src/PropertiesPanel/index.tsx",
+			"import": "./src/PropertiesPanel/index.tsx"
 		},
 		"./useEditor": {
-			"types": "./dist/useEditor.d.ts",
-			"import": "./dist/useEditor.js"
+			"types": "./src/useEditor/index.tsx",
+			"import": "./src/useEditor/index.tsx"
+		}
+	},
+	"publishConfig": {
+		"exports": {
+			"./createEditor": {
+				"types": "./dist/createEditor.d.ts",
+				"import": "./dist/createEditor.js"
+			},
+			"./EditorProvider": {
+				"types": "./dist/EditorProvider.d.ts",
+				"import": "./dist/EditorProvider.js"
+			},
+			"./EditorRoot": {
+				"types": "./dist/EditorRoot.d.ts",
+				"import": "./dist/EditorRoot.js"
+			},
+			"./styles.css": "./dist/style.css",
+			"./EditorCanvas": {
+				"types": "./dist/EditorCanvas.d.ts",
+				"import": "./dist/EditorCanvas.js"
+			},
+			"./Toolbar": {
+				"types": "./dist/Toolbar.d.ts",
+				"import": "./dist/Toolbar.js"
+			},
+			"./LayersPanel": {
+				"types": "./dist/LayersPanel.d.ts",
+				"import": "./dist/LayersPanel.js"
+			},
+			"./PropertiesPanel": {
+				"types": "./dist/PropertiesPanel.d.ts",
+				"import": "./dist/PropertiesPanel.js"
+			},
+			"./useEditor": {
+				"types": "./dist/useEditor.d.ts",
+				"import": "./dist/useEditor.js"
+			}
 		}
 	},
 	"scripts": {

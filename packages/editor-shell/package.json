@@ -3,18 +3,31 @@
 	"version": "0.0.1",
 	"private": false,
 	"type": "module",
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"main": "./src/index.tsx",
+	"types": "./src/index.tsx",
 	"files": [
 		"dist"
 	],
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+			"types": "./src/index.tsx",
+			"import": "./src/index.tsx"
 		},
 		"./style.css": {
-			"default": "./dist/style.css"
+			"default": "./src/shell.css"
+		}
+	},
+	"publishConfig": {
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			},
+			"./style.css": {
+				"default": "./dist/style.css"
+			}
 		}
 	},
 	"scripts": {
