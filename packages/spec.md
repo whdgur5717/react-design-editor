@@ -1,226 +1,156 @@
-# Design Editor Spec
+# Design Editor SDK Runtime Flow
 
-DOM/React 기반 디자인 에디터. Figma와 달리 변환 레이어 없이, 에디터에서 렌더링되는 것이 곧 React 코드가 된다.
+## Purpose
 
----
+이 문서는 Design Editor SDK의 runtime-level 동작 흐름을 정의합니다.
 
-## 아키텍처 개요
+함수, 컴포넌트, 파일 구조는 이 문서의 범위가 아닙니다. 이 문서의 목적은 처음 접하는 사람이 editor runtime의 전체 흐름을 이해할 수 있도록 하는 것입니다.
 
-```
-index.html
-├── iframe (pointer-events: none, z-index: -1)
-│   └── Canvas (editor-canvas)
-│       - React 컴포넌트 렌더링 전용
-│       - Shell의 RPC 요청에 응답 (hit test, 노드 좌표)
-│
-└── #root
-    └── Shell (editor-shell)
-        - 상태 관리 (Zustand + immer)
-        - 이벤트 캡처 (canvas-event-target)
-        - 포인터 상태 머신 (XState)
-        - 오버레이 렌더링 (선택, 호버, 리사이즈 핸들, 드래그 프리뷰)
-        - UI 패널 (도구바, 레이어, 속성)
-                        ↕ Penpal (postMessage)
-```
+## Basic Idea
 
-**Shell/Canvas 분리 이유**: CSS/JS 격리. Canvas의 스타일이 Shell UI에 영향 주지 않도록. Canvas 내부의 각 노드는 페이지 단위로 스타일이 격리되어, 노드의 CSS가 다른 노드나 에디터 UI에 영향을 주지 않아야 한다.
+사용자는 SDK를 자신의 React 앱에 통합합니다.
 
-iframe은 `index.html`에 정적으로 배치되며, Shell의 `#root`와 동일 레벨에 존재한다. Canvas iframe은 `pointer-events: none`으로 렌더링만 담당하고, Shell이 그 위에 투명한 이벤트 타겟(`canvas-event-target`)을 올려 포인터/키보드 이벤트를 직접 캡처한다.
+SDK 내부에는 편집기를 구성하는 runtime들이 포함됩니다.
 
----
+사용자가 편집하는 데이터는 `document data`입니다. 이 데이터는 DOM이나 React tree가 아니며, 저장 또는 export 가능한 디자인 데이터입니다.
 
-## 패키지 역할
+이 데이터는 다음 구조로 이해할 수 있습니다.
 
-```
-packages/
-├── editor-core/       # 공유 타입, 통신 프로토콜, 코드젠
-├── editor-shell/      # 메인 앱 (상태, 이벤트, 오버레이, UI 패널)
-├── editor-canvas/     # iframe 앱 (렌더링 전용, RPC 제공)
-└── editor-components/ # 렌더링용 컴포넌트 레지스트리
+```text
+document data
+  -> page
+  -> node
 ```
 
-| 패키지            | 책임                                 | 주요 폴더                                                                                                   |
-| ----------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| editor-core       | 타입 정의, 통신 프로토콜, 코드젠     | `src/types/`, `src/codegen/`                                                                                |
-| editor-shell      | 상태 관리, 이벤트 캡처, 오버레이, UI | `src/store/`, `src/services/`, `src/interaction/`, `src/tools/`, `src/commands/`, `src/components/overlay/` |
-| editor-canvas     | 노드 렌더링, RPC 제공                | `src/renderer/`                                                                                             |
-| editor-components | 컴포넌트 등록 및 조회                | `src/primitives/`, `src/registry.ts`                                                                        |
+`page`는 작업 화면이고, `node`는 page 안에 포함되는 content 단위입니다.
 
----
+## Main Flow
 
-## 데이터 모델
+전체 흐름은 다음과 같습니다.
 
-**참조**: `editor-core/src/types/`
-
-### 문서 계층
-
-```
-DocumentNode
- └── PageNode[]
-      └── SceneNode[]
-           ├── ElementNode    (HTML 요소)
-           ├── InstanceNode   (컴포넌트 인스턴스)
-           └── TextNode       (리치 텍스트)
+```text
+SDK 앱 통합
+  -> document data 생성
+  -> canvas: document data 렌더링
+  -> canvas: 렌더링 결과의 위치와 크기 제공
+  -> shell: geometry 기준으로 overlay와 사용자 조작 정렬
+  -> 사용자 조작 발생
+  -> shell: document data 변경
+  -> canvas: 변경된 data 렌더링
 ```
 
-- **DocumentNode**: 루트. 여러 PageNode를 포함
-- **PageNode**: 하나의 작업 화면. SceneNode의 컨테이너
-- **SceneNode**: `ElementNode | InstanceNode | TextNode`의 union
+핵심 책임은 다음과 같습니다.
 
-### 노드 타입
-
-**BaseNode** — 모든 SceneNode의 공통 필드: `id`, `x?`, `y?`, `style?`, `visible?`, `locked?`
-
-| 타입         | 역할              | 고유 필드                                 |
-| ------------ | ----------------- | ----------------------------------------- |
-| ElementNode  | HTML 태그 렌더링  | `tag`, `props?`, `children?: SceneNode[]` |
-| InstanceNode | 컴포넌트 인스턴스 | `componentId`, `overrides?`               |
-| TextNode     | 리치 텍스트       | `content` (JSON 구조)                     |
-
-- SceneNode는 새로운 노드 타입을 추가하여 확장할 수 있다
-
-### 컴포넌트 시스템 (미구현)
-
-컴포넌트 정의(마스터)와 인스턴스의 관계를 통해, 재사용 가능한 컴포넌트를 지원할 예정.
-
----
-
-## 데이터 흐름
-
-### 상태 관리
-
-**Source of Truth**: Shell의 Zustand 스토어 (`editor-shell/src/store/`)
-
-- 문서 트리 (Document → Page → Node 계층)
-- 컴포넌트 정의 목록
-- 선택 상태, 호버 상태
-- 활성 도구, 줌 레벨
-- 노드 좌표 캐시 (Canvas에서 보고받은 렌더링 결과)
-
-immer 미들웨어로 불변 업데이트를 간결하게 처리하고, `subscribeWithSelector`와 shallow 비교로 불필요한 Canvas 동기화를 방지한다. 노드 트리 탐색은 스토어 내부의 헬퍼 함수로 통합되어 있다.
-
-### 동기화
-
-```
-Shell                              Canvas
-  │                                  │
-  │  ──── syncState() ──────────▶   │  상태 전달
-  │  ──── getNodeRect(id) ─────▶   │  → Rect (RPC)
-  │  ──── getNodeRects() ──────▶   │  → 전체 Rect 맵 (RPC)
-  │                                  │
-  │  ◀─── onNodeRectsUpdated() ──  │  좌표 캐시 갱신
-  │  ◀─── onTextChange() ────────  │  텍스트 편집
-  │                                  │
+```text
+canvas: 화면 결과 생성
+shell: 편집 조작 관리
+overlay: 화면 결과 위에 배치되는 편집 전용 UI
 ```
 
-**원칙**:
+## Shell, Canvas, Overlay
 
-- Canvas는 이벤트를 수신하지 않으며, rect 측정/텍스트 변경 같은 브리지 요청에만 응답
-- Canvas는 상태를 직접 변경하지 않음
-- Shell이 상태를 업데이트한 뒤 `syncState()`로 동기화
-- hit test 판정은 Shell이 `nodeRectsCache`와 문서 트리를 이용해 수행
-- 단방향 데이터 흐름
+`shell`은 편집기 조작을 담당하는 runtime입니다.
 
-### 노드 위치 모델
+Shell의 책임 범위에는 선택 상태, hover 상태, 현재 도구, 패널, 명령 흐름, undo/redo, 사용자 입력 처리가 포함됩니다. 사용자가 클릭, 드래그, 값 변경을 수행하면 shell은 해당 입력을 편집 의도로 해석합니다.
 
-- **루트 노드**: 캔버스 절대 좌표 (`x`, `y`). `fixed` + `transform`으로 배치
-- **자식 노드**: 부모 기준 CSS 레이아웃 (`position`, `top`/`left` 등)
-- 속성 패널에서도 이 구분이 반영됨 (루트 노드만 x/y 좌표 편집 가능)
+`canvas`는 사용자가 편집하는 데이터를 실제 화면 결과로 렌더링하는 runtime입니다.
 
----
+Canvas는 document data를 DOM/React output으로 변환합니다. 사용자가 보는 디자인 결과는 canvas의 렌더링 결과입니다.
 
-## 이벤트 흐름
+`overlay`는 canvas 위에 배치되는 편집 전용 UI입니다.
 
-```
-브라우저 포인터/키보드 이벤트
-     │  (canvas-event-target에서 캡처)
-     ▼
-Editor
-     │
-     ▼
-포인터 상태 머신 (XState)
-     │
-     ├── Shell hitTest → nodeRectsCache + document tree
-     │
-     ├── 상태에 따라 분기
-     │     ├── 키보드 → 키바인딩 매칭 → 단축키 실행
-     │     └── 포인터 → 활성 도구에 위임
-     │
-     ▼
-명령어 실행 → 스토어 업데이트 → syncState → Canvas 동기화
+선택 테두리, hover 표시, resize handle, drag preview는 사용자가 만든 디자인 결과가 아닙니다. 이는 editor가 조작을 보조하기 위해 표시하는 UI입니다. 따라서 document data에 저장되지 않으며, export 대상도 아닙니다.
+
+## Why Geometry Exists
+
+Canvas는 document data를 실제 화면에 렌더링합니다.
+
+Shell은 선택 테두리나 resize handle을 canvas 결과와 정확히 맞춰야 합니다. 이를 위해 shell은 렌더링된 node의 위치와 크기를 알아야 합니다.
+
+Canvas는 렌더링된 결과의 위치와 크기를 shell에 제공합니다. 이 정보를 `geometry`라고 부릅니다.
+
+```text
+node
+  -> canvas: node 렌더링
+  -> geometry: 위치와 크기 계산
+  -> shell: geometry 사용
+  -> overlay: geometry 기준 위치 정렬
 ```
 
-### 포인터 상태 머신
+Geometry는 “데이터에 적힌 값”만 기준으로 결정할 수 없습니다. 실제 DOM/React output은 CSS, content, custom component에 의해 크기가 달라질 수 있습니다. 따라서 editor는 실제 렌더링 결과를 기준으로 overlay와 interaction을 정렬해야 합니다.
 
-XState 기반. 동일한 포인터 이벤트를 현재 상태에 따라 다르게 처리한다.
+## User Interaction Flow
 
-```
-idle ──POINTER_DOWN──▶ hitTesting ──HIT_TEST_DONE──▶ active
-                                                       │
-                                           ┌───────────┼───────────┐
-                                           ▼           ▼           ▼
-                                        pending    dragging    resizing
-                                           │
-                                      POINTER_UP
-                                           ▼
-                                       clicking
-                                           │
-                              ┌────────────┼────────────┐
-                              ▼                         ▼
-                      POINTER_DOWN              timeout
-                      → doubleClick             → idle
+사용자 입력은 document data를 직접 변경하지 않습니다.
+
+먼저 shell이 입력을 해석합니다.
+
+```text
+사용자 입력
+  -> shell: 입력 의도 해석
+  -> shell: 편집 명령 생성
+  -> document data 변경
+  -> canvas: 변경된 data 렌더링
+  -> geometry 갱신
+  -> overlay 갱신
 ```
 
-- **hitTesting**: 포인터 입력을 현재 hit test 결과로 정규화하는 중간 상태
-- **pending → dragging**: threshold 초과 시 드래그로 전환
-- **pending → clicking**: threshold 미만에서 POINTER_UP 시 클릭 처리
-- **clicking**: 더블클릭 판정 (타이머 기반)
-- **resizing**: 리사이즈 핸들에서 시작된 경우 hitTest 없이 바로 진입
+이 흐름은 undo/redo, selection, drag, resize 같은 편집 동작을 일관되게 관리하기 위해 필요합니다.
 
-### Editor
+## Extension Flow
 
-모든 서브시스템을 소유하는 중앙 조율자. React Context로 제공된다.
+SDK 사용자는 자신의 React component를 editor 안에서 렌더링할 수 있어야 합니다.
 
-- 스토어, 명령어 히스토리, 액션 레지스트리, 도구 레지스트리, 키바인딩 레지스트리, CanvasBridge, 포인터 상태 머신을 소유
-- Canvas RPC 연결 관리 (`attachCanvas()`, `detachCanvas()`, `subscribeCanvasSync()`, `syncToCanvas()`)
-- Shell hit test와 overlay geometry 동기화를 위한 API 제공 (`setNodeRectsCache()`, `hitTestNodeId()`)
-- 포인터/키보드 이벤트를 상태 머신에 전달하는 공개 메서드 제공
+흐름은 다음과 같습니다.
 
-**참조**: `editor-shell/src/services/Editor.ts`
+```text
+사용자 component
+  -> SDK 등록
+  -> node type 연결
+  -> canvas 렌더링
+  -> 화면 결과 생성
+```
 
-### 도구 시스템 (Strategy 패턴)
+이 확장은 document output의 확장입니다.
 
-활성 도구에 따라 같은 이벤트를 다르게 처리.
+사용자 component는 shell의 편집 상태나 overlay 동작을 소유하지 않습니다. 편집 상태와 조작 흐름은 shell이 관리하고, 사용자 component는 canvas에서 보이는 결과를 생성합니다.
 
-**참조**: `editor-shell/src/tools/`
+사용자 component의 style은 canvas 안에서 정상적으로 적용되어야 합니다. Host app의 CSS에 우연히 의존하지 않아야 합니다.
 
-### 명령어 시스템 (Command 패턴)
+## Package Roles
 
-모든 상태 변경은 명령어를 통해 실행. Undo/Redo 지원.
+`sdk`는 외부 앱이 사용하는 공개 패키지입니다.
 
-**참조**: `editor-shell/src/commands/`
+`editor-core`는 editor runtime이 공유하는 데이터 개념을 담당합니다.
 
----
+`editor-components`는 document data를 화면에 렌더링할 때 사용할 기본 component layer를 담당합니다.
 
-## 확장 포인트
+`editor-canvas`는 document data를 화면 결과로 렌더링하고 geometry를 제공합니다.
 
-| 추가할 것          | 수정할 폴더                            |
-| ------------------ | -------------------------------------- |
-| 새 노드 타입       | `editor-core/src/types/`               |
-| 새 도구            | `editor-shell/src/tools/`              |
-| 새 명령어/단축키   | `editor-shell/src/commands/`           |
-| 새 렌더링 컴포넌트 | `editor-components/src/primitives/`    |
-| 새 인터랙션 상태   | `editor-shell/src/interaction/`        |
-| 새 오버레이        | `editor-shell/src/components/overlay/` |
+`editor-shell`은 편집 상태, 사용자 입력, 명령 흐름, 패널, overlay를 관리합니다.
 
----
+## Boundaries
 
-## 외부 라이브러리
+- Document data는 저장/export 대상입니다.
+- Canvas output은 document data를 렌더링한 화면 결과입니다.
+- Overlay는 편집 전용 UI이며 document data가 아닙니다.
+- Shell은 편집 조작을 관리합니다.
+- Canvas는 화면 결과를 생성합니다.
+- 사용자 component는 화면 결과를 확장합니다.
+- 사용자 component는 editor control을 소유하지 않습니다.
 
-| 라이브러리    | 용도               |
-| ------------- | ------------------ |
-| zustand       | 상태 관리          |
-| immer         | 불변 상태 업데이트 |
-| xstate        | 포인터 상태 머신   |
-| penpal        | iframe 양방향 통신 |
-| @tiptap/react | 리치 텍스트 편집   |
+## What This Spec Avoids
+
+이 문서에는 다음 내용을 포함하지 않습니다.
+
+- 함수명
+- 컴포넌트명
+- hook 이름
+- 파일 경로
+- CSS class
+- 테스트 ID
+- 내부 DOM 구조
+- 특정 라이브러리 사용 방식
+- 임시 구현이나 migration 과정
+
+이 문서는 구현 이름이 바뀌어도 유지되는 runtime 흐름만 다룹니다.
