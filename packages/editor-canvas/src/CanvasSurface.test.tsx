@@ -104,7 +104,7 @@ function NonForwardingCard({ style }: { style?: CSSProperties }) {
 	return <section style={style} />
 }
 
-test("publishes measured node rects to the current callback after page changes", async () => {
+test("페이지가 바뀌면 측정된 노드 영역을 최신 callback으로 전달한다", async () => {
 	const firstRectChange = vi.fn()
 	const currentRectChange = vi.fn()
 	const screen = await render(
@@ -127,7 +127,7 @@ test("publishes measured node rects to the current callback after page changes",
 	})
 })
 
-test("publishes page-space rects from root data position and child DOM layout", async () => {
+test("루트 좌표와 자식 DOM 배치로 페이지 기준 노드 영역을 계산한다", async () => {
 	const onNodeRectsChange = vi.fn()
 	await render(
 		<CanvasSurface page={nestedLayoutPage} zoom={2} panX={40} panY={50} onNodeRectsChange={onNodeRectsChange} />,
@@ -153,7 +153,7 @@ test("publishes page-space rects from root data position and child DOM layout", 
 	})
 })
 
-test("publishes rects again when the page changes even if measured values are equal", async () => {
+test("측정값이 같아도 페이지가 바뀌면 노드 영역을 다시 전달한다", async () => {
 	const onNodeRectsChange = vi.fn()
 	const screen = await render(
 		<CanvasSurface page={pageNode} zoom={1} panX={0} panY={0} onNodeRectsChange={onNodeRectsChange} />,
@@ -180,7 +180,7 @@ test("publishes rects again when the page changes even if measured values are eq
 	})
 })
 
-test("measures registered components through forwarded root DOM props", async () => {
+test("등록 컴포넌트가 루트 DOM props를 전달하면 해당 DOM을 측정한다", async () => {
 	const onNodeRectsChange = vi.fn()
 	await render(
 		<CanvasSurface
@@ -210,7 +210,7 @@ test("measures registered components through forwarded root DOM props", async ()
 	})
 })
 
-test("measures registered components without forwarded editor DOM props", async () => {
+test("등록 컴포넌트가 에디터 DOM props를 전달하지 않아도 wrapper를 측정한다", async () => {
 	const onNodeRectsChange = vi.fn()
 	await render(
 		<CanvasSurface

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 
 import { hitTestNodeIdInPage } from "./hitTest"
 
-describe("hitTestNodeIdInPage", () => {
-	it("converts pointer coordinates to page coordinates before checking cached rects", () => {
+describe("노드 hit test", () => {
+	it("포인터 좌표를 페이지 좌표로 변환한 뒤 캐시된 노드 영역과 비교한다", () => {
 		const page: PageNode = {
 			id: "page-1",
 			name: "Page 1",

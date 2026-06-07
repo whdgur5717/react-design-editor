@@ -99,7 +99,7 @@ describe("커맨드 병합", () => {
 		expect(state.value).toBe(30)
 	})
 
-	it("mergeKey가 없는 일반 Command는 병합되지 않는다", () => {
+	it("병합 키가 없는 일반 명령은 병합되지 않는다", () => {
 		const history = new CommandHistory()
 		const state = { value: 0 }
 

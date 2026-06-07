@@ -1,46 +1,83 @@
+import type { SceneNode } from "@design-editor/core"
 import { describe, expect, it, vi } from "vitest"
 import { createActor } from "xstate"
 
-import type { Editor } from "../services/Editor"
-import { createPointerMachine } from "./pointerMachine"
+import { createPointerMachine, type PointerMachineDeps } from "./pointerMachine"
 
-describe("createPointerMachine", () => {
-	it("hit tests pointer down and handles a single click from pending", () => {
-		const target = document.createElement("div")
-		const setPointerCapture = vi.fn()
-		Object.defineProperty(target, "setPointerCapture", {
-			value: setPointerCapture,
-			configurable: true,
-		})
+function createPointerTarget() {
+	const target = document.createElement("div")
+	const setPointerCapture = vi.fn()
+	Object.defineProperty(target, "setPointerCapture", {
+		value: setPointerCapture,
+		configurable: true,
+	})
+	return { target, setPointerCapture }
+}
 
-		const handleClick = vi.fn()
-		const hitTestNodeId = vi.fn(() => "node-1")
-		const editor = {
-			toolRegistry: {
-				handleDragEnd: vi.fn(),
-				handleClick,
-				getActiveTool: vi.fn(() => null),
-			},
-			actionRegistry: {
-				execute: vi.fn(),
-			},
-			keybindingRegistry: {
-				match: vi.fn(() => null),
-			},
-			getSelection: vi.fn(() => []),
-			findNode: vi.fn(() => null),
-			getNodeRenderedRect: vi.fn(() => null),
-			getZoom: vi.fn(() => 2),
-			resizeNode: vi.fn(),
+function createDeps(
+	overrides: {
+		handleClick?: PointerMachineDeps["tools"]["handleClick"]
+		handleDragEnd?: PointerMachineDeps["tools"]["handleDragEnd"]
+		hitTestNodeId?: PointerMachineDeps["geometry"]["hitTestNodeId"]
+		findNode?: PointerMachineDeps["document"]["findNode"]
+		resizeNode?: PointerMachineDeps["document"]["resizeNode"]
+		getSelection?: PointerMachineDeps["selection"]["getSelection"]
+		setSelection?: PointerMachineDeps["selection"]["setSelection"]
+		setDragPreview?: PointerMachineDeps["dragPreview"]["setDragPreview"]
+		getZoom?: PointerMachineDeps["viewport"]["getZoom"]
+		getPan?: PointerMachineDeps["viewport"]["getPan"]
+		getNodeRenderedRect?: PointerMachineDeps["geometry"]["getNodeRenderedRect"]
+	} = {},
+): PointerMachineDeps {
+	return {
+		tools: {
+			handleClick: overrides.handleClick ?? vi.fn(),
+			handleDragEnd: overrides.handleDragEnd ?? vi.fn(),
+			getActiveTool: vi.fn(() => undefined),
+		},
+		actions: {
+			execute: vi.fn(),
+		},
+		keybindings: {
+			match: vi.fn(() => null),
+		},
+		document: {
+			findNode: overrides.findNode ?? vi.fn(() => null),
+			resizeNode: overrides.resizeNode ?? vi.fn(),
+		},
+		selection: {
+			getSelection: overrides.getSelection ?? vi.fn(() => []),
 			setHoveredId: vi.fn(),
-			hitTestNodeId,
-			setDragPreview: vi.fn(),
-			getPan: vi.fn(() => ({ x: 10, y: 20 })),
+			setSelection: overrides.setSelection ?? vi.fn(),
+		},
+		viewport: {
+			getZoom: overrides.getZoom ?? vi.fn(() => 1),
+			getPan: overrides.getPan ?? vi.fn(() => ({ x: 0, y: 0 })),
 			setPan: vi.fn(),
 			setZoom: vi.fn(),
-			setSelection: vi.fn(),
-		} as unknown as Editor
-		const actor = createActor(createPointerMachine(editor))
+		},
+		geometry: {
+			getNodeRenderedRect: overrides.getNodeRenderedRect ?? vi.fn(() => null),
+			hitTestNodeId: overrides.hitTestNodeId ?? vi.fn(() => null),
+		},
+		dragPreview: {
+			setDragPreview: overrides.setDragPreview ?? vi.fn(),
+		},
+	}
+}
+
+describe("포인터 상태 머신", () => {
+	it("노드를 클릭하면 현재 도구의 클릭 동작이 실행된다", () => {
+		const { target, setPointerCapture } = createPointerTarget()
+		const handleClick = vi.fn()
+		const hitTestNodeId = vi.fn(() => "node-1")
+		const deps = createDeps({
+			handleClick,
+			hitTestNodeId,
+			getZoom: vi.fn(() => 2),
+			getPan: vi.fn(() => ({ x: 10, y: 20 })),
+		})
+		const actor = createActor(createPointerMachine(deps))
 
 		actor.start()
 		actor.send({
@@ -75,48 +112,31 @@ describe("createPointerMachine", () => {
 		actor.stop()
 	})
 
-	it("keeps drag behavior after entering pending directly", () => {
-		const target = document.createElement("div")
-		Object.defineProperty(target, "setPointerCapture", {
-			value: vi.fn(),
-			configurable: true,
-		})
-
+	it("노드를 드래그하면 선택 상태와 drag preview를 갱신한 뒤 drag end를 실행한다", () => {
+		const { target } = createPointerTarget()
 		const handleDragEnd = vi.fn()
 		const setDragPreview = vi.fn()
 		const setSelection = vi.fn()
-		const editor = {
-			toolRegistry: {
-				handleDragEnd,
-				handleClick: vi.fn(),
-				getActiveTool: vi.fn(() => null),
-			},
-			actionRegistry: {
-				execute: vi.fn(),
-			},
-			keybindingRegistry: {
-				match: vi.fn(() => null),
-			},
-			getSelection: vi.fn(() => []),
-			findNode: vi.fn(() => ({
-				id: "node-1",
-				type: "element",
-				tag: "div",
-				x: 8,
-				y: 9,
-			})),
-			getNodeRenderedRect: vi.fn(() => null),
-			getZoom: vi.fn(() => 2),
-			resizeNode: vi.fn(),
-			setHoveredId: vi.fn(),
-			hitTestNodeId: vi.fn().mockReturnValueOnce("node-1").mockReturnValue("parent-1"),
+		const hitTestNodeId = vi.fn().mockReturnValueOnce("node-1").mockReturnValue("parent-1")
+		const findNode = vi.fn(
+			() =>
+				({
+					id: "node-1",
+					type: "element",
+					tag: "div",
+					x: 8,
+					y: 9,
+				}) satisfies SceneNode,
+		)
+		const deps = createDeps({
+			handleDragEnd,
 			setDragPreview,
-			getPan: vi.fn(() => ({ x: 0, y: 0 })),
-			setPan: vi.fn(),
-			setZoom: vi.fn(),
 			setSelection,
-		} as unknown as Editor
-		const actor = createActor(createPointerMachine(editor))
+			hitTestNodeId,
+			findNode,
+			getZoom: vi.fn(() => 2),
+		})
+		const actor = createActor(createPointerMachine(deps))
 
 		actor.start()
 		actor.send({
@@ -158,54 +178,34 @@ describe("createPointerMachine", () => {
 		actor.stop()
 	})
 
-	it("uses the measured rect as the resize starting size", () => {
-		const resizeHandle = document.createElement("div")
+	it("리사이즈는 스타일값이 아니라 실제 측정 크기를 기준으로 시작한다", () => {
+		const { target: resizeHandle } = createPointerTarget()
 		resizeHandle.dataset.resizeHandle = "e"
-		Object.defineProperty(resizeHandle, "setPointerCapture", {
-			value: vi.fn(),
-			configurable: true,
-		})
 
 		const resizeNode = vi.fn()
-		const editor = {
-			toolRegistry: {
-				handleDragEnd: vi.fn(),
-				handleClick: vi.fn(),
-				getActiveTool: vi.fn(() => null),
-			},
-			actionRegistry: {
-				execute: vi.fn(),
-			},
-			keybindingRegistry: {
-				match: vi.fn(() => null),
-			},
+		const deps = createDeps({
+			resizeNode,
 			getSelection: vi.fn(() => ["node-1"]),
-			findNode: vi.fn(() => ({
-				id: "node-1",
-				type: "element",
-				tag: "div",
-				style: {
-					width: 100,
-					height: 50,
-				},
-			})),
+			findNode: vi.fn(
+				() =>
+					({
+						id: "node-1",
+						type: "element",
+						tag: "div",
+						style: {
+							width: 100,
+							height: 50,
+						},
+					}) satisfies SceneNode,
+			),
 			getNodeRenderedRect: vi.fn(() => ({
 				x: 10,
 				y: 20,
 				width: 180,
 				height: 70,
 			})),
-			getZoom: vi.fn(() => 1),
-			resizeNode,
-			setHoveredId: vi.fn(),
-			hitTestNodeId: vi.fn(() => null),
-			setDragPreview: vi.fn(),
-			getPan: vi.fn(() => ({ x: 0, y: 0 })),
-			setPan: vi.fn(),
-			setZoom: vi.fn(),
-			setSelection: vi.fn(),
-		} as unknown as Editor
-		const actor = createActor(createPointerMachine(editor))
+		})
+		const actor = createActor(createPointerMachine(deps))
 
 		actor.start()
 		actor.send({

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 
 import { collectNodeRects } from "./nodeMeasurement"
 
-describe("collectNodeRects", () => {
-	it("uses root node x/y plus DOM layout offsets for child positions and DOM border-box for size", () => {
+describe("노드 영역 측정", () => {
+	it("자식 노드 위치는 부모 좌표와 DOM 배치를 합산하고 크기는 border box로 측정한다", () => {
 		const root = document.createElement("div")
 		const cardWrapper = document.createElement("div")
 		const card = document.createElement("div")
