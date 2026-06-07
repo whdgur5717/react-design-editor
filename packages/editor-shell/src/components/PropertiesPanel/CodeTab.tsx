@@ -1,8 +1,8 @@
-import type { SceneNode } from "@design-editor/core"
+import type { ElementNode, NodeSnapshot } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
-export function CodeTab({ node }: { node: SceneNode }) {
+export function CodeTab({ node }: { node: NodeSnapshot }) {
 	const [showFull, setShowFull] = useState(false)
 	const [copied, setCopied] = useState(false)
 
@@ -15,7 +15,8 @@ export function CodeTab({ node }: { node: SceneNode }) {
 		)
 	}
 
-	const code = showFull ? serializeDocument(node, "Component") : serializeNode(node)
+	const elementNode = node as ElementNode
+	const code = showFull ? serializeDocument(elementNode, "Component") : serializeNode(elementNode)
 
 	const handleCopy = async () => {
 		await navigator.clipboard.writeText(code)

@@ -6,19 +6,16 @@ import { ResizeHandles } from "./ResizeHandles"
 import { SelectionOverlay } from "./SelectionOverlay"
 
 export function ToolManagerOverlay() {
-	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache, page } = useEditorState((editor) => {
-		const pan = editor.getPan()
-		return {
-			selection: editor.getSelection(),
-			hoveredId: editor.getHoveredId(),
-			zoom: editor.getZoom(),
-			panX: pan.x,
-			panY: pan.y,
-			dragPreview: editor.getDragPreview(),
-			nodeRectsCache: editor.getNodeRectsCache(),
-			page: editor.getCurrentPage(),
-		}
-	})
+	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache, page } = useEditorState((snapshot) => ({
+		selection: snapshot.selection,
+		hoveredId: snapshot.hoveredId,
+		zoom: snapshot.zoom,
+		panX: snapshot.panX,
+		panY: snapshot.panY,
+		dragPreview: snapshot.dragPreview,
+		nodeRectsCache: snapshot.nodeRectsCache,
+		page: snapshot.document.children.find((candidate) => candidate.id === snapshot.currentPageId) ?? null,
+	}))
 
 	if (!page) return null
 

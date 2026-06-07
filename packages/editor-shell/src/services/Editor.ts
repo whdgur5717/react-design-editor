@@ -1,308 +1,128 @@
-import type { EditorTool, NodeLocation, NodeRect, PageNode, SceneNode, Size } from "@design-editor/core"
-import { type AnyActor, createActor } from "xstate"
+import type { DocumentNode, EditorTool } from "@design-editor/core"
 
 import { ActionRegistry } from "../commands/ActionRegistry"
 import { CommandHistory } from "../commands/CommandHistory"
-import { EditorReceiverImpl } from "../commands/EditorReceiverImpl"
-import { ResizeNodeCommand } from "../commands/node/ResizeNodeCommand"
-import type { Command } from "../commands/types"
-import { hitTestNodeIdInPage } from "../document/hitTest"
-import { createPointerMachine } from "../interaction"
+import { createBuiltinEditorExtension } from "../extensions/builtinExtension"
+import { installEditorExtension } from "../extensions/ExtensionInstaller"
+import type { EditorExtension } from "../extensions/types"
+import { InteractionController } from "../interaction"
+import type { EditorAction } from "../keybindings"
 import { KeybindingRegistry } from "../keybindings"
 import { createEditorStore, type EditorStoreApi } from "../store/editor"
-import { FrameTool } from "../tools/FrameTool"
-import { SelectTool } from "../tools/SelectTool"
-import { TextTool } from "../tools/TextTool"
+import { EditorToolFacade } from "../tools/EditorToolFacade"
 import { ToolRegistry } from "../tools/ToolRegistry"
-import { ToolServiceImpl } from "../tools/ToolServiceImpl"
-import { ApplyCanvasTextChangeUsecase } from "../usecases/ApplyCanvasTextChangeUsecase"
-import { DeleteSelectionUsecase } from "../usecases/DeleteSelectionUsecase"
-import { DuplicateSelectionUsecase } from "../usecases/DuplicateSelectionUsecase"
-import { NodePropertyUsecase } from "../usecases/NodePropertyUsecase"
-import { SelectAllUsecase } from "../usecases/SelectAllUsecase"
-import { ClipboardRuntime } from "./ClipboardRuntime"
+import { ClipboardService } from "./ClipboardService"
+import { DocumentService } from "./DocumentService"
+import { DocumentSessionService } from "./DocumentSessionService"
+import { EditorStateApi } from "./EditorStateApi"
+import { EditorStateRepository } from "./EditorStateRepository"
+import { GeometryService } from "./GeometryService"
+import { HistoryService } from "./HistoryService"
+import { SelectionService } from "./SelectionService"
+import { ViewportService } from "./ViewportService"
 
-export class Editor {
-	readonly store: EditorStoreApi
-	readonly commandHistory: CommandHistory
-	readonly receiver: EditorReceiverImpl
-	readonly toolRegistry: ToolRegistry
-	readonly actionRegistry: ActionRegistry
-	readonly keybindingRegistry: KeybindingRegistry
-	private pointerActor: AnyActor
-	private clipboardRuntime: ClipboardRuntime
-	private deleteSelection: DeleteSelectionUsecase
-	private duplicateSelection: DuplicateSelectionUsecase
-	private selectAll: SelectAllUsecase
-	private applyCanvasTextChange: ApplyCanvasTextChangeUsecase
-	private nodeProperty: NodePropertyUsecase
+export interface CreateEditorRuntimeOptions {
+	store?: EditorStoreApi
+	document?: DocumentNode
+	currentPageId?: string
+	extensions?: readonly EditorExtension[]
+}
 
-	constructor() {
-		this.store = createEditorStore()
-		this.receiver = new EditorReceiverImpl(this.store)
-		this.commandHistory = new CommandHistory(50)
-		this.toolRegistry = new ToolRegistry()
-		this.actionRegistry = new ActionRegistry()
-		this.keybindingRegistry = new KeybindingRegistry(this.store)
-
-		// Tool 초기화
-		const toolService = new ToolServiceImpl(this.store, this.receiver, this.commandHistory)
-		this.toolRegistry.init(toolService)
-		this.toolRegistry.register("select", new SelectTool(toolService))
-		this.toolRegistry.register("frame", new FrameTool(toolService))
-		this.toolRegistry.register("text", new TextTool(toolService))
-		this.clipboardRuntime = new ClipboardRuntime(this.receiver, this.commandHistory)
-		this.deleteSelection = new DeleteSelectionUsecase(this.receiver, this.commandHistory)
-		this.duplicateSelection = new DuplicateSelectionUsecase(this.receiver, this.commandHistory)
-		this.selectAll = new SelectAllUsecase(this.receiver)
-		this.applyCanvasTextChange = new ApplyCanvasTextChangeUsecase(this.receiver, this.commandHistory)
-		this.nodeProperty = new NodePropertyUsecase(this.receiver, this.commandHistory)
-
-		// 액션 등록
-		this.actionRegistry.register("history:undo", () => this.commandHistory.undo())
-		this.actionRegistry.register("history:redo", () => this.commandHistory.redo())
-
-		this.actionRegistry.register("selection:clear", () => this.receiver.setSelection([]))
-		this.actionRegistry.register("selection:all", () => this.selectAll.run())
-
-		this.actionRegistry.register("node:delete", () => this.deleteSelection.run())
-
-		this.actionRegistry.register("node:duplicate", () => this.duplicateSelection.run())
-
-		this.actionRegistry.register("clipboard:copy", () => this.clipboardRuntime.copy())
-		this.actionRegistry.register("clipboard:cut", () => this.clipboardRuntime.cut())
-		this.actionRegistry.register("clipboard:paste", () => this.clipboardRuntime.paste())
-
-		this.actionRegistry.register("tool:select", () => this.toolRegistry.setActiveTool("select"))
-		this.actionRegistry.register("tool:frame", () => this.toolRegistry.setActiveTool("frame"))
-		this.actionRegistry.register("tool:text", () => this.toolRegistry.setActiveTool("text"))
-		this.actionRegistry.register("tool:shape", () => this.toolRegistry.setActiveTool("shape"))
-
-		// 포인터 상태 머신
-		const machine = createPointerMachine(this)
-		this.pointerActor = createActor(machine)
+export interface EditorApi {
+	state: EditorStateApi
+	document: DocumentService
+	documentSession: DocumentSessionService
+	selection: SelectionService
+	viewport: ViewportService
+	geometry: GeometryService
+	history: HistoryService
+	clipboard: ClipboardService
+	actions: {
+		execute(id: EditorAction): boolean
 	}
-
-	// ── Lifecycle ──
-
-	start() {
-		this.pointerActor.start()
+	tools: {
+		setActiveTool(tool: EditorTool): void
 	}
+	interaction: InteractionController
+	start(): void
+	dispose(): void
+}
 
-	dispose() {
-		this.pointerActor.stop()
-	}
+export type Editor = EditorApi
 
-	// ── Input events — actor를 내부 구현으로 은닉 ──
-
-	sendPointerDown(e: {
-		clientX: number
-		clientY: number
-		pointerId: number
-		shiftKey: boolean
-		metaKey: boolean
-		target: HTMLElement
-	}) {
-		this.pointerActor.send({
-			type: "POINTER_DOWN",
-			...e,
+export function createEditorRuntime(options: CreateEditorRuntimeOptions = {}): EditorApi {
+	const store =
+		options.store ??
+		createEditorStore({
+			document: options.document,
+			currentPageId: options.currentPageId,
 		})
+	const state = new EditorStateApi(store)
+
+	const repository = new EditorStateRepository(store)
+
+	const history = new HistoryService(new CommandHistory(50))
+	const document = new DocumentService(repository, repository, history)
+	const documentSession = new DocumentSessionService(repository, history)
+	const selection = new SelectionService(repository, repository)
+	const viewport = new ViewportService(repository)
+	const geometry = new GeometryService(repository, repository, repository)
+	const actionRegistry = new ActionRegistry()
+	const keybindingRegistry = new KeybindingRegistry(() => repository.getSelection())
+	const toolRegistry = new ToolRegistry()
+	const toolFacade = new EditorToolFacade(repository, repository, history)
+	const clipboard = new ClipboardService(repository, history)
+
+	toolRegistry.init(toolFacade)
+	const extensionContext = {
+		toolFacade,
+		services: {
+			clipboard,
+			document,
+			selection,
+			history,
+		},
+	}
+	const registries = {
+		tools: toolRegistry,
+		actions: actionRegistry,
+		keybindings: keybindingRegistry,
+	}
+	installEditorExtension(createBuiltinEditorExtension(), registries, extensionContext)
+	for (const extension of options.extensions ?? []) {
+		installEditorExtension(extension, registries, extensionContext)
 	}
 
-	sendPointerMove(e: { clientX: number; clientY: number }) {
-		this.pointerActor.send({
-			type: "POINTER_MOVE",
-			...e,
-		})
-	}
+	const interaction = new InteractionController({
+		document,
+		selection,
+		viewport,
+		geometry,
+		dragPreview: {
+			setDragPreview: (preview) => repository.setDragPreview(preview),
+		},
+		tools: toolRegistry,
+		actions: actionRegistry,
+		keybindings: keybindingRegistry,
+	})
 
-	sendPointerUp(e: { clientX: number; clientY: number; shiftKey: boolean; metaKey: boolean }) {
-		this.pointerActor.send({
-			type: "POINTER_UP",
-			...e,
-		})
-	}
-
-	sendKeyDown(e: {
-		key: string
-		code: string
-		shiftKey: boolean
-		ctrlKey: boolean
-		metaKey: boolean
-		altKey: boolean
-		target: HTMLElement
-	}) {
-		this.pointerActor.send({
-			type: "KEY_DOWN",
-			...e,
-		})
-	}
-
-	sendWheel(e: {
-		deltaX: number
-		deltaY: number
-		clientX: number
-		clientY: number
-		ctrlKey: boolean
-		metaKey: boolean
-	}) {
-		this.pointerActor.send({
-			type: "WHEEL",
-			...e,
-		})
-	}
-
-	applyTextChangeFromCanvas(nodeId: string, content: unknown) {
-		this.applyCanvasTextChange.run(nodeId, content)
-	}
-
-	setNodeRectsCache(rects: Record<string, NodeRect>) {
-		this.store.getState().setNodeRectsCache(rects)
-	}
-
-	updateNodeStyleProperty(
-		nodeId: string,
-		key: Parameters<NodePropertyUsecase["updateStyle"]>[1],
-		value: Parameters<NodePropertyUsecase["updateStyle"]>[2],
-	) {
-		this.nodeProperty.updateStyle(nodeId, key, value)
-	}
-
-	updateNodePosition(nodeId: string, position: Parameters<NodePropertyUsecase["updatePosition"]>[1]) {
-		this.nodeProperty.updatePosition(nodeId, position)
-	}
-
-	// ── 읽기 ──
-
-	findNode(id: string): SceneNode | null {
-		return this.receiver.findNode(id)
-	}
-
-	findNodeLocation(id: string): NodeLocation | null {
-		return this.receiver.findNodeLocation(id)
-	}
-
-	getCurrentPageId() {
-		return this.receiver.getCurrentPageId()
-	}
-
-	getCurrentPage(): PageNode | null {
-		return this.receiver.getCurrentPage()
-	}
-
-	getZoom() {
-		return this.store.getState().zoom
-	}
-
-	getPan() {
-		const { panX, panY } = this.store.getState()
-		return { x: panX, y: panY }
-	}
-
-	getSelection() {
-		return this.store.getState().selection
-	}
-
-	getHoveredId() {
-		return this.store.getState().hoveredId
-	}
-
-	getActiveTool(): EditorTool {
-		return this.store.getState().activeTool
-	}
-
-	getDragPreview() {
-		return this.store.getState().dragPreview
-	}
-
-	getNodeRectsCache() {
-		return this.store.getState().nodeRectsCache
-	}
-
-	getNodeRenderedRect(nodeId: string): NodeRect | null {
-		return this.store.getState().nodeRectsCache[nodeId] ?? null
-	}
-
-	hitTestNodeId(clientX: number, clientY: number) {
-		const state = this.store.getState()
-		const page = state.document.children.find((p) => p.id === state.currentPageId)
-		if (!page) return null
-		return hitTestNodeIdInPage(page, state.nodeRectsCache, state.zoom, state.panX, state.panY, clientX, clientY)
-	}
-
-	getHistorySnapshot() {
-		return this.commandHistory.getSnapshot()
-	}
-
-	subscribeHistory(listener: () => void) {
-		return this.commandHistory.subscribe(listener)
-	}
-
-	// ── 쓰기 ──
-
-	setSelection(ids: string[]) {
-		this.store.getState().setSelection(ids)
-	}
-
-	toggleSelection(id: string) {
-		this.store.getState().toggleSelection(id)
-	}
-
-	setHoveredId(id: string | null) {
-		this.store.getState().setHoveredId(id)
-	}
-
-	setActiveTool(tool: EditorTool) {
-		this.toolRegistry.setActiveTool(tool)
-	}
-
-	setDragPreview(preview: { nodeId: string; dx: number; dy: number } | null) {
-		this.store.getState().setDragPreview(preview)
-	}
-
-	setPan(x: number, y: number) {
-		this.store.getState().setPan(x, y)
-	}
-
-	setZoom(zoom: number) {
-		this.store.getState().setZoom(zoom)
-	}
-
-	reorderNode(parentId: string, fromIndex: number, toIndex: number) {
-		this.receiver.reorderNode(parentId, fromIndex, toIndex)
-	}
-
-	toggleVisibility(id: string) {
-		this.receiver.toggleVisibility(id)
-	}
-
-	toggleLocked(id: string) {
-		this.receiver.toggleLocked(id)
-	}
-
-	// ── Command 실행 ──
-
-	executeCommand(cmd: Command) {
-		this.commandHistory.execute(cmd)
-	}
-
-	beginTransaction() {
-		this.commandHistory.beginTransaction()
-	}
-
-	commitTransaction() {
-		this.commandHistory.commitTransaction()
-	}
-
-	resizeNode(nodeId: string, from: Size, to: Size, mergeKey: string) {
-		this.commandHistory.execute(new ResizeNodeCommand(this.receiver, nodeId, from, to, mergeKey))
-	}
-
-	undo() {
-		this.commandHistory.undo()
-	}
-
-	redo() {
-		this.commandHistory.redo()
+	return {
+		state,
+		document,
+		documentSession,
+		selection,
+		viewport,
+		geometry,
+		history,
+		clipboard,
+		actions: {
+			execute: (id) => actionRegistry.execute(id),
+		},
+		tools: {
+			setActiveTool: (tool) => toolRegistry.setActiveTool(tool),
+		},
+		interaction,
+		start: () => interaction.start(),
+		dispose: () => interaction.dispose(),
 	}
 }

@@ -4,7 +4,9 @@ import { useEditorState } from "../../services/EditorContext"
 import { LayerChildren } from "./LayerChildren"
 
 export function LayersPanelContent() {
-	const currentPage = useEditorState((editor) => editor.getCurrentPage())
+	const currentPage = useEditorState((snapshot) => {
+		return snapshot.document.children.find((page) => page.id === snapshot.currentPageId) ?? null
+	})
 	const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
 
 	const toggleCollapse = (id: string) => {

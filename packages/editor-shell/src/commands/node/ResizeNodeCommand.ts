@@ -1,6 +1,6 @@
 import type { Size } from "@design-editor/core"
 
-import type { Command, EditorReceiver, MergableCommand } from "../types"
+import type { Command, DocumentCommandReceiver, MergableCommand } from "../types"
 
 /**
  * ResizeNodeCommand - 노드 크기 변경
@@ -9,7 +9,7 @@ export class ResizeNodeCommand implements MergableCommand {
 	readonly mergeKey: string
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 		private readonly from: Size,
 		private to: Size,

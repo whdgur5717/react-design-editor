@@ -1,16 +1,15 @@
-import { createContext, type PropsWithChildren, useContext, useEffect } from "react"
-import { useStore } from "zustand"
-import { useShallow } from "zustand/react/shallow"
+import type { EditorSnapshot } from "@design-editor/core"
+import { createContext, type PropsWithChildren, useContext, useEffect, useSyncExternalStore } from "react"
 
-import type { Editor } from "./Editor"
+import type { EditorApi } from "./Editor"
 
-const EditorContext = createContext<Editor | null>(null)
+const EditorContext = createContext<EditorApi | null>(null)
 
-interface EditorProviderProps {
-	editor: Editor
+interface EditorContextProviderProps {
+	editor: EditorApi
 }
 
-export function EditorProvider({ editor, children }: PropsWithChildren<EditorProviderProps>) {
+export function EditorContextProvider({ editor, children }: PropsWithChildren<EditorContextProviderProps>) {
 	useEffect(() => {
 		editor.start()
 		return () => editor.dispose()
@@ -25,12 +24,14 @@ export function useEditor() {
 	return editor
 }
 
-type EditorStateSelector<T> = (editor: Editor) => T
+type EditorStateSelector<T> = (snapshot: EditorSnapshot) => T
 
 export function useEditorState<T>(selector: EditorStateSelector<T>): T {
 	const editor = useEditor()
-	return useStore(
-		editor.store,
-		useShallow(() => selector(editor)),
+	const snapshot = useSyncExternalStore(
+		(listener) => editor.state.subscribe(listener),
+		() => editor.state.getSnapshot(),
+		() => editor.state.getSnapshot(),
 	)
+	return selector(snapshot)
 }

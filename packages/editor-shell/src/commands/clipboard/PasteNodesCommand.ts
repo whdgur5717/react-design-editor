@@ -1,14 +1,14 @@
 import type { SceneNode } from "@design-editor/core"
 
 import { applyPasteOffset, cloneSceneNodeWithNewIds } from "../../services/clipboard"
-import type { Command, EditorReceiver } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 export class PasteNodesCommand implements Command {
 	private createdNodes: SceneNode[] | null = null
 	private readonly previousSelection: string[]
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly targetPageId: string,
 		private readonly targetParentId: string,
 		private readonly nodesSnapshot: SceneNode[],

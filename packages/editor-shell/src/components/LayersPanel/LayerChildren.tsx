@@ -1,4 +1,4 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeSnapshot } from "@design-editor/core"
 import {
 	closestCenter,
 	DndContext,
@@ -14,7 +14,7 @@ import { useEditor } from "../../services/EditorContext"
 import { SortableLayerItem } from "./SortableLayerItem"
 
 interface LayerChildrenProps {
-	nodes: SceneNode[]
+	nodes: readonly NodeSnapshot[]
 	depth: number
 	parentId: string
 	collapsedIds: Set<string>
@@ -43,7 +43,7 @@ export function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCo
 		const newIndex = nodes.findIndex((c) => c.id === over.id)
 
 		if (oldIndex !== -1 && newIndex !== -1) {
-			editor.reorderNode(parentId, oldIndex, newIndex)
+			editor.document.reorderNode(parentId, oldIndex, newIndex)
 		}
 	}
 

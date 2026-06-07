@@ -1,13 +1,13 @@
 import type { Position } from "@design-editor/core"
 
-import type { Command, EditorReceiver } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 /**
  * MoveNodeCommand - 노드 위치 이동
  */
 export class MoveNodeCommand implements Command {
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 		private readonly from: Position,
 		private readonly to: Position,

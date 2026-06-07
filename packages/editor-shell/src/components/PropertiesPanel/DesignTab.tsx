@@ -1,4 +1,4 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeSnapshot } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 import { designTabSchema } from "../../schema/designTabSchema"
@@ -21,7 +21,7 @@ function isSectionVisible(section: StyleSection, style: CSSProperties, parentSty
 	return String(current) === value
 }
 
-export function DesignTab({ node, parentStyle }: { node: SceneNode; parentStyle?: CSSProperties }) {
+export function DesignTab({ node, parentStyle }: { node: NodeSnapshot; parentStyle?: CSSProperties }) {
 	const { updateStyle, updatePosition } = useNodeProperty(node.id)
 	const style = node.style ?? {}
 

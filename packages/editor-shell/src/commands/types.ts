@@ -19,10 +19,9 @@ export interface MergableCommand extends Command {
 }
 
 /**
- * EditorReceiver - Command가 주입받는 인터페이스
- * Store 메서드와 1:1 대응 (개별 메서드)
+ * DocumentCommandReceiver - Command가 주입받는 인터페이스
  */
-export interface EditorReceiver {
+export interface DocumentCommandReceiver {
 	// ========== 노드 액션 (undo 대상) ==========
 
 	/** 노드 업데이트 */

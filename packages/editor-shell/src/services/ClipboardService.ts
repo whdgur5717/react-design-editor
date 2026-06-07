@@ -2,16 +2,16 @@ import type { NodeLocation } from "@design-editor/core"
 
 import { CutNodesCommand } from "../commands/clipboard/CutNodesCommand"
 import { PasteNodesCommand } from "../commands/clipboard/PasteNodesCommand"
-import type { CommandHistory } from "../commands/CommandHistory"
-import type { EditorReceiver } from "../commands/types"
+import type { DocumentCommandReceiver } from "../commands/types"
 import { type ClipboardEntry, type ClipboardPayload, filterToTopLevelInPage, sortClipboardEntries } from "./clipboard"
+import type { HistoryService } from "./HistoryService"
 
-export class ClipboardRuntime {
+export class ClipboardService {
 	private payload: ClipboardPayload | null = null
 
 	constructor(
-		private readonly receiver: EditorReceiver,
-		private readonly history: CommandHistory,
+		private readonly receiver: DocumentCommandReceiver,
+		private readonly history: HistoryService,
 	) {}
 
 	copy() {

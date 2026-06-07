@@ -28,7 +28,7 @@ export function CanvasInteractionSurface() {
 		const onPointerDown = (e: PointerEvent) => {
 			e.preventDefault()
 			const point = toCanvasPoint(e)
-			editor.sendPointerDown({
+			editor.interaction.sendPointerDown({
 				clientX: point.clientX,
 				clientY: point.clientY,
 				pointerId: e.pointerId,
@@ -40,7 +40,7 @@ export function CanvasInteractionSurface() {
 
 		const onPointerMove = (e: PointerEvent) => {
 			const point = toCanvasPoint(e)
-			editor.sendPointerMove({
+			editor.interaction.sendPointerMove({
 				clientX: point.clientX,
 				clientY: point.clientY,
 			})
@@ -48,7 +48,7 @@ export function CanvasInteractionSurface() {
 
 		const onPointerUp = (e: PointerEvent) => {
 			const point = toCanvasPoint(e)
-			editor.sendPointerUp({
+			editor.interaction.sendPointerUp({
 				clientX: point.clientX,
 				clientY: point.clientY,
 				shiftKey: e.shiftKey,
@@ -61,7 +61,7 @@ export function CanvasInteractionSurface() {
 			if (overlayRef.current) overlayRef.current.style.visibility = "hidden"
 			showOverlay()
 			const point = toCanvasPoint(e)
-			editor.sendWheel({
+			editor.interaction.sendWheel({
 				deltaX: e.deltaX,
 				deltaY: e.deltaY,
 				clientX: point.clientX,
@@ -72,7 +72,7 @@ export function CanvasInteractionSurface() {
 		}
 
 		const onKeyDown = (e: KeyboardEvent) => {
-			editor.sendKeyDown({
+			editor.interaction.sendKeyDown({
 				key: e.key,
 				code: e.code,
 				shiftKey: e.shiftKey,

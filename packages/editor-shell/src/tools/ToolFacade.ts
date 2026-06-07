@@ -3,9 +3,9 @@ import type { EditorTool, PageNode, Position, SceneNode } from "@design-editor/c
 import type { Command } from "../commands/types"
 
 /**
- * ToolService - Tool이 필요한 의존성을 추상화한 인터페이스
+ * ToolFacade - Tool이 editor subsystem을 쓰기 위한 단순화된 인터페이스
  */
-export interface ToolService {
+export interface ToolFacade {
 	// Selection
 	getSelection(): string[]
 	setSelection(ids: string[]): void

@@ -1,3 +1,4 @@
+import type { NodeSnapshot, PageSnapshot } from "@design-editor/core"
 import { useState } from "react"
 
 import { useEditorState } from "../../services/EditorContext"
@@ -6,11 +7,21 @@ import { DesignTab } from "./DesignTab"
 
 type Tab = "design" | "prototype" | "code"
 
+function findNodeSnapshot(parent: PageSnapshot | NodeSnapshot, id: string): NodeSnapshot | null {
+	for (const child of parent.children ?? []) {
+		if (child.id === id) return child
+		const found = findNodeSnapshot(child, id)
+		if (found) return found
+	}
+	return null
+}
+
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
-	const selectedNode = useEditorState((editor) => {
-		const selection = editor.getSelection()
-		return selection.length === 1 ? editor.findNode(selection[0]) : null
+	const selectedNode = useEditorState((snapshot) => {
+		const selection = snapshot.selection
+		const page = snapshot.document.children.find((candidate) => candidate.id === snapshot.currentPageId)
+		return selection.length === 1 && page ? findNodeSnapshot(page, selection[0]) : null
 	})
 
 	return (
