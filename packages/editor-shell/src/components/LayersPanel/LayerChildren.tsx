@@ -1,4 +1,4 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeSnapshot } from "@design-editor/core"
 import {
 	closestCenter,
 	DndContext,
@@ -10,11 +10,11 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
-import { useEditorStore } from "../../services/EditorContext"
+import { useEditor } from "../../services/EditorContext"
 import { SortableLayerItem } from "./SortableLayerItem"
 
 interface LayerChildrenProps {
-	nodes: SceneNode[]
+	nodes: readonly NodeSnapshot[]
 	depth: number
 	parentId: string
 	collapsedIds: Set<string>
@@ -22,7 +22,7 @@ interface LayerChildrenProps {
 }
 
 export function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCollapse }: LayerChildrenProps) {
-	const reorderNode = useEditorStore((state) => state.reorderNode)
+	const editor = useEditor()
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -43,7 +43,7 @@ export function LayerChildren({ nodes, depth, parentId, collapsedIds, onToggleCo
 		const newIndex = nodes.findIndex((c) => c.id === over.id)
 
 		if (oldIndex !== -1 && newIndex !== -1) {
-			reorderNode(parentId, oldIndex, newIndex)
+			editor.document.reorderNode(parentId, oldIndex, newIndex)
 		}
 	}
 

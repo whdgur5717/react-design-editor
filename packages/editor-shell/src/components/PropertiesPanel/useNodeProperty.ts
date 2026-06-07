@@ -9,22 +9,15 @@ export function useNodeProperty(nodeId: string) {
 
 	const updateStyle = useCallback(
 		(key: keyof CSSProperties, value: CSSProperties[keyof CSSProperties]) => {
-			editor.updateNodeStyleProperty(nodeId, key, value)
+			editor.document.updateStyleProperty(nodeId, key, value)
 		},
 		[editor, nodeId],
 	)
 
 	const updatePosition = useCallback(
-		(position: Position) => editor.updateNodePosition(nodeId, position),
+		(position: Position) => editor.document.updatePosition(nodeId, position),
 		[editor, nodeId],
 	)
 
-	const updatePropValues = useCallback(
-		(propValues: Record<string, unknown>) => {
-			editor.updateInstancePropValues(nodeId, propValues)
-		},
-		[editor, nodeId],
-	)
-
-	return { updateStyle, updatePosition, updatePropValues }
+	return { updateStyle, updatePosition }
 }

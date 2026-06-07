@@ -1,6 +1,6 @@
 import type { SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 /**
  * AddNodeCommand - 노드 추가
@@ -8,7 +8,7 @@ import type { Command, EditorReceiver } from "../types"
  */
 export class AddNodeCommand implements Command {
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly parentId: string,
 		private readonly node: SceneNode,
 		private readonly index?: number,

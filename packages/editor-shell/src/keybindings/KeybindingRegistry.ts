@@ -1,11 +1,10 @@
-import type { EditorStoreApi } from "../store/editor"
-import { defaultKeybindings, type EditorAction } from "./defaults"
+import type { EditorAction } from "./defaults"
 import type { Keybinding, KeyEventLike } from "./types"
 
 export class KeybindingRegistry {
-	private bindings: Keybinding[] = [...defaultKeybindings]
+	private bindings: Keybinding[] = []
 
-	constructor(private readonly store: EditorStoreApi) {}
+	constructor(private readonly getSelection: () => string[]) {}
 
 	/**
 	 * Keybinding 추가
@@ -42,10 +41,9 @@ export class KeybindingRegistry {
 	private checkCondition(when?: string): boolean {
 		if (!when) return true
 
-		const state = this.store.getState()
 		switch (when) {
 			case "hasSelection":
-				return state.selection.length > 0
+				return this.getSelection().length > 0
 			default:
 				return true
 		}

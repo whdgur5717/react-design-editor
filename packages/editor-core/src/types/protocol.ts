@@ -1,45 +1,12 @@
-import type { CSSProperties } from "react"
-
-import type { EditorTool } from "./editor"
-import type { DocumentNode } from "./node"
-
 /**
- * Shell → Canvas 상태 동기화 페이로드
+ * 현재 PageNode 기준 노드 박스.
+ * root x/y는 노드 데이터에서 오고, child x/y는 DOM layout offset에서 온다.
+ * width/height는 DOM layout border-box 측정값이다.
+ * pan/zoom, CSS transform 결과는 포함하지 않는다.
  */
-export interface SyncStatePayload {
-	document: DocumentNode
-	currentPageId: string
-	zoom: number
-	panX: number
-	panY: number
-	selection: string[]
-	activeTool: EditorTool
-	cursor: CSSProperties["cursor"]
-	/** 코드 컴포넌트 소스 (id → compiledCode) */
-	codeComponentSources: Record<string, string>
-}
-
 export interface NodeRect {
 	x: number
 	y: number
 	width: number
 	height: number
-}
-
-/**
- * Shell에서 Canvas로 호출 가능한 메서드
- */
-export interface CanvasMethods {
-	syncState: (state: SyncStatePayload) => void
-	hitTest: (x: number, y: number) => string | null
-	getNodeRect: (nodeId: string) => NodeRect | null
-	getNodeRects: () => Record<string, NodeRect>
-}
-
-/**
- * Canvas에서 Shell로 호출 가능한 메서드
- */
-export interface ShellMethods {
-	onTextChange: (nodeId: string, content: unknown) => void
-	onNodeRectsUpdated: (rects: Record<string, NodeRect>) => void
 }

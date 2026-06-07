@@ -1,159 +1,155 @@
-# Design Editor Engine
+# Design Editor SDK
 
-DOM/React 기반 비주얼 에디터 엔진. 에디터에서 보이는 것이 곧 React 코드가 된다.
+React 앱 안에 비주얼 에디터를 넣기 위한 SDK.
 
-`~7,000 LOC` · `4 packages` · `TypeScript strict`
+> Preview package. 사용 방식, 컴포넌트 구성, import 경로 변경 가능.
 
-> **[Live Demo](https://design-editor-shell.pages.dev)**
+[Live Demo](https://design-editor-shell.pages.dev)
 
-<!-- TODO: 스크린샷 추가 -->
-<!-- ![screenshot](docs/screenshot.png) -->
+## 제공 기능
 
----
+- 문서 모델 기반 캔버스 렌더링
+- 선택, 이동, 리사이즈, 텍스트 편집
+- undo / redo history
+- toolbar, layers panel, properties panel
+- 커스텀 React 컴포넌트 등록
 
-## 아키텍처
+## 설치
 
-Shell(상태·이벤트·UI)과 Canvas(렌더링)를 **iframe으로 분리**하여 CSS/JS를 격리한다. Shell이 편집 상태와 입력을 소유하고, Canvas는 동기화된 상태를 렌더링한 뒤 측정한 geometry를 다시 Shell에 보고한다.
-
-```mermaid
-graph TB
-    subgraph Shell["Shell — Source of Truth"]
-        EventTarget["Event Capture Layer"]
-        Editor["Editor Runtime"]
-        Pointer["Pointer State Machine"]
-        Tools["Tool Registry"]
-        Commands["Command History"]
-        Store["Zustand Store"]
-        HitTest["Shell Hit Test"]
-        Overlay["Overlay / Panels"]
-    end
-
-    subgraph Canvas["Canvas iframe — Renderer"]
-        Renderer["React Renderer"]
-        Rects["DOM Measurement"]
-    end
-
-    EventTarget --> Editor
-    Editor --> Pointer
-    Pointer --> Tools
-    Tools --> Commands
-    Commands --> Store
-    Store -- "syncState()" --> Renderer
-    Renderer -- "collectNodeRects()" --> Rects
-    Rects -. "onNodeRectsUpdated()" .-> Store
-    Store -. "currentPage + nodeRectsCache" .-> HitTest
-    EventTarget -. "pointer coords" .-> HitTest
-    HitTest -. "target nodeId" .-> Pointer
-    Store --> Overlay
+```bash
+pnpm add @design-editor/sdk react react-dom
 ```
 
-**원칙**
+아직 배포 전 preview 환경에서는 `packages/demo`의 workspace 사용 방식 기준.
 
-- Shell의 Zustand store가 source of truth다.
-- Canvas는 편집 상태를 소유하지 않고, 동기화된 상태를 렌더링한다.
-- 주 hit test는 Shell이 `currentPage + nodeRectsCache`로 수행한다.
-- Canvas는 geometry 측정과 렌더링 결과 보고에 집중한다.
+## 빠른 사용
 
----
+```tsx
+import "@design-editor/sdk/styles.css"
 
-## 이벤트 파이프라인
+import { createEditor } from "@design-editor/sdk/createEditor"
+import { EditorCanvas } from "@design-editor/sdk/EditorCanvas"
+import { EditorProvider } from "@design-editor/sdk/EditorProvider"
+import { EditorRoot } from "@design-editor/sdk/EditorRoot"
+import { LayersPanel } from "@design-editor/sdk/LayersPanel"
+import { PropertiesPanel } from "@design-editor/sdk/PropertiesPanel"
+import { Toolbar } from "@design-editor/sdk/Toolbar"
+import { useMemo } from "react"
 
-브라우저 이벤트는 Shell에서 해석되고, 그 결과만 Canvas에 반영된다.
+export function App() {
+	const editor = useMemo(() => {
+		return createEditor({
+			document: {
+				id: "doc-root",
+				children: [{ id: "page-1", name: "Page 1", children: [] }],
+			},
+			currentPageId: "page-1",
+		})
+	}, [])
 
-```mermaid
-flowchart LR
-    A["Browser Event"] --> B["canvas-event-target"]
-    B --> C["Editor.send*()"]
-    C --> D["Pointer State Machine"]
-    D --> E{"Dispatch"}
-    E -- "keyboard" --> F["KeybindingRegistry / ActionRegistry"]
-    E -- "pointer" --> G["Active Tool"]
-    F --> H["CommandHistory"]
-    G --> H
-    H --> I["Editor Store"]
-    I --> J["syncToCanvas()"]
-    J --> K["Canvas Renderer"]
-    K --> L["measure DOM rects"]
-    L --> M["onNodeRectsUpdated()"]
-    M --> I
+	return (
+		<EditorProvider editor={editor}>
+			<EditorRoot>
+				<Toolbar />
+				<LayersPanel />
+				<EditorCanvas />
+				<PropertiesPanel />
+			</EditorRoot>
+		</EditorProvider>
+	)
+}
 ```
 
----
+흐름은 단순함.
 
-## 설계 패턴
+1. `createEditor()`로 editor 객체 생성
+2. `EditorProvider`에 editor 전달
+3. `EditorCanvas`와 패널 컴포넌트 배치
 
-| 패턴                 | 위치                            | 역할                                                                                                  |
-| -------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **Composition Root** | `App.tsx`, `services/Editor.ts` | `App`이 단일 `Editor` 런타임 객체를 만들고 iframe RPC를 조립                                          |
-| **Command + Merge**  | `commands/`                     | 모든 상태 변경을 Command로 실행. Undo/Redo 지원. `MergableCommand`로 연속 리사이즈를 단일 Undo로 병합 |
-| **Strategy**         | `tools/`                        | 활성 도구(Select / Frame / Text)에 따라 동일 포인터 이벤트를 다르게 처리                              |
-| **State Machine**    | `interaction/`                  | 제스처(클릭/드래그/리사이즈/휠)를 상태 기반으로 분기                                                  |
-| **Bridge**           | `services/`                     | `CanvasBridge`가 iframe RPC를 추상화. Shell이 iframe을 직접 접근하지 않음                             |
-| **Receiver**         | `commands/`                     | Command가 Store에 직접 의존하지 않고 `EditorReceiver` 인터페이스를 통해 실행                          |
+## 커스텀 컴포넌트
 
----
+캔버스에서 렌더링할 React 컴포넌트는 `components` 옵션으로 등록.
 
-## 패키지 구조
-
-```mermaid
-graph LR
-    Core["editor-core<br/>types · protocol · serialize"]
-    Shell["editor-shell<br/>runtime · UI · commands"]
-    Canvas["editor-canvas<br/>iframe renderer"]
-    Components["editor-components<br/>primitive registry"]
-
-    Core --> Shell
-    Core --> Canvas
-    Components --> Canvas
-    Shell -. "Penpal RPC + codeComponentSources" .-> Canvas
+```tsx
+const editor = createEditor({
+	document,
+	currentPageId: "page-1",
+	components: {
+		HeroCard: {
+			component: HeroCard,
+			displayName: "Hero Card",
+			styles: heroCardStyles,
+		},
+	},
+})
 ```
 
+등록한 컴포넌트는 문서 노드의 `tag` 값으로 사용.
+
+```ts
+{
+	id: "hero-card",
+	type: "element",
+	tag: "HeroCard",
+	x: 64,
+	y: 56,
+	props: {
+		title: "Launch readiness",
+	},
+	style: {
+		width: 520,
+		minHeight: 320,
+	},
+	children: [],
+}
 ```
-EditorStore
-├── document: DocumentNode
-├── codeComponents: CodeComponentDefinition[]
-├── selection / hoveredId / activeTool
-├── zoom / pan
-└── nodeRectsCache / dragPreview
-```
 
-```
-DocumentNode → PageNode → SceneNode
-                            ├── ElementNode     (HTML element)
-                            ├── InstanceNode    (code component instance)
-                            └── TextNode        (rich text)
-```
+## 주요 import
 
----
+| Import path                          | 용도                       |
+| ------------------------------------ | -------------------------- |
+| `@design-editor/sdk/createEditor`    | editor 객체 생성           |
+| `@design-editor/sdk/EditorProvider`  | React 트리에 editor 연결   |
+| `@design-editor/sdk/EditorRoot`      | 기본 editor layout wrapper |
+| `@design-editor/sdk/EditorCanvas`    | 문서 캔버스 렌더링         |
+| `@design-editor/sdk/Toolbar`         | 기본 툴바                  |
+| `@design-editor/sdk/LayersPanel`     | 문서 레이어 패널           |
+| `@design-editor/sdk/PropertiesPanel` | 선택 노드 속성 패널        |
+| `@design-editor/sdk/useEditor`       | editor 객체 접근 hook      |
+| `@design-editor/sdk/styles.css`      | 기본 editor 스타일         |
 
-## 기술 스택
+## 패키지 구성
 
-| Category | Stack                                                   |
-| -------- | ------------------------------------------------------- |
-| UI       | React 18, Monaco, Tiptap                                |
-| State    | Zustand + Immer, XState v5                              |
-| IPC      | Penpal (postMessage RPC)                                |
-| Codegen  | `serializeNode()` / `serializeDocument()`, esbuild-wasm |
-| Build    | Vite, pnpm monorepo                                     |
-| Quality  | TypeScript strict, ESLint, Prettier, Playwright         |
-| Deploy   | Cloudflare Pages                                        |
+| Package                     | 역할                                |
+| --------------------------- | ----------------------------------- |
+| `@design-editor/sdk`        | 앱에서 사용하는 SDK entry package   |
+| `@design-editor/shell`      | 상태, 액션, 툴, history runtime     |
+| `@design-editor/canvas`     | 캔버스 렌더링과 DOM geometry 측정   |
+| `@design-editor/core`       | 문서 모델, 공통 타입, serialization |
+| `@design-editor/components` | 기본 component registry             |
+| `@design-editor/demo`       | SDK 사용 예시 앱                    |
 
----
-
-## 시작하기
+## 로컬 개발
 
 ```bash
 pnpm install
 
-# Dev server (Shell :3000 + Canvas :3001)
-pnpm dev
+# demo app
+pnpm --filter @design-editor/demo dev
 
-# Build
-pnpm build
+# build
+pnpm --filter @design-editor/demo build
+pnpm --filter @design-editor/sdk build
 
-# Quality check
+# checks
 pnpm type-check
 pnpm lint
 pnpm test:unit
 pnpm test:e2e
 ```
+
+## 참고 문서
+
+- [SDK direction](docs/sdk-direction.md)
+- [Editor runtime service migration](docs/editor-runtime-service-migration.md)
+- [Deployment](docs/deployment.md)

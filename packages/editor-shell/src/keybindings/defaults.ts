@@ -1,8 +1,8 @@
 /**
  * 기본 키바인딩 설정
  *
- * as const로 선언하여 EditorAction 타입을 자동 추론한다.
- * 키바인딩을 추가/삭제하면 EditorAction 타입이 자동으로 따라간다.
+ * as const로 선언하여 built-in action 타입을 자동 추론한다.
+ * 키바인딩을 추가/삭제하면 BuiltinEditorAction 타입이 자동으로 따라간다.
  */
 export const defaultKeybindings = [
 	// History
@@ -31,4 +31,5 @@ export const defaultKeybindings = [
 type KeyboundAction = (typeof defaultKeybindings)[number]["command"]
 
 /** 키바인딩 없이 등록되는 액션 포함 */
-export type EditorAction = KeyboundAction | "selection:all"
+export type BuiltinEditorAction = KeyboundAction | "selection:all"
+export type EditorAction = string

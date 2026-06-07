@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 
-import type { Command, EditorReceiver, MergableCommand } from "../types"
+import type { Command, DocumentCommandReceiver, MergableCommand } from "../types"
 
 /**
  * UpdateStyleCommand - 스타일 개별 속성 변경 (변경된 키만 저장하여 효율적)
@@ -10,7 +10,7 @@ export class UpdateStyleCommand implements MergableCommand {
 	private readonly previousStyle: Partial<CSSProperties>
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 		private styleUpdates: Partial<CSSProperties>,
 		mergeKey: string,

@@ -1,5 +1,3 @@
-import "./inputs.css"
-
 interface ColorInputProps {
 	value: string | undefined
 	onChange: (value: string) => void

@@ -1,6 +1,6 @@
 import type { SceneNode } from "@design-editor/core"
 
-import type { EditorReceiver } from "../commands/types"
+import type { DocumentCommandReceiver } from "../commands/types"
 
 export interface ClipboardEntry {
 	parentId: string
@@ -15,7 +15,7 @@ export interface ClipboardPayload {
 	pasteCount: number
 }
 
-export function filterToTopLevelInPage(pageId: string, selection: string[], receiver: EditorReceiver) {
+export function filterToTopLevelInPage(pageId: string, selection: string[], receiver: DocumentCommandReceiver) {
 	return selection.filter((id) => {
 		let location = receiver.findNodeLocation(id, { pageId })
 		while (location) {

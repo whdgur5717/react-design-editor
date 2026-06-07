@@ -1,10 +1,10 @@
-import type { Command, EditorReceiver } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 export class DuplicateNodeCommand implements Command {
 	private createdNodeId: string | null = null
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 	) {}
 

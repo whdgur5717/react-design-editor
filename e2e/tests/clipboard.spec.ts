@@ -53,7 +53,7 @@ test.describe("노드 클립보드", () => {
 		await editor.page.keyboard.press(`${primaryModifier}+A`)
 		await editor.page.keyboard.press(`${primaryModifier}+C`)
 
-		await editor.page.locator(".canvas-area").click()
+		await editor.eventTarget.click({ position: { x: 10, y: 10 } })
 		await editor.page.keyboard.press(`${primaryModifier}+V`)
 		await editor.page.waitForTimeout(100)
 

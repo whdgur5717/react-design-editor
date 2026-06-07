@@ -1,19 +1,10 @@
-import type { SceneNode } from "@design-editor/core"
+import type { ElementNode, NodeSnapshot } from "@design-editor/core"
 import { serializeDocument, serializeNode } from "@design-editor/core"
 import { useState } from "react"
 
-export function CodeTab({ node }: { node: SceneNode }) {
+export function CodeTab({ node }: { node: NodeSnapshot }) {
 	const [showFull, setShowFull] = useState(false)
 	const [copied, setCopied] = useState(false)
-
-	// InstanceNode는 코드 생성 불가
-	if (node.type === "instance") {
-		return (
-			<div className="code-tab">
-				<div className="empty-state">Instance nodes cannot be exported to code directly</div>
-			</div>
-		)
-	}
 
 	// TextNode는 코드 생성 미지원 (추후 구현)
 	if (node.type === "text") {
@@ -24,7 +15,8 @@ export function CodeTab({ node }: { node: SceneNode }) {
 		)
 	}
 
-	const code = showFull ? serializeDocument(node, "Component") : serializeNode(node)
+	const elementNode = node as ElementNode
+	const code = showFull ? serializeDocument(elementNode, "Component") : serializeNode(elementNode)
 
 	const handleCopy = async () => {
 		await navigator.clipboard.writeText(code)

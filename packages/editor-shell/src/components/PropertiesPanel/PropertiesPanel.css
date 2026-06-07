@@ -1,11 +1,9 @@
 .properties-panel {
-	position: fixed;
-	top: var(--editor-toolbar-height, 48px);
-	right: 0;
-	bottom: 0;
-	width: var(--editor-right-panel-width, 260px);
+	grid-area: properties;
 	display: flex;
 	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
 	background-color: #ffffff;
 	border-left: 1px solid #e0e0e0;
 }

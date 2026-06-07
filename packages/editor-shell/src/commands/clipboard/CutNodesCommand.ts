@@ -1,6 +1,6 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeLocation, SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver, NodeLocation } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 interface RemovedClipboardNode {
 	location: NodeLocation
@@ -12,7 +12,7 @@ export class CutNodesCommand implements Command {
 	private readonly previousSelection: string[]
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly sourcePageId: string,
 		nodeIds: string[],
 	) {

@@ -1,12 +1,12 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeSnapshot } from "@design-editor/core"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
-import { useEditorStore } from "../../services/EditorContext"
+import { useEditor, useEditorState } from "../../services/EditorContext"
 import { LayerChildren } from "./LayerChildren"
 
 interface SortableLayerItemProps {
-	node: SceneNode
+	node: NodeSnapshot
 	depth: number
 	parentId: string | null
 	index: number
@@ -22,12 +22,11 @@ export function SortableLayerItem({
 	collapsedIds,
 	onToggleCollapse,
 }: SortableLayerItemProps) {
-	const selection = useEditorStore((state) => state.selection)
-	const hoveredId = useEditorStore((state) => state.hoveredId)
-	const setSelection = useEditorStore((state) => state.setSelection)
-	const setHoveredId = useEditorStore((state) => state.setHoveredId)
-	const toggleVisibility = useEditorStore((state) => state.toggleVisibility)
-	const toggleLocked = useEditorStore((state) => state.toggleLocked)
+	const editor = useEditor()
+	const { selection, hoveredId } = useEditorState((snapshot) => ({
+		selection: snapshot.selection,
+		hoveredId: snapshot.hoveredId,
+	}))
 
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: node.id })
 
@@ -46,17 +45,17 @@ export function SortableLayerItem({
 
 	const handleRowClick = (e: React.MouseEvent) => {
 		e.stopPropagation()
-		setSelection([node.id])
+		editor.selection.setSelection([node.id])
 	}
 
 	const handleVisibilityClick = (e: React.MouseEvent) => {
 		e.stopPropagation()
-		toggleVisibility(node.id)
+		editor.document.toggleVisibility(node.id)
 	}
 
 	const handleLockClick = (e: React.MouseEvent) => {
 		e.stopPropagation()
-		toggleLocked(node.id)
+		editor.document.toggleLocked(node.id)
 	}
 
 	const handleCollapseClick = (e: React.MouseEvent) => {
@@ -69,10 +68,11 @@ export function SortableLayerItem({
 			<div
 				className={`layer-row ${isSelected ? "selected" : ""} ${isHovered ? "hovered" : ""} ${!isVisible ? "hidden-layer" : ""}`}
 				data-node-id={node.id}
+				data-testid={`layer-row-${node.id}`}
 				style={{ paddingLeft: depth * 16 + 8 }}
 				onClick={handleRowClick}
-				onMouseEnter={() => setHoveredId(node.id)}
-				onMouseLeave={() => setHoveredId(null)}
+				onMouseEnter={() => editor.selection.setHoveredId(node.id)}
+				onMouseLeave={() => editor.selection.setHoveredId(null)}
 			>
 				<button className="layer-collapse-btn" onClick={handleCollapseClick} disabled={!hasChildren}>
 					{hasChildren ? (isCollapsed ? "▶" : "▼") : "─"}

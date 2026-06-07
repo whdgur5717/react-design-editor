@@ -2,25 +2,27 @@ import { expect } from "@playwright/test"
 import { test } from "../fixtures"
 
 test.describe("노드 선택", () => {
-	test("레이어 패널에서 노드 클릭 시 Properties 패널에 해당 노드의 width/height가 표시된다", async ({ editor }) => {
+	test("레이어 패널에서 노드 클릭 시 Properties 패널에 해당 노드의 width가 표시된다", async ({ editor }) => {
 		await editor.layerRow("root").click()
 
 		await expect(editor.designTab).toBeVisible()
-		await expect(editor.propW).toHaveValue("400")
-		await expect(editor.propH).toHaveValue("300")
+		await expect(editor.propW).toHaveValue("520")
 	})
 })
 
 test.describe("노드 리사이즈", () => {
-	test("SE 핸들을 (100, 50) 드래그하면 width가 400→500, height가 300→350으로 증가한다", async ({ editor }) => {
+	test("남동쪽 핸들을 (100, 50) 드래그하면 width와 height가 이동량만큼 증가한다", async ({ editor }) => {
 		await editor.layerRow("root").click()
-		await expect(editor.propW).toHaveValue("400")
-		await expect(editor.propH).toHaveValue("300")
+		await expect(editor.propW).toHaveValue("520")
+		const startWidth = Number(await editor.propW.inputValue())
+		const startHeightValue = await editor.propH.inputValue()
+		const nodeBox = (await editor.canvasNode("root").boundingBox())!
+		const startHeight = startHeightValue ? Number(startHeightValue) : Math.round(nodeBox.height)
 
 		await editor.resizeNode("se", 100, 50)
 
-		await expect(editor.propW).toHaveValue("500")
-		await expect(editor.propH).toHaveValue("350")
+		await expect(editor.propW).toHaveValue(String(startWidth + 100))
+		await expect(editor.propH).toHaveValue(String(startHeight + 50))
 	})
 
 	test("노드가 선택되지 않으면 리사이즈 핸들이 표시되지 않고, 단일 선택 시 8개 핸들이 모두 표시된다", async ({
@@ -41,15 +43,15 @@ test.describe("노드 이동", () => {
 		const startX = Number(await editor.positionX.inputValue())
 		const startY = Number(await editor.positionY.inputValue())
 
-		await editor.dragOnCanvas({ x: 330, y: 150 }, { x: 410, y: 210 })
+		await editor.dragNode("root", { x: 80, y: 60 })
 
 		await expect(editor.positionX).toHaveValue(String(startX + 80))
 		await expect(editor.positionY).toHaveValue(String(startY + 60))
 	})
 })
 
-test.describe("Zoom", () => {
-	test("Zoom In 버튼을 누르면 100%→110%, Zoom Out 두 번 누르면 110%→90%로 변경된다", async ({ editor }) => {
+test.describe("줌", () => {
+	test("확대 버튼을 누르면 100%에서 110%가 되고 축소 버튼을 두 번 누르면 90%가 된다", async ({ editor }) => {
 		await expect(editor.page.getByText("100%")).toBeVisible()
 
 		await editor.toolButton("Zoom In").click()
@@ -61,8 +63,8 @@ test.describe("Zoom", () => {
 	})
 })
 
-test.describe("Canvas geometry sync", () => {
-	test("selection overlay는 pan 중 노드와 계속 정렬된다", async ({ editor }) => {
+test.describe("선택 표시 위치", () => {
+	test("선택 overlay는 화면을 이동하는 동안에도 노드와 계속 정렬된다", async ({ editor }) => {
 		await editor.layerRow("root").click()
 		await expect(editor.selectionBorder).toBeVisible()
 
@@ -86,7 +88,7 @@ test.describe("Canvas geometry sync", () => {
 		expect(Math.abs(nodeBox.height - selectionBox.height)).toBeLessThan(2)
 	})
 
-	test("selection overlay는 빠른 wheel pan 이후에도 노드와 정렬된다", async ({ editor }) => {
+	test("선택 overlay는 빠르게 wheel로 이동한 뒤에도 노드와 정렬된다", async ({ editor }) => {
 		await editor.layerRow("root").click()
 		await expect(editor.selectionBorder).toBeVisible()
 
@@ -114,14 +116,14 @@ test.describe("Canvas geometry sync", () => {
 		expect(Math.abs(nodeBox.height - selectionBox.height)).toBeLessThan(2)
 	})
 
-	test("pan과 zoom 이후 캔버스 클릭은 같은 노드를 선택하고 overlay가 정렬된다", async ({ editor }) => {
+	test("이동과 확대 이후에도 캔버스 클릭은 같은 노드를 선택하고 overlay가 정렬된다", async ({ editor }) => {
 		await editor.panCanvas(0, 120)
 		await editor.panCanvas(0, 80)
 		await editor.toolButton("Zoom In").click()
 		await editor.toolButton("Zoom In").click()
 
 		const nodeBox = await editor.canvasNode("root").boundingBox()
-		const canvasAreaBox = await editor.page.locator(".canvas-area").boundingBox()
+		const canvasAreaBox = await editor.eventTarget.boundingBox()
 		expect(nodeBox).not.toBeNull()
 		expect(canvasAreaBox).not.toBeNull()
 

@@ -1,4 +1,4 @@
-import type { PageNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { NodeLocation, NodePageContext, PageNode, Position, SceneNode, Size } from "@design-editor/core"
 import type { CSSProperties } from "react"
 
 /**
@@ -19,32 +19,9 @@ export interface MergableCommand extends Command {
 }
 
 /**
- * 인스턴스 오버라이드 타입
- * Store의 setInstanceOverride와 동일한 타입
+ * DocumentCommandReceiver - Command가 주입받는 인터페이스
  */
-export interface InstanceOverrides {
-	props?: Record<string, unknown>
-	style?: Record<string, unknown>
-	children?: string
-}
-
-/**
- * 노드 위치 정보 (부모 내에서의 위치)
- */
-export interface NodeLocation {
-	parentId: string
-	index: number
-}
-
-export interface NodePageContext {
-	pageId?: string
-}
-
-/**
- * EditorReceiver - Command가 주입받는 인터페이스
- * Store 메서드와 1:1 대응 (개별 메서드)
- */
-export interface EditorReceiver {
+export interface DocumentCommandReceiver {
 	// ========== 노드 액션 (undo 대상) ==========
 
 	/** 노드 업데이트 */
@@ -77,22 +54,8 @@ export interface EditorReceiver {
 	/** 노드 복제 */
 	duplicateNode(id: string): string | null
 
-	// ========== 컴포넌트 액션 (undo 대상) ==========
-
-	/** 컴포넌트 인스턴스 생성 */
-	createInstance(componentId: string, parentId: string): string | null
-
-	/** 인스턴스 오버라이드 설정 */
-	setInstanceOverride(instanceId: string, targetNodeId: string, overrides: InstanceOverrides): void
-
-	/** 인스턴스 오버라이드 리셋 */
-	resetInstanceOverrides(instanceId: string): void
-
 	/** 노드 스타일 개별 속성 업데이트 */
 	updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>): void
-
-	/** 코드 컴포넌트 인스턴스의 prop 값 설정 */
-	setInstancePropValues(instanceId: string, propValues: Record<string, unknown>): void
 
 	// ========== 페이지 액션 (undo 대상) ==========
 

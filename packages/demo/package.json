@@ -1,0 +1,27 @@
+{
+	"name": "@design-editor/demo",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"lint": "eslint --fix",
+		"type-check": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"@design-editor/sdk": "workspace:*",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"tldraw": "^4.5.10"
+	},
+	"devDependencies": {
+		"@design-editor/eslint-config": "workspace:*",
+		"@design-editor/tsconfig": "workspace:*",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^4.3.0",
+		"eslint-plugin-react": "^7.37.5",
+		"vite": "^6.0.0"
+	}
+}

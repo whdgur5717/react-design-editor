@@ -1,10 +1,7 @@
-import "./Toolbar.css"
-
 import type { EditorTool } from "@design-editor/core"
 import { useSyncExternalStore } from "react"
-import { useShallow } from "zustand/react/shallow"
 
-import { useEditor, useEditorStore } from "../../services/EditorContext"
+import { useEditor, useEditorState } from "../../services/EditorContext"
 
 const tools: { id: EditorTool; label: string; icon: string }[] = [
 	{ id: "select", label: "Select", icon: "↖" },
@@ -15,28 +12,35 @@ const tools: { id: EditorTool; label: string; icon: string }[] = [
 
 export function Toolbar() {
 	const editor = useEditor()
-
-	const { activeTool, setActiveTool, zoom, setZoom } = useEditorStore(
-		useShallow((state) => ({
-			activeTool: state.activeTool,
-			setActiveTool: state.setActiveTool,
-			zoom: state.zoom,
-			setZoom: state.setZoom,
-		})),
-	)
+	const { activeTool, zoom } = useEditorState((snapshot) => ({
+		activeTool: snapshot.activeTool,
+		zoom: snapshot.zoom,
+	}))
 
 	const { canUndo, canRedo } = useSyncExternalStore(
-		(listener) => editor.subscribeHistory(listener),
-		() => editor.getHistorySnapshot(),
+		(listener) => editor.history.subscribe(listener),
+		() => editor.history.getSnapshot(),
 	)
 
 	return (
 		<div className="toolbar">
 			<div className="toolbar-left">
-				<button type="button" className="toolbar-button" onClick={() => editor.undo()} disabled={!canUndo} title="Undo">
+				<button
+					type="button"
+					className="toolbar-button"
+					onClick={() => editor.history.undo()}
+					disabled={!canUndo}
+					title="Undo"
+				>
 					↶
 				</button>
-				<button type="button" className="toolbar-button" onClick={() => editor.redo()} disabled={!canRedo} title="Redo">
+				<button
+					type="button"
+					className="toolbar-button"
+					onClick={() => editor.history.redo()}
+					disabled={!canRedo}
+					title="Redo"
+				>
 					↷
 				</button>
 				<div className="toolbar-separator" />
@@ -45,7 +49,7 @@ export function Toolbar() {
 						type="button"
 						key={tool.id}
 						className={`toolbar-button ${activeTool === tool.id ? "active" : ""}`}
-						onClick={() => setActiveTool(tool.id)}
+						onClick={() => editor.tools.setActiveTool(tool.id)}
 						title={tool.label}
 					>
 						{tool.icon}
@@ -53,11 +57,21 @@ export function Toolbar() {
 				))}
 			</div>
 			<div className="toolbar-right">
-				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom - 0.1)} title="Zoom Out">
+				<button
+					type="button"
+					className="toolbar-button"
+					onClick={() => editor.viewport.setZoom(zoom - 0.1)}
+					title="Zoom Out"
+				>
 					−
 				</button>
 				<span className="zoom-level">{Math.round(zoom * 100)}%</span>
-				<button type="button" className="toolbar-button" onClick={() => setZoom(zoom + 0.1)} title="Zoom In">
+				<button
+					type="button"
+					className="toolbar-button"
+					onClick={() => editor.viewport.setZoom(zoom + 0.1)}
+					title="Zoom In"
+				>
 					+
 				</button>
 			</div>

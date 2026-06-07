@@ -1,7 +1,7 @@
 import type { ClickPayload, DragPayload, KeyPayload, PageNode } from "@design-editor/core"
 
 import { getAbsolutePosition, isRootNode } from "../utils/nodePosition"
-import type { ToolService } from "./ToolService"
+import type { ToolFacade } from "./ToolFacade"
 import { BaseTool } from "./types"
 
 /**
@@ -12,7 +12,7 @@ function resolveDropParent(
 	draggedNodeId: string,
 	currentParentId: string,
 	page: PageNode,
-	service: ToolService,
+	service: ToolFacade,
 ): string {
 	// 자기 자신 위에 드롭 → 현재 부모 유지
 	if (overNodeId === draggedNodeId) return currentParentId

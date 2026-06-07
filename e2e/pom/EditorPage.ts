@@ -1,12 +1,12 @@
-import { expect, type FrameLocator, type Locator, type Page } from "@playwright/test"
+import { expect, type Locator, type Page } from "@playwright/test"
 
 export class EditorPage {
-	readonly canvas: FrameLocator
+	readonly canvas: Locator
 	private readonly overlay: Locator
 
 	constructor(readonly page: Page) {
-		this.canvas = page.frameLocator("#canvas-iframe")
-		this.overlay = page.locator("#canvas-event-target")
+		this.canvas = page.getByTestId("canvas-container")
+		this.overlay = page.getByTestId("design-editor-event-target")
 	}
 
 	// ── Lifecycle ──
@@ -16,7 +16,8 @@ export class EditorPage {
 	}
 
 	async waitForReady() {
-		await expect(this.page.locator(".app")).toBeVisible()
+		await expect(this.page.locator(".de-editor-root")).toBeVisible()
+		await expect(this.canvas).toBeAttached()
 		await expect(this.canvas.locator("[data-node-id]").first()).toBeAttached()
 	}
 
@@ -33,6 +34,17 @@ export class EditorPage {
 		const box = (await this.overlay.boundingBox())!
 		await this.page.mouse.move(box.x + to.x, box.y + to.y, { steps })
 		await this.page.mouse.up()
+	}
+
+	async dragNode(nodeId: string, delta: { x: number; y: number }, steps = 5) {
+		const nodeBox = (await this.canvasNode(nodeId).boundingBox())!
+		const overlayBox = (await this.overlay.boundingBox())!
+
+		const from = {
+			x: nodeBox.x + Math.min(24, nodeBox.width / 2) - overlayBox.x,
+			y: nodeBox.y + Math.min(24, nodeBox.height / 2) - overlayBox.y,
+		}
+		await this.dragOnCanvas(from, { x: from.x + delta.x, y: from.y + delta.y }, steps)
 	}
 
 	async panCanvas(deltaX: number, deltaY: number, position = { x: 330, y: 150 }) {
@@ -62,7 +74,7 @@ export class EditorPage {
 	}
 
 	layerRow(nodeId: string) {
-		return this.page.locator(`.layer-row[data-node-id="${nodeId}"]`)
+		return this.page.getByTestId(`layer-row-${nodeId}`)
 	}
 
 	// ── Toolbar ──
@@ -96,6 +108,9 @@ export class EditorPage {
 	}
 	get selectionBorder() {
 		return this.page.locator(".selection-border")
+	}
+	get eventTarget() {
+		return this.overlay
 	}
 
 	resizeHandle(name: string) {

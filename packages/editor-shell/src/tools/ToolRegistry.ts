@@ -1,6 +1,6 @@
 import type { ClickPayload, DragPayload, EditorTool, KeyPayload } from "@design-editor/core"
 
-import type { ToolService } from "./ToolService"
+import type { ToolFacade } from "./ToolFacade"
 import type { Tool } from "./types"
 
 /**
@@ -9,13 +9,13 @@ import type { Tool } from "./types"
  */
 export class ToolRegistry {
 	private tools = new Map<EditorTool, Tool>()
-	private service!: ToolService
+	private service!: ToolFacade
 
 	/**
-	 * ToolService 초기화
+	 * ToolFacade 초기화
 	 */
-	init(service: ToolService): void {
-		this.service = service
+	init(facade: ToolFacade): void {
+		this.service = facade
 	}
 
 	/**

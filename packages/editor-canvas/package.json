@@ -1,11 +1,32 @@
 {
 	"name": "@design-editor/canvas",
 	"version": "0.0.1",
-	"private": true,
+	"private": false,
 	"type": "module",
+	"main": "./src/index.tsx",
+	"types": "./src/index.tsx",
+	"files": [
+		"dist"
+	],
+	"exports": {
+		".": {
+			"types": "./src/index.tsx",
+			"import": "./src/index.tsx"
+		}
+	},
+	"publishConfig": {
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			}
+		}
+	},
 	"scripts": {
 		"dev": "vite --port 3001",
-		"build": "vite build",
+		"build": "tsdown",
 		"lint": "eslint --fix",
 		"type-check": "tsgo --noEmit"
 	},
@@ -18,10 +39,11 @@
 		"@tiptap/pm": "^3.18.0",
 		"@tiptap/react": "^3.18.0",
 		"@tiptap/starter-kit": "^3.18.0",
-		"es-toolkit": "^1.43.0",
-		"penpal": "^6.2.0",
-		"react": "catalog:",
-		"react-dom": "catalog:"
+		"es-toolkit": "^1.43.0"
+	},
+	"peerDependencies": {
+		"react": ">=18.0.0 <20.0.0",
+		"react-dom": ">=18.0.0 <20.0.0"
 	},
 	"devDependencies": {
 		"@design-editor/eslint-config": "workspace:*",

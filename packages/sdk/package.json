@@ -1,0 +1,106 @@
+{
+	"name": "@design-editor/sdk",
+	"version": "0.0.1",
+	"private": false,
+	"type": "module",
+	"files": [
+		"dist"
+	],
+	"exports": {
+		"./createEditor": {
+			"types": "./src/createEditor/index.tsx",
+			"import": "./src/createEditor/index.tsx"
+		},
+		"./EditorProvider": {
+			"types": "./src/EditorProvider/index.tsx",
+			"import": "./src/EditorProvider/index.tsx"
+		},
+		"./EditorRoot": {
+			"types": "./src/EditorRoot/index.tsx",
+			"import": "./src/EditorRoot/index.tsx"
+		},
+		"./styles.css": "./src/styles/index.css",
+		"./EditorCanvas": {
+			"types": "./src/EditorCanvas/index.tsx",
+			"import": "./src/EditorCanvas/index.tsx"
+		},
+		"./Toolbar": {
+			"types": "./src/Toolbar/index.tsx",
+			"import": "./src/Toolbar/index.tsx"
+		},
+		"./LayersPanel": {
+			"types": "./src/LayersPanel/index.tsx",
+			"import": "./src/LayersPanel/index.tsx"
+		},
+		"./PropertiesPanel": {
+			"types": "./src/PropertiesPanel/index.tsx",
+			"import": "./src/PropertiesPanel/index.tsx"
+		},
+		"./useEditor": {
+			"types": "./src/useEditor/index.tsx",
+			"import": "./src/useEditor/index.tsx"
+		}
+	},
+	"publishConfig": {
+		"exports": {
+			"./createEditor": {
+				"types": "./dist/createEditor.d.ts",
+				"import": "./dist/createEditor.js"
+			},
+			"./EditorProvider": {
+				"types": "./dist/EditorProvider.d.ts",
+				"import": "./dist/EditorProvider.js"
+			},
+			"./EditorRoot": {
+				"types": "./dist/EditorRoot.d.ts",
+				"import": "./dist/EditorRoot.js"
+			},
+			"./styles.css": "./dist/style.css",
+			"./EditorCanvas": {
+				"types": "./dist/EditorCanvas.d.ts",
+				"import": "./dist/EditorCanvas.js"
+			},
+			"./Toolbar": {
+				"types": "./dist/Toolbar.d.ts",
+				"import": "./dist/Toolbar.js"
+			},
+			"./LayersPanel": {
+				"types": "./dist/LayersPanel.d.ts",
+				"import": "./dist/LayersPanel.js"
+			},
+			"./PropertiesPanel": {
+				"types": "./dist/PropertiesPanel.d.ts",
+				"import": "./dist/PropertiesPanel.js"
+			},
+			"./useEditor": {
+				"types": "./dist/useEditor.d.ts",
+				"import": "./dist/useEditor.js"
+			}
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"lint": "eslint --fix",
+		"type-check": "tsgo --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@design-editor/canvas": "workspace:*",
+		"@design-editor/components": "workspace:*",
+		"@design-editor/core": "workspace:*",
+		"@design-editor/shell": "workspace:*"
+	},
+	"peerDependencies": {
+		"react": ">=18.0.0 <20.0.0",
+		"react-dom": ">=18.0.0 <20.0.0"
+	},
+	"devDependencies": {
+		"@design-editor/eslint-config": "workspace:*",
+		"@design-editor/tsconfig": "workspace:*",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^4.3.0",
+		"eslint-plugin-react": "^7.37.5",
+		"vite": "^6.0.0"
+	}
+}

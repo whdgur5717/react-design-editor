@@ -1,7 +1,6 @@
 import { defineConfig, devices } from "@playwright/test"
 
-const SHELL_URL = process.env.SHELL_URL ?? "http://localhost:3000"
-const CANVAS_URL = process.env.CANVAS_URL ?? "http://localhost:3001"
+const DEMO_URL = process.env.DEMO_URL ?? "http://127.0.0.1:3137"
 
 export default defineConfig({
 	testDir: "./e2e/tests",
@@ -11,7 +10,7 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: "html",
 	use: {
-		baseURL: SHELL_URL,
+		baseURL: DEMO_URL,
 		trace: "on-first-retry",
 	},
 	expect: {
@@ -23,16 +22,9 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 	],
-	webServer: [
-		{
-			command: "pnpm --filter @design-editor/canvas dev",
-			url: CANVAS_URL,
-			reuseExistingServer: !process.env.CI,
-		},
-		{
-			command: "pnpm --filter @design-editor/shell dev",
-			url: SHELL_URL,
-			reuseExistingServer: !process.env.CI,
-		},
-	],
+	webServer: {
+		command: "pnpm --filter @design-editor/demo exec vite --host 127.0.0.1 --port 3137",
+		url: DEMO_URL,
+		reuseExistingServer: false,
+	},
 })

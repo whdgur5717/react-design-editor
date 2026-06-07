@@ -1,10 +1,11 @@
-import type { TextNode } from "@design-editor/core"
+import type { ReadonlyDeep, TextNode } from "@design-editor/core"
 import type { JSONContent } from "@tiptap/core"
 import { Extension } from "@tiptap/core"
 import { Color } from "@tiptap/extension-color"
 import { TextStyle } from "@tiptap/extension-text-style"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import { useLayoutEffect } from "react"
 
 const EscapeBlur = Extension.create({
 	name: "escapeBlur",
@@ -21,18 +22,26 @@ const EscapeBlur = Extension.create({
 const extensions = [StarterKit, TextStyle, Color, EscapeBlur]
 
 interface TextNodeRendererProps {
-	node: TextNode
+	node: ReadonlyDeep<TextNode>
 	onContentChange: (content: JSONContent) => void
 }
 
 export function TextNodeRenderer({ node, onContentChange }: TextNodeRendererProps) {
 	const editor = useEditor({
-		content: node.content,
+		content: node.content as JSONContent,
 		extensions,
 		onBlur: ({ editor }) => {
 			onContentChange(editor.getJSON())
 		},
 	})
 
-	return <EditorContent editor={editor} />
+	useLayoutEffect(() => {
+		editor?.view.updateRoot()
+	}, [editor])
+
+	return (
+		<div style={node.style}>
+			<EditorContent editor={editor} />
+		</div>
+	)
 }

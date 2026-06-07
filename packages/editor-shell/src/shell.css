@@ -1,0 +1,22 @@
+@import "./components/Toolbar/Toolbar.css";
+@import "./components/LayersPanel/LayersPanel.css";
+@import "./components/PropertiesPanel/PropertiesPanel.css";
+@import "./components/inputs/inputs.css";
+
+@layer reset, base, tokens, recipes, utilities;
+
+.canvas-interaction-surface {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.canvas-event-target {
+	position: absolute;
+	inset: 0;
+	background: transparent;
+	overflow: hidden;
+	pointer-events: auto;
+	touch-action: none;
+}

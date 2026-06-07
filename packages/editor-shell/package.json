@@ -1,41 +1,59 @@
 {
 	"name": "@design-editor/shell",
 	"version": "0.0.1",
-	"private": true,
+	"private": false,
 	"type": "module",
+	"main": "./src/index.tsx",
+	"types": "./src/index.tsx",
+	"files": [
+		"dist"
+	],
+	"exports": {
+		".": {
+			"types": "./src/index.tsx",
+			"import": "./src/index.tsx"
+		},
+		"./style.css": {
+			"default": "./src/shell.css"
+		}
+	},
+	"publishConfig": {
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			},
+			"./style.css": {
+				"default": "./dist/style.css"
+			}
+		}
+	},
 	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
+		"dev": "tsdown --watch",
+		"build": "tsdown",
 		"lint": "eslint --fix",
 		"type-check": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@base-ui/react": "^1.0.0",
 		"@design-editor/core": "workspace:*",
 		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
-		"@monaco-editor/react": "^4.7.0",
 		"es-toolkit": "^1.43.0",
-		"esbuild-wasm": "^0.24.0",
 		"immer": "^11.1.3",
-		"penpal": "^6.2.0",
-		"react": "catalog:",
-		"react-dom": "catalog:",
-		"react-grab": "^0.1.14",
-		"react-resizable-panels": "^2.1.0",
-		"nuqs": "^2.4.3",
 		"xstate": "^5.27.0",
-		"zundo": "^2.3.0",
 		"zustand": "^5.0.0"
+	},
+	"peerDependencies": {
+		"react": ">=18.0.0 <20.0.0"
 	},
 	"devDependencies": {
 		"@design-editor/eslint-config": "workspace:*",
 		"@design-editor/tsconfig": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@vitejs/plugin-react": "^4.3.0",
-		"eslint-plugin-react": "^7.37.5",
-		"vite": "^6.0.0"
+		"eslint-plugin-react": "^7.37.5"
 	}
 }

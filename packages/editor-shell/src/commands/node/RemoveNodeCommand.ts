@@ -1,6 +1,6 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeLocation, SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver, NodeLocation } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 /**
  * RemoveNodeCommand - 노드 삭제
@@ -11,7 +11,7 @@ export class RemoveNodeCommand implements Command {
 	private readonly location: NodeLocation
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 	) {
 		// 생성 시점에 복원에 필요한 정보 저장

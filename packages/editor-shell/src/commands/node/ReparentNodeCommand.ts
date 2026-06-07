@@ -1,13 +1,13 @@
-import type { SceneNode } from "@design-editor/core"
+import type { NodeLocation, SceneNode } from "@design-editor/core"
 
-import type { Command, EditorReceiver, NodeLocation } from "../types"
+import type { Command, DocumentCommandReceiver } from "../types"
 
 export class ReparentNodeCommand implements Command {
 	private previousLocation: NodeLocation | null = null
 	private previousNode: SceneNode | null = null
 
 	constructor(
-		private readonly receiver: EditorReceiver,
+		private readonly receiver: DocumentCommandReceiver,
 		private readonly nodeId: string,
 		private readonly newParentId: string,
 	) {

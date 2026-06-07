@@ -1,25 +1,27 @@
-import "./PropertiesPanel.css"
-
+import type { NodeSnapshot, PageSnapshot } from "@design-editor/core"
 import { useState } from "react"
 
-import { useEditor, useEditorStore } from "../../services/EditorContext"
-import { CodeComponentPropsTab } from "./CodeComponentPropsTab"
+import { useEditorState } from "../../services/EditorContext"
 import { CodeTab } from "./CodeTab"
 import { DesignTab } from "./DesignTab"
 
 type Tab = "design" | "prototype" | "code"
 
+function findNodeSnapshot(parent: PageSnapshot | NodeSnapshot, id: string): NodeSnapshot | null {
+	for (const child of parent.children ?? []) {
+		if (child.id === id) return child
+		const found = findNodeSnapshot(child, id)
+		if (found) return found
+	}
+	return null
+}
+
 export function PropertiesPanel() {
 	const [activeTab, setActiveTab] = useState<Tab>("design")
-	const editor = useEditor()
-	const selectedNode = useEditorStore((state) => {
-		if (state.selection.length !== 1) return null
-		return editor.findNode(state.selection[0])
-	})
-
-	const codeComponent = useEditorStore((state) => {
-		if (!selectedNode || selectedNode.type !== "instance") return null
-		return state.codeComponents.find((c) => c.id === selectedNode.componentId) ?? null
+	const selectedNode = useEditorState((snapshot) => {
+		const selection = snapshot.selection
+		const page = snapshot.document.children.find((candidate) => candidate.id === snapshot.currentPageId)
+		return selection.length === 1 && page ? findNodeSnapshot(page, selection[0]) : null
 	})
 
 	return (
@@ -54,9 +56,6 @@ export function PropertiesPanel() {
 						{activeTab === "design" && (
 							<>
 								<DesignTab node={selectedNode} />
-								{codeComponent && selectedNode.type === "instance" && (
-									<CodeComponentPropsTab node={selectedNode} codeComponent={codeComponent} />
-								)}
 							</>
 						)}
 						{activeTab === "prototype" && <div className="empty-state">Prototype features coming soon</div>}

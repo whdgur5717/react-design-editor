@@ -1,45 +1,38 @@
-import { useShallow } from "zustand/react/shallow"
-
-import { useEditorStore } from "../../services/EditorContext"
-import { getNodePageRectHybrid, type Rect } from "../../utils/nodePosition"
+import { useEditorState } from "../../services/EditorContext"
+import { getCachedNodePageRect, type Rect } from "../../utils/nodePosition"
 import { DragPreview } from "./DragPreview"
 import { HoverHighlight } from "./HoverHighlight"
 import { ResizeHandles } from "./ResizeHandles"
 import { SelectionOverlay } from "./SelectionOverlay"
 
 export function ToolManagerOverlay() {
-	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache } = useEditorStore(
-		useShallow((s) => ({
-			selection: s.selection,
-			hoveredId: s.hoveredId,
-			zoom: s.zoom,
-			panX: s.panX,
-			panY: s.panY,
-			dragPreview: s.dragPreview,
-			nodeRectsCache: s.nodeRectsCache,
-		})),
-	)
-	const page = useEditorStore((s) => s.document.children.find((p) => p.id === s.currentPageId))
+	const { selection, hoveredId, zoom, panX, panY, dragPreview, nodeRectsCache, page } = useEditorState((snapshot) => ({
+		selection: snapshot.selection,
+		hoveredId: snapshot.hoveredId,
+		zoom: snapshot.zoom,
+		panX: snapshot.panX,
+		panY: snapshot.panY,
+		dragPreview: snapshot.dragPreview,
+		nodeRectsCache: snapshot.nodeRectsCache,
+		page: snapshot.document.children.find((candidate) => candidate.id === snapshot.currentPageId) ?? null,
+	}))
 
 	if (!page) return null
 
 	const selectionRects = new Map<string, Rect>()
 	for (const nodeId of selection) {
-		const rect = getNodePageRectHybrid(nodeId, zoom, page, nodeRectsCache, panX, panY)
+		const rect = getCachedNodePageRect(nodeId, nodeRectsCache)
 		if (rect) selectionRects.set(nodeId, rect)
 	}
 
-	const hoverRect =
-		hoveredId && !selection.includes(hoveredId)
-			? getNodePageRectHybrid(hoveredId, zoom, page, nodeRectsCache, panX, panY)
-			: null
+	const hoverRect = hoveredId && !selection.includes(hoveredId) ? getCachedNodePageRect(hoveredId, nodeRectsCache) : null
 
 	const singleSelectedRect = selection.length === 1 ? (selectionRects.get(selection[0]) ?? null) : null
 
 	return (
 		<div
 			style={{
-				position: "fixed",
+				position: "absolute",
 				top: 0,
 				left: 0,
 				width: 0,
@@ -59,10 +52,7 @@ export function ToolManagerOverlay() {
 					dx={dragPreview.dx}
 					dy={dragPreview.dy}
 					zoom={zoom}
-					page={page}
 					nodeRectsCache={nodeRectsCache}
-					panX={panX}
-					panY={panY}
 				/>
 			)}
 		</div>

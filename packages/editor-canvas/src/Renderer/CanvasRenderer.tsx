@@ -1,70 +1,37 @@
-import type { PageNode, SceneNode } from "@design-editor/core"
-import type { ComponentType } from "react"
-import type React from "react"
+import type { PageSnapshot } from "@design-editor/core"
 
-import { renderInstanceContent } from "./InstanceNodeRenderer"
-import { type RenderContext, renderNode } from "./renderNode"
-import { TextNodeRenderer } from "./TextNodeRenderer"
+import { type ComponentResolver, renderNode } from "./renderNode"
 
-interface CanvasRendererProps {
-	page: PageNode
-	codeComponents: Record<string, ComponentType<Record<string, unknown>>>
-	onTextChange: (nodeId: string, content: unknown) => void
+export interface CanvasRendererProps {
+	page: PageSnapshot
+	onTextChange?: (nodeId: string, content: unknown) => void
+	resolveComponent?: ComponentResolver
 }
 
-function renderRootContent(child: SceneNode, ctx: RenderContext) {
-	switch (child.type) {
-		case "element":
-			return child.children?.filter((c) => c.visible !== false).map((c) => renderNode(c, ctx)) ?? null
-		case "text":
-			return (
-				<TextNodeRenderer key={child.id} node={child} onContentChange={(content) => ctx.onTextChange(child.id, content)} />
-			)
-		case "instance":
-			return renderInstanceContent(child, ctx)
-	}
-}
+const noopTextChange = () => {}
 
-export function CanvasRenderer({ page, codeComponents, onTextChange }: CanvasRendererProps) {
-	const ctx: RenderContext = { codeComponents, onTextChange }
+export function CanvasRenderer({ page, onTextChange = noopTextChange, resolveComponent }: CanvasRendererProps) {
+	const ctx = { onTextChange, resolveComponent }
 	return (
 		<>
 			{page.children
 				.filter((child) => child.visible !== false)
-				.map((child) => {
-					const x = child.x ?? 0
-					const y = child.y ?? 0
-					const { width, height, ...contentStyle } = child.style ?? {}
-
-					return (
-						<div
-							key={child.id}
-							data-node-id={child.id}
-							data-layout-type="outer"
-							style={
-								{
-									position: "fixed",
-									transform: `translateX(${x}px) translateY(${y}px)`,
-									width: width,
-									height: height,
-									willChange: "transform",
-									contain: "layout style",
-									isolation: "isolate",
-									"--editor-fixed-position": "absolute",
-									"--editor-viewport-height": `${typeof height === "number" ? height : 0}px`,
-								} as React.CSSProperties
-							}
-						>
-							<div
-								data-node-measure-id={child.id}
-								style={{ ...contentStyle, width, height, position: "relative" }}
-								data-layout-type="inner"
-							>
-								{renderRootContent(child, ctx)}
-							</div>
-						</div>
-					)
-				})}
+				.map((child) => (
+					<div
+						key={child.id}
+						data-node-id={child.id}
+						data-node-measure-id={child.id}
+						style={{
+							position: "absolute",
+							transform: `translateX(${child.x ?? 0}px) translateY(${child.y ?? 0}px)`,
+							willChange: "transform",
+							contain: "layout style",
+							isolation: "isolate",
+						}}
+					>
+						{renderNode(child, ctx)}
+					</div>
+				))}
 		</>
 	)
 }

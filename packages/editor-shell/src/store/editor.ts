@@ -1,52 +1,7 @@
-import type {
-	CodeComponentDefinition,
-	DocumentNode,
-	EditorStore,
-	EditorTool,
-	InstanceNode,
-	NodeRect,
-	PageNode,
-	Position,
-	SceneNode,
-	Size,
-} from "@design-editor/core"
-import { current } from "immer"
-import type { CSSProperties } from "react"
+import type { DocumentNode, EditorModel, NodeLocation, NodePageContext, PageNode, SceneNode } from "@design-editor/core"
 import { createStore } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
-import { immer } from "zustand/middleware/immer"
-
-interface NodePageContext {
-	pageId?: string
-}
-
-type EditorStoreState = Omit<
-	EditorStore,
-	| "updateNode"
-	| "addNode"
-	| "removeNode"
-	| "moveNode"
-	| "resizeNode"
-	| "reorderNode"
-	| "reparentNode"
-	| "toggleVisibility"
-	| "toggleLocked"
-	| "findNode"
-> & {
-	updateNode: (id: string, updates: Partial<SceneNode>, context?: NodePageContext) => void
-	addNode: (parentId: string, node: SceneNode, index?: number, context?: NodePageContext) => void
-	removeNode: (id: string, context?: NodePageContext) => void
-	moveNode: (id: string, position: Position, context?: NodePageContext) => void
-	resizeNode: (id: string, size: Size, context?: NodePageContext) => void
-	reorderNode: (parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) => void
-	reparentNode: (sourceId: string, newParentId: string, context?: NodePageContext) => void
-	toggleVisibility: (id: string, context?: NodePageContext) => void
-	toggleLocked: (id: string, context?: NodePageContext) => void
-	findNode: (id: string, context?: NodePageContext) => SceneNode | null
-	findNodeLocation: (id: string, context?: NodePageContext) => { parentId: string; index: number } | null
-}
-
-// ── Read-only 트리 헬퍼 ──
+import type { StoreApi } from "zustand/vanilla"
 
 export function findNode(parent: PageNode | SceneNode, id: string): SceneNode | null {
 	if ("children" in parent && Array.isArray(parent.children)) {
@@ -59,7 +14,7 @@ export function findNode(parent: PageNode | SceneNode, id: string): SceneNode | 
 	return null
 }
 
-function findParent(parent: PageNode | SceneNode, id: string): PageNode | SceneNode | null {
+export function findParent(parent: PageNode | SceneNode, id: string): PageNode | SceneNode | null {
 	if ("children" in parent && Array.isArray(parent.children)) {
 		for (const child of parent.children) {
 			if (child.id === id) return parent
@@ -70,20 +25,20 @@ function findParent(parent: PageNode | SceneNode, id: string): PageNode | SceneN
 	return null
 }
 
-function getChildrenOf(node: PageNode | SceneNode): SceneNode[] | null {
+export function getChildrenOf(node: PageNode | SceneNode): SceneNode[] | null {
 	if ("children" in node && Array.isArray(node.children)) return node.children
 	return null
 }
 
-function findPage(document: DocumentNode, pageId: string) {
+export function findPage(document: DocumentNode, pageId: string) {
 	return document.children.find((page) => page.id === pageId) ?? null
 }
 
-function resolvePage(document: DocumentNode, currentPageId: string, context?: NodePageContext) {
+export function resolvePage(document: DocumentNode, currentPageId: string, context?: NodePageContext) {
 	return findPage(document, context?.pageId ?? currentPageId)
 }
 
-function findLocationInTree(nodes: SceneNode[], targetId: string): { parentId: string; index: number } | null {
+function findLocationInTree(nodes: SceneNode[], targetId: string): NodeLocation | null {
 	for (const node of nodes) {
 		if (Array.isArray(node.children)) {
 			const index = node.children.findIndex((child) => child.id === targetId)
@@ -99,7 +54,7 @@ function findLocationInTree(nodes: SceneNode[], targetId: string): { parentId: s
 	return null
 }
 
-function findNodeLocationInPage(page: PageNode, id: string): { parentId: string; index: number } | null {
+export function findNodeLocationInPage(page: PageNode, id: string): NodeLocation | null {
 	const pageChildIndex = page.children.findIndex((child) => child.id === id)
 	if (pageChildIndex !== -1) {
 		return { parentId: page.id, index: pageChildIndex }
@@ -108,7 +63,7 @@ function findNodeLocationInPage(page: PageNode, id: string): { parentId: string;
 	return findLocationInTree(page.children, id)
 }
 
-function collectNodeIds(node: SceneNode): string[] {
+export function collectNodeIds(node: SceneNode): string[] {
 	const ids = [node.id]
 	if (Array.isArray(node.children)) {
 		for (const child of node.children) {
@@ -118,7 +73,7 @@ function collectNodeIds(node: SceneNode): string[] {
 	return ids
 }
 
-function cloneNodeWithNewIds(node: SceneNode): SceneNode {
+export function cloneNodeWithNewIds(node: SceneNode): SceneNode {
 	const prefix = node.type === "element" ? node.tag.toLowerCase() : node.type
 	const newId = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
@@ -131,7 +86,7 @@ function cloneNodeWithNewIds(node: SceneNode): SceneNode {
 	}
 }
 
-function isAncestorOf(page: PageNode, sourceId: string, targetId: string) {
+export function isAncestorOf(page: PageNode, sourceId: string, targetId: string) {
 	const sourceNode = findNode(page, sourceId)
 	if (!sourceNode) return false
 	return hasDescendant(sourceNode, targetId)
@@ -147,16 +102,11 @@ function hasDescendant(node: SceneNode, targetId: string): boolean {
 	return false
 }
 
-/**
- * 초기 문서 상태
- */
-const initialPageId = "page-1"
-
 const initialDocument: DocumentNode = {
 	id: "doc-root",
 	children: [
 		{
-			id: initialPageId,
+			id: "page-1",
 			name: "Page 1",
 			children: [
 				{
@@ -201,450 +151,29 @@ const initialDocument: DocumentNode = {
 	},
 }
 
-/**
- * 에디터 스토어
- */
-export function createEditorStore() {
-	return createStore<EditorStoreState>()(
-		subscribeWithSelector(
-			immer((set, get) => ({
-				// 초기 상태
-				document: initialDocument,
-				currentPageId: initialPageId,
-				codeComponents: [],
-				selection: [],
-				hoveredId: null,
-				activeTool: "select",
-				zoom: 1,
-				panX: 0,
-				panY: 0,
-				dragPreview: null,
-				nodeRectsCache: {},
-
-				// 노드 액션
-				updateNode(id: string, updates: Partial<SceneNode>, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const node = findNode(page, id)
-						if (!node) return
-
-						Object.assign(node, updates)
-					})
-				},
-
-				addNode(parentId: string, node: SceneNode, index?: number, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const parent = parentId === page.id ? page : findNode(page, parentId)
-						if (!parent) return
-
-						const children = getChildrenOf(parent)
-						if (!children) return
-
-						if (index !== undefined) children.splice(index, 0, node)
-						else children.push(node)
-					})
-				},
-
-				removeNode(id: string, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const parent = findParent(page, id)
-						if (!parent) return
-
-						const children = getChildrenOf(parent)
-						if (!children) return
-
-						const idx = children.findIndex((child) => child.id === id)
-						if (idx === -1) return
-
-						const removedNode = children[idx]
-						const removedIds = collectNodeIds(removedNode)
-						children.splice(idx, 1)
-
-						state.selection = state.selection.filter((selectionId) => !removedIds.includes(selectionId))
-					})
-				},
-
-				moveNode(id: string, position: Position, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const node = findNode(page, id)
-						if (!node) return
-
-						node.x = position.x
-						node.y = position.y
-					})
-				},
-
-				resizeNode(id: string, size: Size, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const node = findNode(page, id)
-						if (!node) return
-
-						node.style = {
-							...node.style,
-							width: size.width,
-							height: size.height,
-						}
-					})
-				},
-
-				setSelection(ids: string[]) {
-					set({ selection: ids })
-				},
-
-				toggleSelection(id: string) {
-					set((state) => {
-						const idx = state.selection.indexOf(id)
-						if (idx !== -1) state.selection.splice(idx, 1)
-						else state.selection.push(id)
-					})
-				},
-
-				setHoveredId(id: string | null) {
-					set({ hoveredId: id })
-				},
-
-				setDragPreview(preview: { nodeId: string; dx: number; dy: number } | null) {
-					set({ dragPreview: preview })
-				},
-
-				setNodeRectsCache(rects: Record<string, NodeRect>) {
-					set({ nodeRectsCache: rects })
-				},
-
-				setActiveTool(tool: EditorTool) {
-					set({ activeTool: tool })
-				},
-
-				setZoom(zoom: number) {
-					set({ zoom: Math.max(0.1, Math.min(4, zoom)) })
-				},
-
-				setPan(panX: number, panY: number) {
-					set({ panX, panY })
-				},
-
-				reorderNode(parentId: string, fromIndex: number, toIndex: number, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const parent = parentId === page.id ? page : findNode(page, parentId)
-						if (!parent) return
-
-						const children = getChildrenOf(parent)
-						if (!children) return
-
-						const [removed] = children.splice(fromIndex, 1)
-						children.splice(toIndex, 0, removed)
-					})
-				},
-
-				dropNode(sourceId: string, targetId: string, delta: { x: number; y: number }) {
-					const page = get().document.children.find((p) => p.id === get().currentPageId)
-					if (!page) return
-
-					const currentParent = findParent(page, sourceId)
-					if (!currentParent) return
-
-					if (targetId === currentParent.id) {
-						const node = findNode(page, sourceId)
-						if (!node) return
-
-						get().moveNode(sourceId, {
-							x: (node.x ?? 0) + delta.x,
-							y: (node.y ?? 0) + delta.y,
-						})
-					} else {
-						get().reparentNode(sourceId, targetId)
-					}
-				},
-
-				reparentNode(sourceId: string, newParentId: string, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const sourceNode = findNode(page, sourceId)
-						if (!sourceNode) return
-						if (sourceId === newParentId) return
-						if (isAncestorOf(page, sourceId, newParentId)) return
-
-						if (newParentId !== page.id) {
-							const target = findNode(page, newParentId)
-							if (!target || target.type === "text") return
-						}
-
-						// snapshot before mutation (current() returns frozen object)
-						const snapshot = current(sourceNode)
-
-						// remove from old parent
-						const oldParent = findParent(page, sourceId)
-						const oldChildren = oldParent ? getChildrenOf(oldParent) : null
-						if (!oldChildren) return
-
-						const idx = oldChildren.findIndex((c) => c.id === sourceId)
-						oldChildren.splice(idx, 1)
-
-						// add to new parent
-						const newParent = newParentId === page.id ? page : findNode(page, newParentId)
-						const newChildren = newParent ? getChildrenOf(newParent) : null
-						if (!newChildren) return
-						newChildren.push(snapshot)
-
-						state.selection = [sourceId]
-					})
-				},
-
-				toggleVisibility(id: string, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const node = findNode(page, id)
-						if (!node) return
-
-						node.visible = node.visible !== false ? false : true
-					})
-				},
-
-				toggleLocked(id: string, context?: NodePageContext) {
-					set((state) => {
-						const page = resolvePage(state.document, state.currentPageId, context)
-						if (!page) return
-
-						const node = findNode(page, id)
-						if (!node) return
-
-						node.locked = node.locked !== true
-					})
-				},
-
-				duplicateNode(id: string): string | null {
-					const state = get()
-					const page = state.document.children.find((p) => p.id === state.currentPageId)
-					if (!page) return null
-
-					const node = findNode(page, id)
-					if (!node) return null
-
-					const parent = findParent(page, id)
-					if (!parent) return null
-
-					const children = getChildrenOf(parent)
-					if (!children) return null
-
-					const index = children.findIndex((child) => child.id === id)
-					if (index === -1) return null
-
-					const cloned = cloneNodeWithNewIds(node)
-
-					cloned.x = (cloned.x ?? 0) + 20
-					cloned.y = (cloned.y ?? 0) + 20
-
-					state.addNode(parent.id, cloned, index + 1)
-					state.setSelection([cloned.id])
-					return cloned.id
-				},
-
-				createInstance(componentId: string, parentId: string) {
-					const state = get()
-					const codeComponent = state.codeComponents.find((c) => c.id === componentId)
-
-					if (!codeComponent) return null
-
-					const instanceId = `inst-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-					const instance: InstanceNode = {
-						id: instanceId,
-						type: "instance",
-						componentId,
-						x: 100,
-						y: 100,
-					}
-
-					const defaultProps: Record<string, unknown> = {}
-					for (const [key, control] of Object.entries(codeComponent.propertyControls)) {
-						if (control.defaultValue !== undefined) {
-							defaultProps[key] = control.defaultValue
-						}
-					}
-					if (Object.keys(defaultProps).length > 0) {
-						instance.propValues = defaultProps
-					}
-
-					state.addNode(parentId, instance)
-					state.setSelection([instanceId])
-
-					return instanceId
-				},
-
-				setInstanceOverride(
-					instanceId: string,
-					targetNodeId: string,
-					overrides: { props?: Record<string, unknown>; style?: CSSProperties; children?: string },
-				) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-
-						if (!node.overrides) node.overrides = {}
-						node.overrides[targetNodeId] = {
-							...node.overrides[targetNodeId],
-							...overrides,
-						}
-					})
-				},
-
-				resetInstanceOverrides(instanceId: string) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-
-						node.overrides = undefined
-					})
-				},
-
-				// 페이지 액션
-				setCurrentPage(pageId: string) {
-					set((state) => {
-						if (!state.document.children.some((p) => p.id === pageId)) return
-						state.currentPageId = pageId
-						state.selection = []
-					})
-				},
-
-				addPage(name: string): string {
-					const pageId = `page-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-
-					set((state) => {
-						state.document.children.push({ id: pageId, name, children: [] })
-						state.currentPageId = pageId
-						state.selection = []
-					})
-
-					return pageId
-				},
-
-				removePage(pageId: string) {
-					set((state) => {
-						if (state.document.children.length <= 1) return
-
-						const idx = state.document.children.findIndex((p) => p.id === pageId)
-						if (idx === -1) return
-
-						state.document.children.splice(idx, 1)
-
-						if (state.currentPageId === pageId) {
-							state.currentPageId = state.document.children[0].id
-							state.selection = []
-						}
-					})
-				},
-
-				renamePage(pageId: string, name: string) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === pageId)
-						if (page) page.name = name
-					})
-				},
-
-				// 코드 컴포넌트 액션
-				addCodeComponent(name: string, source: string): string {
-					const id = `code-comp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-					set((state) => {
-						state.codeComponents.push({
-							id,
-							name,
-							source,
-							compiledCode: null,
-							propertyControls: {},
-							compilationError: null,
-						} satisfies CodeComponentDefinition)
-					})
-					return id
-				},
-
-				updateCodeComponent(
-					id: string,
-					updates: Partial<
-						Pick<CodeComponentDefinition, "source" | "compiledCode" | "propertyControls" | "compilationError" | "name">
-					>,
-				) {
-					set((state) => {
-						const comp = state.codeComponents.find((c) => c.id === id)
-						if (!comp) return
-						Object.assign(comp, updates)
-					})
-				},
-
-				removeCodeComponent(id: string) {
-					set((state) => {
-						const idx = state.codeComponents.findIndex((c) => c.id === id)
-						if (idx !== -1) state.codeComponents.splice(idx, 1)
-					})
-				},
-
-				setInstancePropValues(instanceId: string, propValues: Record<string, unknown>) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-						const node = findNode(page, instanceId)
-						if (!node || node.type !== "instance") return
-						node.propValues = propValues
-					})
-				},
-
-				updateNodeStyle(id: string, styleUpdates: Partial<CSSProperties>) {
-					set((state) => {
-						const page = state.document.children.find((p) => p.id === state.currentPageId)
-						if (!page) return
-						const node = findNode(page, id)
-						if (!node) return
-						if (!node.style) node.style = {}
-						for (const [key, val] of Object.entries(styleUpdates)) {
-							if (val === undefined) {
-								delete (node.style as Record<string, unknown>)[key]
-							} else {
-								;(node.style as Record<string, unknown>)[key] = val
-							}
-						}
-					})
-				},
-
-				// 유틸리티 메서드
-				findNode(id: string, context?: NodePageContext): SceneNode | null {
-					const page = resolvePage(get().document, get().currentPageId, context)
-					if (!page) return null
-					return findNode(page, id)
-				},
-
-				findNodeLocation(id: string, context?: NodePageContext) {
-					const page = resolvePage(get().document, get().currentPageId, context)
-					if (!page) return null
-					return findNodeLocationInPage(page, id)
-				},
-			})),
-		),
-	)
+export interface CreateEditorStoreOptions {
+	document?: DocumentNode
+	currentPageId?: string
 }
 
-export type EditorStoreApi = ReturnType<typeof createEditorStore>
+export type EditorStoreApi = StoreApi<EditorModel>
+
+export function createInitialEditorModel(options: CreateEditorStoreOptions = {}): EditorModel {
+	const document = structuredClone(options.document ?? initialDocument)
+	return {
+		document,
+		currentPageId: options.currentPageId ?? "page-1",
+		selection: [],
+		hoveredId: null,
+		activeTool: "select",
+		zoom: 1,
+		panX: 0,
+		panY: 0,
+		dragPreview: null,
+		nodeRectsCache: {},
+	}
+}
+
+export function createEditorStore(options: CreateEditorStoreOptions = {}): EditorStoreApi {
+	return createStore<EditorModel>()(subscribeWithSelector(() => createInitialEditorModel(options)))
+}

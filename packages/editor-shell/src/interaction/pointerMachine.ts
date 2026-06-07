@@ -1,7 +1,13 @@
 import { clamp } from "es-toolkit"
 import { assign, setup } from "xstate"
 
-import type { Editor } from "../services/Editor"
+import type { ActionRegistry } from "../commands/ActionRegistry"
+import type { KeybindingRegistry } from "../keybindings"
+import type { DocumentService } from "../services/DocumentService"
+import type { GeometryService } from "../services/GeometryService"
+import type { SelectionService } from "../services/SelectionService"
+import type { ViewportService } from "../services/ViewportService"
+import type { ToolRegistry } from "../tools/ToolRegistry"
 import { screenToData } from "../utils/nodePosition"
 
 // ── Event types ──
@@ -51,17 +57,6 @@ type WheelEvent_ = {
 	metaKey: boolean
 }
 
-type HitTestDoneEvent = {
-	type: "HIT_TEST_DONE"
-	nodeId: string | null
-	clientX: number
-	clientY: number
-	pointerId: number
-	shiftKey: boolean
-	metaKey: boolean
-	target: HTMLElement
-}
-
 type UpdateOverNodeEvent = {
 	type: "UPDATE_OVER_NODE"
 	nodeId: string | null
@@ -73,7 +68,6 @@ type PointerMachineEvent =
 	| PointerUpEvent
 	| KeyDownEvent
 	| WheelEvent_
-	| HitTestDoneEvent
 	| UpdateOverNodeEvent
 
 // ── Context ──
@@ -98,11 +92,23 @@ interface PointerContext {
 
 const DRAG_THRESHOLD = 8
 const DOUBLE_CLICK_MS = 300
+
+export interface PointerMachineDeps {
+	document: Pick<DocumentService, "findNode" | "resizeNode">
+	selection: Pick<SelectionService, "getSelection" | "setSelection" | "setHoveredId">
+	viewport: Pick<ViewportService, "getZoom" | "getPan" | "setZoom" | "setPan">
+	geometry: Pick<GeometryService, "hitTestNodeId" | "getNodeRenderedRect">
+	dragPreview: {
+		setDragPreview(preview: { nodeId: string; dx: number; dy: number } | null): void
+	}
+	tools: Pick<ToolRegistry, "handleDragEnd" | "handleClick" | "getActiveTool">
+	actions: Pick<ActionRegistry, "execute">
+	keybindings: Pick<KeybindingRegistry, "match">
+}
+
 // ── Machine factory ──
 
-export function createPointerMachine(editor: Editor) {
-	const { toolRegistry, actionRegistry, keybindingRegistry } = editor
-
+export function createPointerMachine(deps: PointerMachineDeps) {
 	return setup({
 		types: {
 			context: {} as PointerContext,
@@ -115,50 +121,35 @@ export function createPointerMachine(editor: Editor) {
 			},
 
 			updateHover: (_, params: { clientX: number; clientY: number }) => {
-				editor.setHoveredId(editor.hitTestNodeId(params.clientX, params.clientY))
-			},
-
-			dispatchHitTest: ({ self }, params: { event: PointerEvent_ }) => {
-				const { clientX, clientY, pointerId, shiftKey, metaKey, target } = params.event
-				const nodeId = editor.hitTestNodeId(clientX, clientY)
-				self.send({
-					type: "HIT_TEST_DONE",
-					nodeId,
-					clientX,
-					clientY,
-					pointerId,
-					shiftKey,
-					metaKey,
-					target,
-				})
+				deps.selection.setHoveredId(deps.geometry.hitTestNodeId(params.clientX, params.clientY))
 			},
 
 			initDrag: ({ context }) => {
-				const selection = editor.getSelection()
+				const selection = deps.selection.getSelection()
 				if (context.nodeId && !selection.includes(context.nodeId)) {
-					editor.setSelection([context.nodeId])
+					deps.selection.setSelection([context.nodeId])
 				}
 			},
 
 			updateDragPreview: ({ context, self }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
-				const zoom = editor.getZoom()
+				const zoom = deps.viewport.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
-				editor.setDragPreview({ nodeId: context.nodeId, dx, dy })
+				deps.dragPreview.setDragPreview({ nodeId: context.nodeId, dx, dy })
 
-				self.send({ type: "UPDATE_OVER_NODE", nodeId: editor.hitTestNodeId(params.clientX, params.clientY) })
+				self.send({ type: "UPDATE_OVER_NODE", nodeId: deps.geometry.hitTestNodeId(params.clientX, params.clientY) })
 			},
 
 			commitDrag: ({ context }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
-				const zoom = editor.getZoom()
+				const zoom = deps.viewport.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
 
-				editor.setDragPreview(null)
+				deps.dragPreview.setDragPreview(null)
 
-				toolRegistry.handleDragEnd(context.nodeId, {
+				deps.tools.handleDragEnd(context.nodeId, {
 					delta: { x: dx, y: dy },
 					initialPosition: context.initialNodePosition,
 					overNodeId: context.lastOverNodeId ?? undefined,
@@ -168,7 +159,7 @@ export function createPointerMachine(editor: Editor) {
 			updateResize: ({ context }, params: { clientX: number; clientY: number }) => {
 				if (!context.nodeId) return
 
-				const zoom = editor.getZoom()
+				const zoom = deps.viewport.getZoom()
 				const dx = (params.clientX - context.startX) / zoom
 				const dy = (params.clientY - context.startY) / zoom
 
@@ -181,20 +172,20 @@ export function createPointerMachine(editor: Editor) {
 				if (handle.includes("s")) height = Math.max(1, context.startHeight + dy)
 				if (handle.includes("n")) height = Math.max(1, context.startHeight - dy)
 
-				const node = editor.findNode(context.nodeId)
+				const node = deps.document.findNode(context.nodeId)
 				if (!node) return
 
-				const from = { width: node.style?.width, height: node.style?.height }
+				const from = { width: context.startWidth, height: context.startHeight }
 				const to = { width, height }
 				const mergeKey = `resize:${context.nodeId}:${context.resizeSessionId}`
-				editor.resizeNode(context.nodeId, from, to, mergeKey)
+				deps.document.resizeNode(context.nodeId, from, to, mergeKey)
 			},
 
 			singleClick: ({ context }) => {
-				const zoom = editor.getZoom()
-				const { x: panX, y: panY } = editor.getPan()
+				const zoom = deps.viewport.getZoom()
+				const { x: panX, y: panY } = deps.viewport.getPan()
 				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
-				toolRegistry.handleClick(context.nodeId, {
+				deps.tools.handleClick(context.nodeId, {
 					x: data.x,
 					y: data.y,
 					shiftKey: context.shiftKey,
@@ -203,10 +194,10 @@ export function createPointerMachine(editor: Editor) {
 			},
 
 			doubleClick: ({ context }) => {
-				const zoom = editor.getZoom()
-				const { x: panX, y: panY } = editor.getPan()
+				const zoom = deps.viewport.getZoom()
+				const { x: panX, y: panY } = deps.viewport.getPan()
 				const data = screenToData(context.startX, context.startY, zoom, panX, panY)
-				toolRegistry.handleClick(context.nodeId, {
+				deps.tools.handleClick(context.nodeId, {
 					x: data.x,
 					y: data.y,
 					shiftKey: context.shiftKey,
@@ -220,22 +211,21 @@ export function createPointerMachine(editor: Editor) {
 				if (target.isContentEditable || target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
 					return
 				}
-				if (target.tagName === "IFRAME") return
 				if (shouldPreserveNativeClipboard(target, key, metaKey, ctrlKey)) return
 
 				const payload = { key, code, shiftKey, ctrlKey, metaKey, altKey }
-				const actionId = keybindingRegistry.match(payload)
+				const actionId = deps.keybindings.match(payload)
 				if (actionId) {
-					actionRegistry.execute(actionId)
+					deps.actions.execute(actionId)
 					return
 				}
 
-				toolRegistry.getActiveTool()?.onKeyDown(payload)
+				deps.tools.getActiveTool()?.onKeyDown(payload)
 			},
 
 			handleWheel: (_, params: { event: WheelEvent_ }) => {
-				const zoom = editor.getZoom()
-				const { x: panX, y: panY } = editor.getPan()
+				const zoom = deps.viewport.getZoom()
+				const { x: panX, y: panY } = deps.viewport.getPan()
 
 				if (params.event.ctrlKey || params.event.metaKey) {
 					// 줌: 마우스 포인터 기준
@@ -243,17 +233,17 @@ export function createPointerMachine(editor: Editor) {
 					const ratio = newZoom / zoom
 					const newPanX = params.event.clientX - (params.event.clientX - panX) * ratio
 					const newPanY = params.event.clientY - (params.event.clientY - panY) * ratio
-					editor.setZoom(newZoom)
-					editor.setPan(newPanX, newPanY)
+					deps.viewport.setZoom(newZoom)
+					deps.viewport.setPan(newPanX, newPanY)
 				} else {
 					// 팬
-					editor.setPan(panX - params.event.deltaX, panY - params.event.deltaY)
+					deps.viewport.setPan(panX - params.event.deltaX, panY - params.event.deltaY)
 				}
 			},
 
 			cancelDrag: ({ context }) => {
 				if (context.nodeId) {
-					editor.setDragPreview(null)
+					deps.dragPreview.setDragPreview(null)
 				}
 			},
 		},
@@ -322,18 +312,10 @@ export function createPointerMachine(editor: Editor) {
 							actions: assign(({ event }) => {
 								const target = event.target
 								const resizeHandle = target.closest("[data-resize-handle]") as HTMLElement
-								const nodeId = editor.getSelection()[0] ?? null
-								const node = nodeId ? editor.findNode(nodeId) : null
-
-								let width = typeof node?.style?.width === "number" ? node.style.width : 0
-								let height = typeof node?.style?.height === "number" ? node.style.height : 0
-								if (nodeId && (width === 0 || height === 0)) {
-									const rendered = editor.getNodeRenderedRect(nodeId)
-									if (rendered) {
-										if (width === 0) width = rendered.width
-										if (height === 0) height = rendered.height
-									}
-								}
+								const nodeId = deps.selection.getSelection()[0] ?? null
+								const rendered = nodeId ? deps.geometry.getNodeRenderedRect(nodeId) : null
+								const width = rendered?.width ?? 0
+								const height = rendered?.height ?? 0
 
 								return {
 									startX: event.clientX,
@@ -352,34 +334,27 @@ export function createPointerMachine(editor: Editor) {
 							}),
 						},
 						{
-							target: "hitTesting",
-							actions: [{ type: "dispatchHitTest", params: ({ event }) => ({ event }) }],
+							target: "active.pending",
+							actions: assign(({ event }) => {
+								event.target.setPointerCapture(event.pointerId)
+								return {
+									startX: event.clientX,
+									startY: event.clientY,
+									nodeId: deps.geometry.hitTestNodeId(event.clientX, event.clientY),
+									pointerId: event.pointerId,
+									shiftKey: event.shiftKey,
+									metaKey: event.metaKey,
+									target: event.target,
+									initialNodePosition: { x: 0, y: 0 },
+									lastOverNodeId: null,
+									startWidth: 0,
+									startHeight: 0,
+									resizeHandle: "",
+									resizeSessionId: "",
+								}
+							}),
 						},
 					],
-				},
-			},
-
-			hitTesting: {
-				on: {
-					HIT_TEST_DONE: {
-						target: "active.pending",
-						actions: assign(({ event }) => {
-							event.target.setPointerCapture(event.pointerId)
-							return {
-								startX: event.clientX,
-								startY: event.clientY,
-								nodeId: event.nodeId,
-								pointerId: event.pointerId,
-								shiftKey: event.shiftKey,
-								metaKey: event.metaKey,
-								target: event.target,
-								initialNodePosition: { x: 0, y: 0 },
-								startWidth: 0,
-								startHeight: 0,
-								resizeHandle: "",
-							}
-						}),
-					},
 				},
 			},
 
@@ -397,7 +372,7 @@ export function createPointerMachine(editor: Editor) {
 									target: "dragging",
 									actions: [
 										assign(({ context }) => {
-											const node = context.nodeId ? editor.findNode(context.nodeId) : null
+											const node = context.nodeId ? deps.document.findNode(context.nodeId) : null
 											const initialX = node?.x ?? 0
 											const initialY = node?.y ?? 0
 											return { initialNodePosition: { x: initialX, y: initialY } }
@@ -479,5 +454,5 @@ function shouldPreserveNativeClipboard(target: HTMLElement, key: string, metaKey
 	const selection = window.getSelection()?.toString().trim()
 	if (!selection) return false
 
-	return !target.closest("#canvas-event-target")
+	return !target.closest("[data-design-editor-event-target]")
 }
