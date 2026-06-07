@@ -40,11 +40,6 @@ if (publicNode) {
 	publicNode.x = 999
 }
 
-// @ts-expect-error store는 공개 에디터 API가 아니다.
-editor.store
-
-// @ts-expect-error commandHistory는 공개 에디터 API가 아니다.
-editor.commandHistory
-
-// @ts-expect-error registry는 공개 에디터 API가 아니다.
-editor.toolRegistry
+expectTypeOf(editor).not.toHaveProperty("store")
+expectTypeOf(editor).not.toHaveProperty("commandHistory")
+expectTypeOf(editor).not.toHaveProperty("toolRegistry")
