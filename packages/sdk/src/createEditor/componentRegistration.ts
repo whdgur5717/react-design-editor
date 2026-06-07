@@ -1,6 +1,6 @@
 import type { ComponentDefinition, ComponentProps } from "@design-editor/components"
 import { componentRegistry } from "@design-editor/components"
-import type { Editor } from "@design-editor/shell"
+import type { EditorApi } from "@design-editor/shell"
 import type * as React from "react"
 
 export type CanvasStyleSource = string | CSSStyleSheet | { id?: string; cssText: string }
@@ -20,9 +20,9 @@ interface EditorComponentRegistrations {
 	styles: CanvasStyleSource[]
 }
 
-const editorComponentRegistrations = new WeakMap<Editor, EditorComponentRegistrations>()
+const editorComponentRegistrations = new WeakMap<EditorApi, EditorComponentRegistrations>()
 
-export function registerEditorComponents(editor: Editor, components: EditorComponentRegistrationMap) {
+export function registerEditorComponents(editor: EditorApi, components: EditorComponentRegistrationMap) {
 	const registered: EditorComponentRegistrations = {
 		components: new Map(),
 		styles: [],
@@ -46,10 +46,10 @@ export function registerEditorComponents(editor: Editor, components: EditorCompo
 	editorComponentRegistrations.set(editor, registered)
 }
 
-export function getRegisteredComponentStyles(editor: Editor): CanvasStyleSource[] {
+export function getRegisteredComponentStyles(editor: EditorApi): CanvasStyleSource[] {
 	return editorComponentRegistrations.get(editor)?.styles ?? []
 }
 
-export function resolveRegisteredComponent(editor: Editor, type: string): ComponentDefinition | undefined {
+export function resolveRegisteredComponent(editor: EditorApi, type: string): ComponentDefinition | undefined {
 	return editorComponentRegistrations.get(editor)?.components.get(type) ?? componentRegistry.get(type)
 }

@@ -1,5 +1,5 @@
 import type { ComponentDefinition } from "@design-editor/components"
-import type { SceneNode } from "@design-editor/core"
+import type { NodeSnapshot } from "@design-editor/core"
 import type React from "react"
 
 import { renderElementNode } from "./ElementNodeRenderer"
@@ -12,7 +12,7 @@ export interface RenderContext {
 	resolveComponent?: ComponentResolver
 }
 
-export function renderNode(node: SceneNode, ctx: RenderContext): React.ReactNode {
+export function renderNode(node: NodeSnapshot, ctx: RenderContext): React.ReactNode {
 	switch (node.type) {
 		case "text":
 			return (

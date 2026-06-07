@@ -1,9 +1,9 @@
-import type { PageNode } from "@design-editor/core"
+import type { PageSnapshot } from "@design-editor/core"
 
 import { type ComponentResolver, renderNode } from "./renderNode"
 
 export interface CanvasRendererProps {
-	page: PageNode
+	page: PageSnapshot
 	onTextChange?: (nodeId: string, content: unknown) => void
 	resolveComponent?: ComponentResolver
 }

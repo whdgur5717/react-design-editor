@@ -25,15 +25,12 @@ export function EditorCanvas({ renderCanvasProviders }: EditorCanvasProps = {}) 
 	const [shadowEnv, setShadowEnv] = useState<CanvasShadowDom | null>(null)
 	const installedComponentStyleSheetsRef = useRef<CSSStyleSheet[]>([])
 
-	const { page, zoom, panX, panY } = useEditorState((editor) => {
-		const pan = editor.getPan()
-		return {
-			page: editor.getCurrentPage(),
-			zoom: editor.getZoom(),
-			panX: pan.x,
-			panY: pan.y,
-		}
-	})
+	const { page, zoom, panX, panY } = useEditorState((snapshot) => ({
+		page: snapshot.document.children.find((candidate) => candidate.id === snapshot.currentPageId) ?? null,
+		zoom: snapshot.zoom,
+		panX: snapshot.panX,
+		panY: snapshot.panY,
+	}))
 
 	useLayoutEffect(function setupCanvasShadowRoot() {
 		const host = shadowHostRef.current
@@ -103,8 +100,8 @@ export function EditorCanvas({ renderCanvasProviders }: EditorCanvasProps = {}) 
 			zoom={zoom}
 			panX={panX}
 			panY={panY}
-			onTextChange={(nodeId, content) => editor.applyTextChangeFromCanvas(nodeId, content)}
-			onNodeRectsChange={(rects) => editor.setNodeRectsCache(rects)}
+			onTextChange={(nodeId, content) => editor.document.applyTextChangeFromCanvas(nodeId, content)}
+			onNodeRectsChange={(rects) => editor.geometry.setNodeRectsCache(rects)}
 			resolveComponent={(type) => resolveRegisteredComponent(editor, type)}
 		/>
 	)

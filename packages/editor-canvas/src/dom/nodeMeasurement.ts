@@ -1,4 +1,4 @@
-import type { NodeRect, PageNode, SceneNode } from "@design-editor/core"
+import type { NodeRect, NodeSnapshot, PageSnapshot } from "@design-editor/core"
 
 const NODE_ID_SELECTOR = "[data-node-id]"
 const NODE_MEASURE_SELECTOR = "[data-node-measure-id]"
@@ -17,10 +17,10 @@ export function getTargetNodeId(el: Element | null, boundary?: ParentNode | null
 	return null
 }
 
-function collectNodeTreeInfo(page: PageNode) {
+function collectNodeTreeInfo(page: PageSnapshot) {
 	const nodeInfo: Record<string, NodeTreeInfo> = {}
 
-	function visit(nodes: SceneNode[], isRoot: boolean) {
+	function visit(nodes: readonly NodeSnapshot[], isRoot: boolean) {
 		for (const node of nodes) {
 			nodeInfo[node.id] = {
 				isRoot,
@@ -80,7 +80,7 @@ function findMeasuredAncestor(element: HTMLElement) {
 	return null
 }
 
-export function measureNodeRect(el: HTMLElement, page: PageNode): NodeRect | null {
+export function measureNodeRect(el: HTMLElement, page: PageSnapshot): NodeRect | null {
 	const nodeId = el.dataset.nodeMeasureId
 	if (!nodeId) return null
 	const root = el.getRootNode()
@@ -88,7 +88,7 @@ export function measureNodeRect(el: HTMLElement, page: PageNode): NodeRect | nul
 	return collectNodeRects(searchRoot, page)[nodeId] ?? null
 }
 
-export function collectNodeRects(root: ParentNode = document, page?: PageNode | null): Record<string, NodeRect> {
+export function collectNodeRects(root: ParentNode = document, page?: PageSnapshot | null): Record<string, NodeRect> {
 	const rects: Record<string, NodeRect> = {}
 	if (!page) return rects
 
@@ -129,7 +129,7 @@ export function collectNodeRects(root: ParentNode = document, page?: PageNode | 
 	return rects
 }
 
-export function getNodeRect(nodeId: string, root: ParentNode = document, page?: PageNode | null): NodeRect | null {
+export function getNodeRect(nodeId: string, root: ParentNode = document, page?: PageSnapshot | null): NodeRect | null {
 	if (!page) return null
 	const el = root.querySelector(`${NODE_MEASURE_SELECTOR}[data-node-measure-id="${nodeId}"]`)
 	if (!(el instanceof HTMLElement)) return null

@@ -1,6 +1,6 @@
 import "@design-editor/components"
 
-import type { NodeRect, PageNode } from "@design-editor/core"
+import type { NodeRect, PageSnapshot } from "@design-editor/core"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { collectNodeRects, getNodeMeasureElements } from "./dom/nodeMeasurement"
@@ -8,7 +8,7 @@ import { CanvasRenderer } from "./Renderer/CanvasRenderer"
 import type { ComponentResolver } from "./Renderer/renderNode"
 
 export interface CanvasSurfaceProps {
-	page: PageNode | null
+	page: PageSnapshot | null
 	zoom: number
 	panX: number
 	panY: number

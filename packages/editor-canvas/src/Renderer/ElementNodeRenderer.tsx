@@ -1,10 +1,10 @@
 import { componentRegistry } from "@design-editor/components"
-import type { ElementNode } from "@design-editor/core"
+import type { ElementNode, ReadonlyDeep } from "@design-editor/core"
 import React from "react"
 
 import { type RenderContext, renderNode } from "./renderNode"
 
-export function renderElementNode(node: ElementNode, ctx: RenderContext): React.ReactNode {
+export function renderElementNode(node: ReadonlyDeep<ElementNode>, ctx: RenderContext): React.ReactNode {
 	const definition = ctx.resolveComponent?.(node.tag) ?? componentRegistry.get(node.tag)
 	const Component = definition?.component
 	const renderedChildren =
