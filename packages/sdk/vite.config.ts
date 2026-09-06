@@ -6,6 +6,7 @@ export default defineConfig({
 	build: {
 		lib: {
 			entry: {
+				index: "src/index.ts",
 				createEditor: "src/createEditor/index.tsx",
 				EditorProvider: "src/EditorProvider/index.tsx",
 				EditorRoot: "src/EditorRoot/index.tsx",

@@ -1,8 +1,8 @@
 const packages = {
-	"editor-core": "@design-editor/core",
-	"editor-components": "@design-editor/components",
-	"editor-canvas": "@design-editor/canvas",
-	"editor-shell": "@design-editor/shell",
+	"editor-core": "@open-editor-sdk/core",
+	"editor-components": "@open-editor-sdk/components",
+	"editor-canvas": "@open-editor-sdk/canvas",
+	"editor-shell": "@open-editor-sdk/shell",
 }
 
 const config = {}

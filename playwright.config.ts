@@ -23,7 +23,7 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: "pnpm --filter @design-editor/demo exec vite --host 127.0.0.1 --port 3137",
+		command: "pnpm --filter @open-editor-sdk/demo exec vite --host 127.0.0.1 --port 3137",
 		url: DEMO_URL,
 		reuseExistingServer: false,
 	},

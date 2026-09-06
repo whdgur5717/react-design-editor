@@ -1,4 +1,4 @@
-import type { EditorSnapshot } from "@design-editor/core"
+import type { EditorSnapshot } from "@open-editor-sdk/core"
 
 import type { EditorStoreApi } from "../store/editor"
 

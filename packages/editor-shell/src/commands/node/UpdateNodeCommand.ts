@@ -1,4 +1,4 @@
-import type { SceneNode } from "@design-editor/core"
+import type { SceneNode } from "@open-editor-sdk/core"
 
 import type { Command, DocumentCommandReceiver } from "../types"
 

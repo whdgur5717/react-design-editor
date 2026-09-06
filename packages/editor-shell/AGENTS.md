@@ -1,6 +1,6 @@
 # editor-shell 작업 메모
 
-- `@design-editor/shell`은 에디터 제어 런타임을 맡는다.
+- `@open-editor-sdk/shell`은 에디터 제어 런타임을 맡는다.
 - 이 패키지의 중심:
   - selection, hover
   - pan/zoom
@@ -9,7 +9,7 @@
   - undo/redo
   - 레이어/속성 패널
   - overlay affordance
-- 문서 모델 타입은 `@design-editor/core`에 기대고, 렌더된 node의 위치와 크기는 `nodeRectsCache`로 받아 overlay와 hit test에 사용한다.
+- 문서 모델 타입은 `@open-editor-sdk/core`에 기대고, 렌더된 node의 위치와 크기는 `nodeRectsCache`로 받아 overlay와 hit test에 사용한다.
 
 ## 핵심 흐름
 

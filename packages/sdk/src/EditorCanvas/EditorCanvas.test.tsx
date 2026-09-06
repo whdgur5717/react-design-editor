@@ -1,7 +1,7 @@
 import "../styles/index.css"
 import "./EditorCanvas.test.css"
 
-import type { DocumentNode, SceneNode } from "@design-editor/core"
+import type { DocumentNode, SceneNode } from "@open-editor-sdk/core"
 import type { CSSProperties, ReactNode } from "react"
 import { expect, test } from "vitest"
 import { page } from "vitest/browser"

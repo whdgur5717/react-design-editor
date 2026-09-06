@@ -1,4 +1,4 @@
-import type { EditorSnapshot } from "@design-editor/core"
+import type { EditorSnapshot } from "@open-editor-sdk/core"
 import { createContext, type PropsWithChildren, useContext, useEffect, useSyncExternalStore } from "react"
 
 import type { EditorApi } from "./Editor"

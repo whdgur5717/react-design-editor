@@ -1,4 +1,4 @@
-import baseConfig from "@design-editor/eslint-config"
+import baseConfig from "@open-editor-sdk/eslint-config"
 import react from "eslint-plugin-react"
 
 const codeFiles = ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]

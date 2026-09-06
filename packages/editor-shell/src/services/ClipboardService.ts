@@ -1,4 +1,4 @@
-import type { NodeLocation } from "@design-editor/core"
+import type { NodeLocation } from "@open-editor-sdk/core"
 
 import { CutNodesCommand } from "../commands/clipboard/CutNodesCommand"
 import { PasteNodesCommand } from "../commands/clipboard/PasteNodesCommand"

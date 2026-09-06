@@ -1,4 +1,4 @@
-import type { PageSnapshot } from "@design-editor/core"
+import type { PageSnapshot } from "@open-editor-sdk/core"
 
 import { type ComponentResolver, renderNode } from "./renderNode"
 

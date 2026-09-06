@@ -1,4 +1,4 @@
-import { createEditorRuntime, type CreateEditorRuntimeOptions } from "@design-editor/shell"
+import { createEditorRuntime, type CreateEditorRuntimeOptions } from "@open-editor-sdk/shell"
 
 import { type EditorComponentRegistrationMap, registerEditorComponents } from "./componentRegistration"
 

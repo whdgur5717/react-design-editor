@@ -1,5 +1,5 @@
 {
-	"name": "@design-editor/eslint-config",
+	"name": "@open-editor-sdk/eslint-config",
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",

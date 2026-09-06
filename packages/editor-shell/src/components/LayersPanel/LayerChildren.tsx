@@ -1,4 +1,3 @@
-import type { NodeSnapshot } from "@design-editor/core"
 import {
 	closestCenter,
 	DndContext,
@@ -9,6 +8,7 @@ import {
 	useSensors,
 } from "@dnd-kit/core"
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import type { NodeSnapshot } from "@open-editor-sdk/core"
 
 import { useEditor } from "../../services/EditorContext"
 import { SortableLayerItem } from "./SortableLayerItem"

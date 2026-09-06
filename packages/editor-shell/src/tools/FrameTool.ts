@@ -1,4 +1,4 @@
-import type { ClickPayload } from "@design-editor/core"
+import type { ClickPayload } from "@open-editor-sdk/core"
 
 import { createFrameNode } from "./nodeFactory"
 import { BaseTool } from "./types"

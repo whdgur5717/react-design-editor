@@ -1,4 +1,4 @@
-import type { ClickPayload, DragPayload, KeyPayload, PageNode } from "@design-editor/core"
+import type { ClickPayload, DragPayload, KeyPayload, PageNode } from "@open-editor-sdk/core"
 
 import { getAbsolutePosition, isRootNode } from "../utils/nodePosition"
 import type { ToolFacade } from "./ToolFacade"

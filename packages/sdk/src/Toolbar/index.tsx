@@ -1,4 +1,4 @@
-import { Toolbar as ShellToolbar } from "@design-editor/shell"
+import { Toolbar as ShellToolbar } from "@open-editor-sdk/shell"
 
 export function Toolbar() {
 	return <ShellToolbar />

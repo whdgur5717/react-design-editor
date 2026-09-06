@@ -1,1 +1,1 @@
-export { useEditor, useEditorState } from "@design-editor/shell"
+export { useEditor, useEditorState } from "@open-editor-sdk/shell"

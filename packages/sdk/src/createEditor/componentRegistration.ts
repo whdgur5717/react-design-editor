@@ -1,6 +1,6 @@
-import type { ComponentDefinition, ComponentProps } from "@design-editor/components"
-import { componentRegistry } from "@design-editor/components"
-import type { EditorApi } from "@design-editor/shell"
+import type { ComponentDefinition, ComponentProps } from "@open-editor-sdk/components"
+import { componentRegistry } from "@open-editor-sdk/components"
+import type { EditorApi } from "@open-editor-sdk/shell"
 import type * as React from "react"
 
 export type CanvasStyleSource = string | CSSStyleSheet | { id?: string; cssText: string }

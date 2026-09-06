@@ -1,4 +1,4 @@
-import type { PageNode } from "@design-editor/core"
+import type { PageNode } from "@open-editor-sdk/core"
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react"
 import { expect, test, vi } from "vitest"
 import { render } from "vitest-browser-react"

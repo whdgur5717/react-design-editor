@@ -1,4 +1,4 @@
-import type { Size } from "@design-editor/core"
+import type { Size } from "@open-editor-sdk/core"
 
 import type { Command, DocumentCommandReceiver, MergableCommand } from "../types"
 

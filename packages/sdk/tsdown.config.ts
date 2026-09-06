@@ -2,6 +2,7 @@ import { defineConfig } from "tsdown"
 
 export default defineConfig({
 	entry: {
+		index: "src/index.ts",
 		createEditor: "src/createEditor/index.tsx",
 		EditorProvider: "src/EditorProvider/index.tsx",
 		EditorRoot: "src/EditorRoot/index.tsx",

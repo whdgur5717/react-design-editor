@@ -1,4 +1,4 @@
-import type { DocumentNode } from "@design-editor/core"
+import type { DocumentNode } from "@open-editor-sdk/core"
 import { expect, test, vi } from "vitest"
 
 import { createEditor } from "./createEditor"

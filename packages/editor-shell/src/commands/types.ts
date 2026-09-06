@@ -1,4 +1,4 @@
-import type { NodeLocation, NodePageContext, PageNode, Position, SceneNode, Size } from "@design-editor/core"
+import type { NodeLocation, NodePageContext, PageNode, Position, SceneNode, Size } from "@open-editor-sdk/core"
 import type { CSSProperties } from "react"
 
 /**

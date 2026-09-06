@@ -1,4 +1,4 @@
-import type { EditorTool } from "@design-editor/core"
+import type { EditorTool } from "@open-editor-sdk/core"
 import { useSyncExternalStore } from "react"
 
 import { useEditor, useEditorState } from "../../services/EditorContext"

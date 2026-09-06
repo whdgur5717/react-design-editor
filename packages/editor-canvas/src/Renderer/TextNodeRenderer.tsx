@@ -1,4 +1,4 @@
-import type { ReadonlyDeep, TextNode } from "@design-editor/core"
+import type { ReadonlyDeep, TextNode } from "@open-editor-sdk/core"
 import type { JSONContent } from "@tiptap/core"
 import { Extension } from "@tiptap/core"
 import { Color } from "@tiptap/extension-color"

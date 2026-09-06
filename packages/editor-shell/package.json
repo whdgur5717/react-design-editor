@@ -1,7 +1,12 @@
 {
-	"name": "@design-editor/shell",
+	"name": "@open-editor-sdk/shell",
 	"version": "0.0.1",
 	"private": false,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/whdgur5717/react-design-editor.git",
+		"directory": "packages/editor-shell"
+	},
 	"type": "module",
 	"main": "./src/index.tsx",
 	"types": "./src/index.tsx",
@@ -18,6 +23,7 @@
 		}
 	},
 	"publishConfig": {
+		"access": "public",
 		"main": "./dist/index.js",
 		"types": "./dist/index.d.ts",
 		"exports": {
@@ -37,7 +43,7 @@
 		"type-check": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@design-editor/core": "workspace:*",
+		"@open-editor-sdk/core": "workspace:*",
 		"@dnd-kit/core": "^6.3.1",
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
@@ -50,8 +56,8 @@
 		"react": ">=18.0.0 <20.0.0"
 	},
 	"devDependencies": {
-		"@design-editor/eslint-config": "workspace:*",
-		"@design-editor/tsconfig": "workspace:*",
+		"@open-editor-sdk/eslint-config": "workspace:*",
+		"@open-editor-sdk/tsconfig": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"eslint-plugin-react": "^7.37.5"

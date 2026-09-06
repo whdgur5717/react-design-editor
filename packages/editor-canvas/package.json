@@ -1,7 +1,12 @@
 {
-	"name": "@design-editor/canvas",
+	"name": "@open-editor-sdk/canvas",
 	"version": "0.0.1",
 	"private": false,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/whdgur5717/react-design-editor.git",
+		"directory": "packages/editor-canvas"
+	},
 	"type": "module",
 	"main": "./src/index.tsx",
 	"types": "./src/index.tsx",
@@ -15,6 +20,7 @@
 		}
 	},
 	"publishConfig": {
+		"access": "public",
 		"main": "./dist/index.js",
 		"types": "./dist/index.d.ts",
 		"exports": {
@@ -31,8 +37,8 @@
 		"type-check": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@design-editor/components": "workspace:*",
-		"@design-editor/core": "workspace:*",
+		"@open-editor-sdk/components": "workspace:*",
+		"@open-editor-sdk/core": "workspace:*",
 		"@tiptap/core": "^3.18.0",
 		"@tiptap/extension-color": "^3.18.0",
 		"@tiptap/extension-text-style": "^3.18.0",
@@ -46,8 +52,8 @@
 		"react-dom": ">=18.0.0 <20.0.0"
 	},
 	"devDependencies": {
-		"@design-editor/eslint-config": "workspace:*",
-		"@design-editor/tsconfig": "workspace:*",
+		"@open-editor-sdk/eslint-config": "workspace:*",
+		"@open-editor-sdk/tsconfig": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.0",

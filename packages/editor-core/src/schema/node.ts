@@ -1,4 +1,4 @@
-import { z } from "zod"
+import * as z from "zod/v4-mini"
 
 /**
  * CSS 스타일 스키마 (주요 속성들)
@@ -12,35 +12,35 @@ export const styleSchema = z.record(z.string(), z.unknown())
 const baseNodeDataSchema = z.object({
 	id: z.string(),
 	type: z.string(),
-	props: z.record(z.string(), z.unknown()).optional(),
-	style: styleSchema.optional(),
+	props: z.optional(z.record(z.string(), z.unknown())),
+	style: z.optional(styleSchema),
 })
 
 /**
  * NodeData 스키마 (재귀 포함)
  */
-export const nodeDataSchema: z.ZodType<{
+export const nodeDataSchema: z.ZodMiniType<{
 	id: string
 	type: string
 	props?: Record<string, unknown>
 	style?: Record<string, unknown>
 	children?: unknown[] | string
-}> = baseNodeDataSchema.extend({
-	children: z.union([z.lazy(() => z.array(nodeDataSchema)), z.string()]).optional(),
+}> = z.extend(baseNodeDataSchema, {
+	children: z.optional(z.union([z.lazy(() => z.array(nodeDataSchema)), z.string()])),
 })
 
 /**
  * DocumentNode 스키마
  */
-export const documentNodeSchema = baseNodeDataSchema.extend({
-	children: z.union([z.lazy(() => z.array(nodeDataSchema)), z.string()]).optional(),
-	meta: z
-		.object({
-			name: z.string().optional(),
-			createdAt: z.string().optional(),
-			updatedAt: z.string().optional(),
-		})
-		.optional(),
+export const documentNodeSchema = z.extend(baseNodeDataSchema, {
+	children: z.optional(z.union([z.lazy(() => z.array(nodeDataSchema)), z.string()])),
+	meta: z.optional(
+		z.object({
+			name: z.optional(z.string()),
+			createdAt: z.optional(z.string()),
+			updatedAt: z.optional(z.string()),
+		}),
+	),
 })
 
 /**
@@ -62,4 +62,7 @@ export const sizeSchema = z.object({
 /**
  * BoundingBox 스키마
  */
-export const boundingBoxSchema = positionSchema.merge(sizeSchema)
+export const boundingBoxSchema = z.extend(positionSchema, {
+	width: z.number(),
+	height: z.number(),
+})

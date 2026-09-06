@@ -25,7 +25,7 @@ jobs:
    - run: pnpm install
    - run: pnpm add -wD wrangler
    - name: Build demo
-     run: pnpm --filter @design-editor/demo build
+     run: pnpm --filter @open-editor-sdk/demo build
    - name: Deploy shell
      id: deploy-shell
      uses: cloudflare/wrangler-action@v3

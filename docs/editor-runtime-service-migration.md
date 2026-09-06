@@ -1443,7 +1443,7 @@ packages/editor-shell/src/services/DocumentService.test.ts
 
 ```bash
 pnpm test:unit
-pnpm --filter @design-editor/sdk test
+pnpm --filter open-editor-sdk test
 pnpm test:e2e
 pnpm type-check
 ```

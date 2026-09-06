@@ -1,4 +1,4 @@
-import type { DocumentNode, EditorTool } from "@design-editor/core"
+import type { DocumentNode, EditorTool } from "@open-editor-sdk/core"
 
 import { ActionRegistry } from "../commands/ActionRegistry"
 import { CommandHistory } from "../commands/CommandHistory"

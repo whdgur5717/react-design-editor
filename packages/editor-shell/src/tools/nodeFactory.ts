@@ -1,4 +1,4 @@
-import type { ElementNode, TextNode } from "@design-editor/core"
+import type { ElementNode, TextNode } from "@open-editor-sdk/core"
 
 function generateId(prefix: string): string {
 	return `${prefix}-${crypto.randomUUID()}`

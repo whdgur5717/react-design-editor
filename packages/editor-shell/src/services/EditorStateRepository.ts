@@ -10,7 +10,7 @@ import type {
 	Position,
 	SceneNode,
 	Size,
-} from "@design-editor/core"
+} from "@open-editor-sdk/core"
 import { current, produce } from "immer"
 import type { CSSProperties } from "react"
 

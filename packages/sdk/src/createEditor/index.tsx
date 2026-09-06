@@ -9,5 +9,5 @@ export type {
 	EditorExtensionContext,
 	EditorStoreApi,
 	ToolContribution,
-} from "@design-editor/shell"
-export { createEditorStore } from "@design-editor/shell"
+} from "@open-editor-sdk/shell"
+export { createEditorStore } from "@open-editor-sdk/shell"
