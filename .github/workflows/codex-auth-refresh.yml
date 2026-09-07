@@ -1,0 +1,31 @@
+name: Refresh Codex Authentication
+
+on:
+ schedule:
+  # Every Monday at 09:00 KST
+  - cron: "0 0 * * 1"
+ workflow_dispatch:
+
+jobs:
+ refresh-codex-auth:
+  runs-on: ubuntu-latest
+  timeout-minutes: 10
+  concurrency:
+   group: codex-subscription-auth
+   cancel-in-progress: false
+  permissions:
+   contents: read
+  steps:
+   - name: Checkout repository
+     uses: actions/checkout@v4
+     with:
+      fetch-depth: 1
+      persist-credentials: false
+
+   - name: Refresh Codex authentication
+     uses: ./.github/actions/run-codex
+     with:
+      auth-json-b64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
+      secret-update-token: ${{ secrets.CODEX_AUTH_SECRET_UPDATE_TOKEN }}
+      effort: low
+      prompt: Reply with exactly AUTH_OK. Do not inspect the repository or run tools.
