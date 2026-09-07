@@ -1,0 +1,48 @@
+name: npm release
+
+on:
+ push:
+  branches: [main]
+
+permissions: {}
+
+concurrency:
+ group: npm-release
+ cancel-in-progress: false
+
+jobs:
+ release:
+  runs-on: ubuntu-latest
+  permissions:
+   contents: write
+   pull-requests: write
+   id-token: write
+  steps:
+   - name: Checkout main
+     uses: actions/checkout@v5
+     with:
+      fetch-depth: 0
+
+   - name: Install pnpm
+     uses: pnpm/action-setup@v4
+
+   - name: Setup Node.js
+     uses: actions/setup-node@v4
+     with:
+      node-version: 24.20.0
+      cache: pnpm
+
+   - name: Install dependencies
+     run: pnpm install --frozen-lockfile
+
+   - name: Create the Version PR or publish
+     uses: changesets/action@v2
+     with:
+      version-script: pnpm release:version
+      publish-script: pnpm release:publish
+      commit-message: "chore(release): version packages"
+      pr-title: "chore(release): version packages"
+      create-github-releases: false
+      push-git-tags: true
+     env:
+      NPM_CONFIG_PROVENANCE: "true"

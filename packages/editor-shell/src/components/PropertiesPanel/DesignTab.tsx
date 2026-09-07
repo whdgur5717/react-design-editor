@@ -1,4 +1,4 @@
-import type { NodeSnapshot } from "@design-editor/core"
+import type { NodeSnapshot } from "@open-editor-sdk/core"
 import type { CSSProperties } from "react"
 
 import { designTabSchema } from "../../schema/designTabSchema"

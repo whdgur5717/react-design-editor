@@ -1,4 +1,4 @@
-import type { ClickPayload, DragPayload, EditorTool, KeyPayload } from "@design-editor/core"
+import type { ClickPayload, DragPayload, EditorTool, KeyPayload } from "@open-editor-sdk/core"
 
 import type { ToolFacade } from "./ToolFacade"
 import type { Tool } from "./types"

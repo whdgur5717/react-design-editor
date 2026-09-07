@@ -1,4 +1,4 @@
-import type { NodeLocation, NodeSnapshot, PageSnapshot, Position, Size, TextChangePayload } from "@design-editor/core"
+import type { NodeLocation, NodeSnapshot, PageSnapshot, Position, Size, TextChangePayload } from "@open-editor-sdk/core"
 import type { CSSProperties } from "react"
 
 import { DuplicateNodeCommand } from "../commands/node/DuplicateNodeCommand"

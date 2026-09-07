@@ -1,12 +1,26 @@
 {
-	"name": "@design-editor/sdk",
+	"name": "open-editor-sdk",
 	"version": "0.0.1",
 	"private": false,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/whdgur5717/react-design-editor.git",
+		"directory": "packages/sdk"
+	},
 	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
 	"files": [
 		"dist"
 	],
+	"sideEffects": [
+		"**/*.css"
+	],
 	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"import": "./src/index.ts"
+		},
 		"./createEditor": {
 			"types": "./src/createEditor/index.tsx",
 			"import": "./src/createEditor/index.tsx"
@@ -42,7 +56,14 @@
 		}
 	},
 	"publishConfig": {
+		"access": "public",
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
 		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			},
 			"./createEditor": {
 				"types": "./dist/createEditor.d.ts",
 				"import": "./dist/createEditor.js"
@@ -80,23 +101,24 @@
 	},
 	"scripts": {
 		"build": "tsdown",
+		"prepack": "pnpm build",
 		"lint": "eslint --fix",
 		"type-check": "tsgo --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@design-editor/canvas": "workspace:*",
-		"@design-editor/components": "workspace:*",
-		"@design-editor/core": "workspace:*",
-		"@design-editor/shell": "workspace:*"
+		"@open-editor-sdk/canvas": "workspace:*",
+		"@open-editor-sdk/components": "workspace:*",
+		"@open-editor-sdk/core": "workspace:*",
+		"@open-editor-sdk/shell": "workspace:*"
 	},
 	"peerDependencies": {
 		"react": ">=18.0.0 <20.0.0",
 		"react-dom": ">=18.0.0 <20.0.0"
 	},
 	"devDependencies": {
-		"@design-editor/eslint-config": "workspace:*",
-		"@design-editor/tsconfig": "workspace:*",
+		"@open-editor-sdk/eslint-config": "workspace:*",
+		"@open-editor-sdk/tsconfig": "workspace:*",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "^4.3.0",

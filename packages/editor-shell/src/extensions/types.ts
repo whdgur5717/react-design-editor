@@ -1,4 +1,4 @@
-import type { EditorTool } from "@design-editor/core"
+import type { EditorTool } from "@open-editor-sdk/core"
 
 import type { ActionHandler } from "../commands/ActionRegistry"
 import type { EditorAction } from "../keybindings"

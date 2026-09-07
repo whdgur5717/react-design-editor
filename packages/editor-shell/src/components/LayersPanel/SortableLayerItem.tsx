@@ -1,6 +1,6 @@
-import type { NodeSnapshot } from "@design-editor/core"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import type { NodeSnapshot } from "@open-editor-sdk/core"
 
 import { useEditor, useEditorState } from "../../services/EditorContext"
 import { LayerChildren } from "./LayerChildren"

@@ -1,4 +1,11 @@
-import type { DocumentNode, EditorModel, NodeLocation, NodePageContext, PageNode, SceneNode } from "@design-editor/core"
+import type {
+	DocumentNode,
+	EditorModel,
+	NodeLocation,
+	NodePageContext,
+	PageNode,
+	SceneNode,
+} from "@open-editor-sdk/core"
 import { createStore } from "zustand"
 import { subscribeWithSelector } from "zustand/middleware"
 import type { StoreApi } from "zustand/vanilla"

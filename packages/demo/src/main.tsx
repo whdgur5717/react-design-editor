@@ -1,4 +1,4 @@
-import "@design-editor/sdk/styles.css"
+import "open-editor-sdk/styles.css"
 import "./index.css"
 
 import { StrictMode } from "react"

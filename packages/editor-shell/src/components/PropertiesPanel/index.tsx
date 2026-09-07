@@ -1,4 +1,4 @@
-import type { NodeSnapshot, PageSnapshot } from "@design-editor/core"
+import type { NodeSnapshot, PageSnapshot } from "@open-editor-sdk/core"
 import { useState } from "react"
 
 import { useEditorState } from "../../services/EditorContext"

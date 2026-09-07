@@ -1,4 +1,4 @@
-import type { NodeRect } from "@design-editor/core"
+import type { NodeRect } from "@open-editor-sdk/core"
 
 import { hitTestNodeIdInPage } from "../document/hitTest"
 import type { DocumentReadRepository, GeometryRepository, ViewportRepository } from "./EditorStateRepository"

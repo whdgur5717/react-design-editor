@@ -1,4 +1,4 @@
-import type { DocumentNode } from "@design-editor/core"
+import type { DocumentNode } from "@open-editor-sdk/core"
 
 import { createInitialEditorModel } from "../store/editor"
 import type { DocumentSessionRepository } from "./EditorStateRepository"

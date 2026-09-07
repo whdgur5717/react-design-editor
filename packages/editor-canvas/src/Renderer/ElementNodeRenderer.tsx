@@ -1,5 +1,5 @@
-import { componentRegistry } from "@design-editor/components"
-import type { ElementNode, ReadonlyDeep } from "@design-editor/core"
+import { componentRegistry } from "@open-editor-sdk/components"
+import type { ElementNode, ReadonlyDeep } from "@open-editor-sdk/core"
 import React from "react"
 
 import { type RenderContext, renderNode } from "./renderNode"

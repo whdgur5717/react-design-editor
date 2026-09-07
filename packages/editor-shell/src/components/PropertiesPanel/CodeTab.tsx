@@ -1,5 +1,5 @@
-import type { ElementNode, NodeSnapshot } from "@design-editor/core"
-import { serializeDocument, serializeNode } from "@design-editor/core"
+import type { ElementNode, NodeSnapshot } from "@open-editor-sdk/core"
+import { serializeDocument, serializeNode } from "@open-editor-sdk/core"
 import { useState } from "react"
 
 export function CodeTab({ node }: { node: NodeSnapshot }) {

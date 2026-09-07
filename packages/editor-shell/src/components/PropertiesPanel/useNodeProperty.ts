@@ -1,4 +1,4 @@
-import type { Position } from "@design-editor/core"
+import type { Position } from "@open-editor-sdk/core"
 import type { CSSProperties } from "react"
 import { useCallback } from "react"
 

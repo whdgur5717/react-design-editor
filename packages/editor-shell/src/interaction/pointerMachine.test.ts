@@ -1,4 +1,4 @@
-import type { SceneNode } from "@design-editor/core"
+import type { SceneNode } from "@open-editor-sdk/core"
 import { describe, expect, it, vi } from "vitest"
 import { createActor } from "xstate"
 

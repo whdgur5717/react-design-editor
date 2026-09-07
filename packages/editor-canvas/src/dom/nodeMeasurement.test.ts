@@ -1,4 +1,4 @@
-import type { PageNode } from "@design-editor/core"
+import type { PageNode } from "@open-editor-sdk/core"
 import { describe, expect, it } from "vitest"
 
 import { collectNodeRects } from "./nodeMeasurement"

@@ -1,0 +1,58 @@
+[
+	{
+		"name": "createOnly",
+		"totalBytes": 89570,
+		"totalGzip": 26967,
+		"initialGzip": 26967,
+		"lazyGzip": 0,
+		"initialFiles": ["_virtual_createOnly.js", "react/jsx-runtime", "react", "react-dom"],
+		"files": [
+			{
+				"type": "chunk",
+				"file": "_virtual_createOnly.js",
+				"bytes": 89570,
+				"gzip": 26967,
+				"isEntry": true,
+				"isDynamicEntry": false,
+				"imports": ["react/jsx-runtime", "react", "react-dom"],
+				"dynamicImports": []
+			}
+		]
+	},
+	{
+		"name": "editorScreen",
+		"totalBytes": 572046,
+		"totalGzip": 179573,
+		"initialGzip": 179573,
+		"lazyGzip": 0,
+		"initialFiles": [
+			"_virtual_editorScreen.js",
+			"react/jsx-runtime",
+			"react",
+			"react-dom",
+			"assets/_virtual_editorScreen-NWbyxkvd.css"
+		],
+		"files": [
+			{
+				"type": "chunk",
+				"file": "_virtual_editorScreen.js",
+				"bytes": 565755,
+				"gzip": 177960,
+				"isEntry": true,
+				"isDynamicEntry": false,
+				"imports": ["react/jsx-runtime", "react", "react-dom"],
+				"dynamicImports": []
+			},
+			{
+				"type": "asset",
+				"file": "assets/_virtual_editorScreen-NWbyxkvd.css",
+				"bytes": 6291,
+				"gzip": 1613,
+				"isEntry": false,
+				"isDynamicEntry": false,
+				"imports": [],
+				"dynamicImports": []
+			}
+		]
+	}
+]

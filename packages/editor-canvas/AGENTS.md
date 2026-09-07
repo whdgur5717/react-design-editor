@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Canvas는 편집 상태를 소유하지 않고, 사용자 입력을 처리하지 않으며, command를 관리하지 않는다. 모든 편집 로직은 `editor-shell`에 있다.
 
-이 패키지가 제공하는 컴포넌트는 `@design-editor/sdk`에서 Shadow DOM 안에 mount되어 CSS/JS 격리를 보장한다.
+이 패키지가 제공하는 컴포넌트는 `open-editor-sdk`에서 Shadow DOM 안에 mount되어 CSS/JS 격리를 보장한다.
 
 ## 아키텍처
 
@@ -99,8 +99,8 @@ describe("collectNodeRects", () => {
 
 - **React 18**: 렌더링 엔진
 - **TipTap**: Rich text 편집
-- **@design-editor/core**: 공유 타입
-- **@design-editor/components**: 내장 컴포넌트 registry
+- **@open-editor-sdk/core**: 공유 타입
+- **@open-editor-sdk/components**: 내장 컴포넌트 registry
 - **es-toolkit**: 유틸리티 (lodash 대신)
 
 ## 관련 문서

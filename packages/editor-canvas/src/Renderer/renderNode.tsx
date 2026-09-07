@@ -1,5 +1,5 @@
-import type { ComponentDefinition } from "@design-editor/components"
-import type { NodeSnapshot } from "@design-editor/core"
+import type { ComponentDefinition } from "@open-editor-sdk/components"
+import type { NodeSnapshot } from "@open-editor-sdk/core"
 import type React from "react"
 
 import { renderElementNode } from "./ElementNodeRenderer"

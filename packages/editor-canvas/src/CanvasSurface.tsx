@@ -1,6 +1,6 @@
-import "@design-editor/components"
+import "@open-editor-sdk/components"
 
-import type { NodeRect, PageSnapshot } from "@design-editor/core"
+import type { NodeRect, PageSnapshot } from "@open-editor-sdk/core"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { collectNodeRects, getNodeMeasureElements } from "./dom/nodeMeasurement"

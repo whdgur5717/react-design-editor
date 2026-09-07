@@ -1,4 +1,4 @@
-import type { NodeRect, PageNode } from "@design-editor/core"
+import type { NodeRect, PageNode } from "@open-editor-sdk/core"
 import { describe, expect, it } from "vitest"
 
 import { hitTestNodeIdInPage } from "./hitTest"

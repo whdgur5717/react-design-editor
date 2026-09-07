@@ -1,4 +1,4 @@
 {
-	"extends": "@design-editor/tsconfig/base.json",
+	"extends": "@open-editor-sdk/tsconfig/base.json",
 	"include": ["src/**/*"]
 }

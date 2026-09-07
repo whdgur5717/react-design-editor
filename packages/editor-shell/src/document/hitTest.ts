@@ -1,4 +1,4 @@
-import type { NodeRect, PageNode, SceneNode } from "@design-editor/core"
+import type { NodeRect, PageNode, SceneNode } from "@open-editor-sdk/core"
 
 import { getCachedNodePageRect, screenToData } from "../utils/nodePosition"
 

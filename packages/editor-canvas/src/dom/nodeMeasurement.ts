@@ -1,4 +1,4 @@
-import type { NodeRect, NodeSnapshot, PageSnapshot } from "@design-editor/core"
+import type { NodeRect, NodeSnapshot, PageSnapshot } from "@open-editor-sdk/core"
 
 const NODE_ID_SELECTOR = "[data-node-id]"
 const NODE_MEASURE_SELECTOR = "[data-node-measure-id]"

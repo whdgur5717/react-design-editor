@@ -2,7 +2,7 @@
 
 ## 목적
 
-`@design-editor/sdk`는 외부 React 앱이 디자인 에디터를 자기 제품 안에 넣고, 필요한 UI를 조합하고, canvas에 렌더될 요소를 자기 React 컴포넌트로 확장할 수 있게 하는 공개 패키지다.
+`open-editor-sdk`는 외부 React 앱이 디자인 에디터를 자기 제품 안에 넣고, 필요한 UI를 조합하고, canvas에 렌더될 요소를 자기 React 컴포넌트로 확장할 수 있게 하는 공개 패키지다.
 
 이 SDK의 핵심은 완성된 앱 하나를 그대로 노출하는 것이 아니라, 호스트 앱이 editor를 구성할 수 있는 계약을 제공하는 것이다.
 
@@ -49,7 +49,7 @@ export function App() {
 
 `createEditor()`는 editor instance를 만드는 진입점이다.
 
-현재 구현은 `@design-editor/shell`의 `Editor`를 생성해서 반환한다.
+현재 구현은 `@open-editor-sdk/shell`의 `Editor`를 생성해서 반환한다.
 
 ```ts
 export function createEditor(options: CreateEditorOptions = {}) {

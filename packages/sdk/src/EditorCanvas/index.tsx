@@ -1,5 +1,5 @@
-import { CanvasSurface, defaultCanvasStyles } from "@design-editor/canvas"
-import { CanvasInteractionSurface, useEditor, useEditorState } from "@design-editor/shell"
+import { CanvasSurface, defaultCanvasStyles } from "@open-editor-sdk/canvas"
+import { CanvasInteractionSurface, useEditor, useEditorState } from "@open-editor-sdk/shell"
 import type * as React from "react"
 import { useLayoutEffect, useRef, useState } from "react"
 

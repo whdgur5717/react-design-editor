@@ -1,4 +1,4 @@
-import type { EditorTool, PageNode, Position, SceneNode } from "@design-editor/core"
+import type { EditorTool, PageNode, Position, SceneNode } from "@open-editor-sdk/core"
 
 import type { Command } from "../commands/types"
 

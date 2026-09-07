@@ -17,7 +17,7 @@ React 앱 안에 비주얼 에디터를 넣기 위한 SDK.
 ## 설치
 
 ```bash
-pnpm add @design-editor/sdk react react-dom
+pnpm add open-editor-sdk react react-dom
 ```
 
 아직 배포 전 preview 환경에서는 `packages/demo`의 workspace 사용 방식 기준.
@@ -25,15 +25,15 @@ pnpm add @design-editor/sdk react react-dom
 ## 빠른 사용
 
 ```tsx
-import "@design-editor/sdk/styles.css"
+import "open-editor-sdk/styles.css"
 
-import { createEditor } from "@design-editor/sdk/createEditor"
-import { EditorCanvas } from "@design-editor/sdk/EditorCanvas"
-import { EditorProvider } from "@design-editor/sdk/EditorProvider"
-import { EditorRoot } from "@design-editor/sdk/EditorRoot"
-import { LayersPanel } from "@design-editor/sdk/LayersPanel"
-import { PropertiesPanel } from "@design-editor/sdk/PropertiesPanel"
-import { Toolbar } from "@design-editor/sdk/Toolbar"
+import { createEditor } from "open-editor-sdk/createEditor"
+import { EditorCanvas } from "open-editor-sdk/EditorCanvas"
+import { EditorProvider } from "open-editor-sdk/EditorProvider"
+import { EditorRoot } from "open-editor-sdk/EditorRoot"
+import { LayersPanel } from "open-editor-sdk/LayersPanel"
+import { PropertiesPanel } from "open-editor-sdk/PropertiesPanel"
+import { Toolbar } from "open-editor-sdk/Toolbar"
 import { useMemo } from "react"
 
 export function App() {
@@ -106,28 +106,28 @@ const editor = createEditor({
 
 ## 주요 import
 
-| Import path                          | 용도                       |
-| ------------------------------------ | -------------------------- |
-| `@design-editor/sdk/createEditor`    | editor 객체 생성           |
-| `@design-editor/sdk/EditorProvider`  | React 트리에 editor 연결   |
-| `@design-editor/sdk/EditorRoot`      | 기본 editor layout wrapper |
-| `@design-editor/sdk/EditorCanvas`    | 문서 캔버스 렌더링         |
-| `@design-editor/sdk/Toolbar`         | 기본 툴바                  |
-| `@design-editor/sdk/LayersPanel`     | 문서 레이어 패널           |
-| `@design-editor/sdk/PropertiesPanel` | 선택 노드 속성 패널        |
-| `@design-editor/sdk/useEditor`       | editor 객체 접근 hook      |
-| `@design-editor/sdk/styles.css`      | 기본 editor 스타일         |
+| Import path                       | 용도                       |
+| --------------------------------- | -------------------------- |
+| `open-editor-sdk/createEditor`    | editor 객체 생성           |
+| `open-editor-sdk/EditorProvider`  | React 트리에 editor 연결   |
+| `open-editor-sdk/EditorRoot`      | 기본 editor layout wrapper |
+| `open-editor-sdk/EditorCanvas`    | 문서 캔버스 렌더링         |
+| `open-editor-sdk/Toolbar`         | 기본 툴바                  |
+| `open-editor-sdk/LayersPanel`     | 문서 레이어 패널           |
+| `open-editor-sdk/PropertiesPanel` | 선택 노드 속성 패널        |
+| `open-editor-sdk/useEditor`       | editor 객체 접근 hook      |
+| `open-editor-sdk/styles.css`      | 기본 editor 스타일         |
 
 ## 패키지 구성
 
-| Package                     | 역할                                |
-| --------------------------- | ----------------------------------- |
-| `@design-editor/sdk`        | 앱에서 사용하는 SDK entry package   |
-| `@design-editor/shell`      | 상태, 액션, 툴, history runtime     |
-| `@design-editor/canvas`     | 캔버스 렌더링과 DOM geometry 측정   |
-| `@design-editor/core`       | 문서 모델, 공통 타입, serialization |
-| `@design-editor/components` | 기본 component registry             |
-| `@design-editor/demo`       | SDK 사용 예시 앱                    |
+| Package                       | 역할                                |
+| ----------------------------- | ----------------------------------- |
+| `open-editor-sdk`             | 앱에서 사용하는 SDK entry package   |
+| `@open-editor-sdk/shell`      | 상태, 액션, 툴, history runtime     |
+| `@open-editor-sdk/canvas`     | 캔버스 렌더링과 DOM geometry 측정   |
+| `@open-editor-sdk/core`       | 문서 모델, 공통 타입, serialization |
+| `@open-editor-sdk/components` | 기본 component registry             |
+| `@open-editor-sdk/demo`       | SDK 사용 예시 앱                    |
 
 ## 로컬 개발
 
@@ -135,11 +135,11 @@ const editor = createEditor({
 pnpm install
 
 # demo app
-pnpm --filter @design-editor/demo dev
+pnpm --filter @open-editor-sdk/demo dev
 
 # build
-pnpm --filter @design-editor/demo build
-pnpm --filter @design-editor/sdk build
+pnpm --filter @open-editor-sdk/demo build
+pnpm --filter open-editor-sdk build
 
 # checks
 pnpm type-check

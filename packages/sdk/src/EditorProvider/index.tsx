@@ -1,8 +1,8 @@
-import type { EditorApi } from "@design-editor/shell"
-import { EditorContextProvider } from "@design-editor/shell"
+import type { EditorApi } from "@open-editor-sdk/shell"
+import { EditorContextProvider } from "@open-editor-sdk/shell"
 import type * as React from "react"
 
-interface EditorProviderProps {
+export interface EditorProviderProps {
 	editor: EditorApi
 }
 
