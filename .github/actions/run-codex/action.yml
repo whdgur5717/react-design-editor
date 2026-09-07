@@ -1,0 +1,148 @@
+name: Run Codex
+description: Run Codex with the repository's ChatGPT subscription authentication
+
+inputs:
+ auth-json-b64:
+  description: Base64-encoded Codex auth.json
+  required: true
+ secret-update-token:
+  description: GitHub token with repository Secrets write permission
+  required: true
+ prompt:
+  description: Instructions passed to Codex
+  required: true
+ model:
+  description: Codex model
+  required: false
+  default: gpt-5.6-luna
+ effort:
+  description: Model reasoning effort
+  required: false
+  default: medium
+ codex-version:
+  description: Pinned @openai/codex version
+  required: false
+  default: 0.153.4
+
+outputs:
+ final-message:
+  description: Final response emitted by Codex
+  value: ${{ steps.codex.outputs['final-message'] }}
+
+runs:
+ using: composite
+ steps:
+  - name: Set up Node.js for Codex
+    uses: actions/setup-node@v4
+    with:
+     node-version: 24
+
+  - name: Restore Codex authentication
+    id: auth
+    shell: bash
+    env:
+     CODEX_AUTH_JSON_B64: ${{ inputs['auth-json-b64'] }}
+     CODEX_AUTH_SECRET_UPDATE_TOKEN: ${{ inputs['secret-update-token'] }}
+    run: |
+     set -euo pipefail
+
+     codex_home="$(mktemp -d "${RUNNER_TEMP}/codex-home.XXXXXX")"
+     output_file="${RUNNER_TEMP}/codex-last-message-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.md"
+
+     node -e '
+       const fs = require("fs");
+       const path = require("path");
+       if (!process.env.CODEX_AUTH_JSON_B64) {
+         throw new Error("CODEX_AUTH_JSON_B64 is empty");
+       }
+       const auth = Buffer.from(process.env.CODEX_AUTH_JSON_B64, "base64").toString("utf8");
+       JSON.parse(auth);
+       const codexHome = process.argv[1];
+       fs.writeFileSync(path.join(codexHome, "auth.json"), auth, { mode: 0o600 });
+       fs.writeFileSync(
+         path.join(codexHome, "config.toml"),
+         [
+           "default_permissions = \"analysis\"",
+           "",
+           "[permissions.analysis]",
+           "extends = \":read-only\"",
+           "",
+           "[permissions.analysis.filesystem]",
+           `${JSON.stringify(codexHome)} = \"deny\"`,
+           "",
+         ].join("\n"),
+         { mode: 0o600 },
+       );
+     ' "$codex_home"
+
+     if [[ -z "$CODEX_AUTH_SECRET_UPDATE_TOKEN" ]]; then
+       echo "CODEX_AUTH_SECRET_UPDATE_TOKEN is empty" >&2
+       exit 1
+     fi
+
+     echo "codex-home=$codex_home" >> "$GITHUB_OUTPUT"
+     echo "output-file=$output_file" >> "$GITHUB_OUTPUT"
+
+  - name: Run Codex
+    id: codex
+    shell: bash
+    env:
+     CODEX_HOME: ${{ steps.auth.outputs['codex-home'] }}
+     CODEX_OUTPUT_FILE: ${{ steps.auth.outputs['output-file'] }}
+     CODEX_PROMPT: ${{ inputs.prompt }}
+     CODEX_MODEL: ${{ inputs.model }}
+     CODEX_EFFORT: ${{ inputs.effort }}
+     CODEX_VERSION: ${{ inputs['codex-version'] }}
+    run: |
+     set -euo pipefail
+
+     effort_config="model_reasoning_effort=\"${CODEX_EFFORT}\""
+     printf '%s' "$CODEX_PROMPT" |
+       npm exec --yes --package="@openai/codex@${CODEX_VERSION}" -- \
+         codex exec \
+           --cd "$GITHUB_WORKSPACE" \
+           --ask-for-approval never \
+           --ephemeral \
+           --strict-config \
+           --color never \
+           --model "$CODEX_MODEL" \
+           --config "$effort_config" \
+           --output-last-message "$CODEX_OUTPUT_FILE" \
+           -
+
+     delimiter="CODEX_OUTPUT_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+     {
+       echo "final-message<<$delimiter"
+       cat "$CODEX_OUTPUT_FILE"
+       echo
+       echo "$delimiter"
+     } >> "$GITHUB_OUTPUT"
+
+  - name: Persist refreshed Codex authentication
+    if: ${{ always() && steps.auth.outcome == 'success' }}
+    shell: bash
+    env:
+     CODEX_HOME: ${{ steps.auth.outputs['codex-home'] }}
+     GH_TOKEN: ${{ inputs['secret-update-token'] }}
+    run: |
+     set -euo pipefail
+
+     test -s "$CODEX_HOME/auth.json"
+     base64 < "$CODEX_HOME/auth.json" |
+       gh secret set CODEX_AUTH_JSON_B64 --repo "$GITHUB_REPOSITORY"
+
+  - name: Remove Codex credentials
+    if: ${{ always() && steps.auth.outcome == 'success' }}
+    shell: bash
+    env:
+     CODEX_HOME: ${{ steps.auth.outputs['codex-home'] }}
+     CODEX_OUTPUT_FILE: ${{ steps.auth.outputs['output-file'] }}
+    run: |
+     set -euo pipefail
+
+     if [[ "$CODEX_HOME" == "$RUNNER_TEMP"/codex-home.* ]]; then
+       rm -rf -- "$CODEX_HOME"
+     fi
+     if [[ "$CODEX_OUTPUT_FILE" == "$RUNNER_TEMP"/codex-last-message-* ]]; then
+       rm -f -- "$CODEX_OUTPUT_FILE"
+     fi
