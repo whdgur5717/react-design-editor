@@ -99,9 +99,8 @@ runs:
      effort_config="model_reasoning_effort=\"${CODEX_EFFORT}\""
      printf '%s' "$CODEX_PROMPT" |
        npm exec --yes --package="@openai/codex@${CODEX_VERSION}" -- \
-         codex exec \
+         codex --ask-for-approval never exec \
            --cd "$GITHUB_WORKSPACE" \
-           --ask-for-approval never \
            --ephemeral \
            --strict-config \
            --color never \
